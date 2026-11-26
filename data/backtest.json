@@ -1,0 +1,207 @@
+{
+  "updatedAt": "2026-11-26T21:14:25.282Z",
+  "source": "data/backfill/posts.txt",
+  "count": 5,
+  "records": [
+    {
+      "kind": "backtested",
+      "id": "cmc-09d1aa2a5e",
+      "claim": {
+        "source": "cmc",
+        "authorId": "Alek_Carter",
+        "originalText": "$ETH is gearing up for a major breakout. Bulls are back in control. $1,844 is the key level to watch. Entry: $1,820 TP1: $1,844 TP2: $1,880 TP3: $1,980 SL: $1,710 Break $1,844 and things could get explosive.",
+        "postedAt": "2026-11-23T05:00:00.000Z",
+        "asset": "ETH",
+        "direction": "bullish",
+        "targetUsd": "1844",
+        "deadline": "2026-11-24T05:00:00.000Z",
+        "horizonDefaulted": true,
+        "targetSource": "post",
+        "extractor": "particle-ai/particle-1:free"
+      },
+      "cmcAtPost": {
+        "priceUsd": "1726.5132439164133",
+        "observedAt": "2026-11-23T05:05:00.000Z",
+        "source": "keyed"
+      },
+      "proxyBaseline": {
+        "probability": 0.03,
+        "label": "Proxy baseline — not Cournot",
+        "methodology": "Trailing 30-day daily volatility (σ 3.47%/day), lognormal odds of ETH being at or above $1844 after 1.0 days. CMC historical quotes. The post named no deadline, so it is scored at the 24-hour mark. CMC shows only the posting day, so the post is priced at 12:00 Bangkok that day."
+      },
+      "resolution": {
+        "result": {
+          "outcome": 0,
+          "resolvedAt": "2026-11-24T05:05:00.000Z",
+          "cmcPriceUsd": "1702.3305417073732"
+        },
+        "score": {
+          "kind": "proxy-edge",
+          "label": "Proxy Edge — not Cournot",
+          "probability": 0.03,
+          "edge": -0.03
+        }
+      }
+    },
+    {
+      "kind": "backtested",
+      "id": "cmc-3505741c82",
+      "claim": {
+        "source": "cmc",
+        "authorId": "Alek_Carter",
+        "originalText": "$XRP is showing signs of a strong bounce from support. Bulls are pushing back, and $0.94 is the key level to watch. Entry: $0.935–$0.940 TP1: $0.970 TP2: $0.994 SL: $0.915 A clean breakout could trigger the next leg up.",
+        "postedAt": "2026-11-22T05:00:00.000Z",
+        "asset": "XRP",
+        "direction": "bullish",
+        "targetUsd": "0.97",
+        "deadline": "2026-11-23T05:00:00.000Z",
+        "horizonDefaulted": true,
+        "targetSource": "post",
+        "extractor": "particle-ai/particle-1:free"
+      },
+      "cmcAtPost": {
+        "priceUsd": "0.9179211087299388",
+        "observedAt": "2026-11-22T05:05:00.000Z",
+        "source": "keyed"
+      },
+      "proxyBaseline": {
+        "probability": 0.05,
+        "label": "Proxy baseline — not Cournot",
+        "methodology": "Trailing 30-day daily volatility (σ 3.41%/day), lognormal odds of XRP being at or above $0.97 after 1.0 days. CMC historical quotes. The post named no deadline, so it is scored at the 24-hour mark. CMC shows only the posting day, so the post is priced at 12:00 Bangkok that day."
+      },
+      "resolution": {
+        "result": {
+          "outcome": 0,
+          "resolvedAt": "2026-11-23T05:05:00.000Z",
+          "cmcPriceUsd": "0.9328812164298854"
+        },
+        "score": {
+          "kind": "proxy-edge",
+          "label": "Proxy Edge — not Cournot",
+          "probability": 0.05,
+          "edge": -0.05
+        }
+      }
+    },
+    {
+      "kind": "backtested",
+      "id": "cmc-07728dbca8",
+      "claim": {
+        "source": "cmc",
+        "authorId": "teresa211192",
+        "originalText": "$BTC is trying to find its footing after the recent dip. Buyers are slowly stepping back in, and price is showing some stability around $73.6K. The next move will be interesting. A push above $74K could bring fresh confidence back into the market. Let's see if bulls can take control. 👀",
+        "postedAt": "2026-11-11T05:00:00.000Z",
+        "asset": "BTC",
+        "direction": "bullish",
+        "targetUsd": "73700.80",
+        "deadline": "2026-11-12T05:00:00.000Z",
+        "horizonDefaulted": true,
+        "targetSource": "price-at-posting",
+        "extractor": "particle-ai/particle-1:free"
+      },
+      "cmcAtPost": {
+        "priceUsd": "73700.80367205852",
+        "observedAt": "2026-11-11T05:05:00.000Z",
+        "source": "keyed"
+      },
+      "proxyBaseline": {
+        "probability": 0.5,
+        "label": "Proxy baseline — not Cournot",
+        "methodology": "Trailing 30-day daily volatility (σ 1.90%/day), lognormal odds of BTC being at or above $73700.80 after 1.0 days. CMC historical quotes. The post named no deadline, so it is scored at the 24-hour mark. CMC shows only the posting day, so the post is priced at 12:00 Bangkok that day."
+      },
+      "resolution": {
+        "result": {
+          "outcome": 0,
+          "resolvedAt": "2026-11-12T05:05:00.000Z",
+          "cmcPriceUsd": "73543.24754717755"
+        },
+        "score": {
+          "kind": "proxy-edge",
+          "label": "Proxy Edge — not Cournot",
+          "probability": 0.5,
+          "edge": -0.5
+        }
+      }
+    },
+    {
+      "kind": "backtested",
+      "id": "cmc-c83bab3ee6",
+      "claim": {
+        "source": "cmc",
+        "authorId": "teresa211192",
+        "originalText": "$BTC is holding strong around $80K as the market starts reacting to the aftermath of the US elections. Election uncertainty is slowly turning into market expectations, and BTC seems to be finding its footing. The next move will be interesting. If buyers keep defending this zone and push above resistance, we could see another bullish leg. Eyes on $80K. The reaction from here matters! 🚀",
+        "postedAt": "2026-11-05T05:00:00.000Z",
+        "asset": "BTC",
+        "direction": "bullish",
+        "targetUsd": "80417.38",
+        "deadline": "2026-11-06T05:00:00.000Z",
+        "horizonDefaulted": true,
+        "targetSource": "price-at-posting",
+        "extractor": "particle-ai/particle-1:free"
+      },
+      "cmcAtPost": {
+        "priceUsd": "80417.3781949566",
+        "observedAt": "2026-11-05T05:05:00.000Z",
+        "source": "keyed"
+      },
+      "proxyBaseline": {
+        "probability": 0.5,
+        "label": "Proxy baseline — not Cournot",
+        "methodology": "Trailing 30-day daily volatility (σ 1.68%/day), lognormal odds of BTC being at or above $80417.38 after 1.0 days. CMC historical quotes. The post named no deadline, so it is scored at the 24-hour mark. CMC shows only the posting day, so the post is priced at 12:00 Bangkok that day."
+      },
+      "resolution": {
+        "result": {
+          "outcome": 0,
+          "resolvedAt": "2026-11-06T05:05:00.000Z",
+          "cmcPriceUsd": "75591.39644712368"
+        },
+        "score": {
+          "kind": "proxy-edge",
+          "label": "Proxy Edge — not Cournot",
+          "probability": 0.5,
+          "edge": -0.5
+        }
+      }
+    },
+    {
+      "kind": "backtested",
+      "id": "cmc-be3999423c",
+      "claim": {
+        "source": "cmc",
+        "authorId": "teresa211192",
+        "originalText": "$TRX is showing some nice strength! 🚀 After dropping to $0.3017, TRON has bounced back to $0.3214 and is now trading above its MA(7) and MA(30). Buyers are slowly taking control, while MACD remains positive. RSI is around 71, so a little cooling off wouldn't be surprising. The next level I'm watching is $0.3250. A clean break above it could open the door for another leg up. Let's see if bulls can keep this momentum going! 🔥",
+        "postedAt": "2026-11-03T05:00:00.000Z",
+        "asset": "TRX",
+        "direction": "bullish",
+        "targetUsd": "0.320120",
+        "deadline": "2026-11-04T05:00:00.000Z",
+        "horizonDefaulted": true,
+        "targetSource": "price-at-posting",
+        "extractor": "particle-ai/particle-1:free"
+      },
+      "cmcAtPost": {
+        "priceUsd": "0.32012031191133267",
+        "observedAt": "2026-11-03T05:05:00.000Z",
+        "source": "keyed"
+      },
+      "proxyBaseline": {
+        "probability": 0.5,
+        "label": "Proxy baseline — not Cournot",
+        "methodology": "Trailing 30-day daily volatility (σ 2.41%/day), lognormal odds of TRX being at or above $0.320120 after 1.0 days. CMC historical quotes. The post named no deadline, so it is scored at the 24-hour mark. CMC shows only the posting day, so the post is priced at 12:00 Bangkok that day."
+      },
+      "resolution": {
+        "result": {
+          "outcome": 1,
+          "resolvedAt": "2026-11-04T05:05:00.000Z",
+          "cmcPriceUsd": "0.32153644298602996"
+        },
+        "score": {
+          "kind": "proxy-edge",
+          "label": "Proxy Edge — not Cournot",
+          "probability": 0.5,
+          "edge": 0.5
+        }
+      }
+    }
+  ]
+}
