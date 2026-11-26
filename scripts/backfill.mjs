@@ -204,18 +204,24 @@ function proxyProbability(closes, spot, target, direction, days) {
 
 async function readClaim(text, authorId, postedAt) {
   if (!RULES_ONLY) {
-    try {
-      const res = await fetch(EXTRACT_URL, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text, authorId, postedAt: postedAt.toISOString() }),
-      });
-      const j = await res.json();
-      if (j.state === "ok") return j.claim;
-      if (j.state === "refused") return null;
-    } catch {
-      /* fall back to the rules */
+    // Free models occasionally refuse a post they read correctly a minute ago. A refusal is retried twice;
+    // the first reading that finds a call is used, and the checks in /api/extract still apply to it.
+    let refusals = 0;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(EXTRACT_URL, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ text, authorId, postedAt: postedAt.toISOString() }),
+        });
+        const j = await res.json();
+        if (j.state === "ok") return j.claim;
+        if (j.state === "refused") refusals += 1;
+      } catch {
+        /* retry, then fall back to the rules */
+      }
     }
+    if (refusals > 0) return null;
   }
   const c = cleanPastedPost(text);
   return extractClaim({ text: c.text, authorId, postedAt: postedAt.toISOString(), source: "cmc", now: postedAt });
@@ -289,5 +295,15 @@ for (const [i, { author, postedAt, dayOnly, url, text }] of blocks.entries()) {
   }
 }
 
+// Results accumulate: a post scored on an earlier run is kept even if this run's model refused it, so one
+// unlucky run cannot erase reviewed data. --fresh starts over.
+if (!process.argv.includes("--fresh") && existsSync(OUTPUT)) {
+  const prev = JSON.parse(readFileSync(OUTPUT, "utf8")).records ?? [];
+  const have = new Set(out.map((r) => r.id));
+  const kept = prev.filter((r) => !have.has(r.id));
+  if (kept.length > 0) console.log(`kept ${kept.length} post(s) scored on an earlier run: ${kept.map((r) => `${r.claim.authorId}/${r.claim.asset}`).join(", ")}`);
+  out.push(...kept);
+}
+out.sort((a, b) => a.claim.postedAt.localeCompare(b.claim.postedAt));
 writeFileSync(OUTPUT, JSON.stringify({ updatedAt: now.toISOString(), source: INPUT, count: out.length, records: out }, null, 2) + "\n");
 console.log(`\n${out.length} resolved real posts -> ${OUTPUT} (from ${blocks.length} blocks)`);
