@@ -228,12 +228,12 @@ function namedDeadline(text: string, postedAt: Date): Date | null {
 
 /** Explicit dates only. "Soon" is not a date; it becomes the flagged default horizon. */
 function findDeadline(text: string, postedAt: Date): Date | null {
-  const relative = text.match(/\b(?:in|within)\s+(\d+)\s*(day|week|month)s?\b/i);
+  const relative = text.match(/\b(?:in|within|next)\s+(\d+)\s*(hour|hr|h|day|week|month)s?\b/i);
   if (relative) {
     const n = Number(relative[1]);
     const unit = relative[2]!.toLowerCase();
-    const days = unit === "day" ? n : unit === "week" ? n * 7 : n * 30;
-    return new Date(postedAt.getTime() + days * 86_400_000);
+    const hours = unit.startsWith("h") ? n : (unit === "day" ? n : unit === "week" ? n * 7 : n * 30) * 24;
+    return new Date(postedAt.getTime() + hours * 3_600_000);
   }
 
   const monthDay = text.match(

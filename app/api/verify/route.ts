@@ -6,6 +6,8 @@ import { readCournot as readCournotResponse, CournotError, type CournotMode } fr
 import { keylessPrice, keyedQuotes, CmcError } from "../../../server/cmc.ts";
 import { readAtlas, AtlasError } from "../../../server/atlas.ts";
 import { verify, VerifyError } from "../../../server/verify.ts";
+import { appendRecord } from "../../../server/store.ts";
+import type { VerificationRecord } from "../../../shared/types.ts";
 import { liveTransport, writerConfigFromEnv, RegistryError, writeReceipt } from "../../../server/registry.ts";
 
 /** This is the only route that writes. It never holds funds and never chooses a value. */
@@ -118,8 +120,20 @@ export async function POST(request: Request) {
           return writeReceipt(call, writeDeps);
         },
       },
-      { cournotMode: mode, record: writeDeps !== null },
+      // A fixture probability is never written on chain: the chain is permanent and carries no provenance
+      // label, so a synthetic number there would read as Cournot's forever. Fixture runs stay drafts.
+      { cournotMode: mode, record: writeDeps !== null && mode !== "fixture" },
     );
+
+    // Keep confirmed receipts, so the leaderboard and KOL pages show them. Best effort: a read-only
+    // filesystem (a serverless deployment) simply keeps nothing, and the chain still holds the receipt.
+    if (result.record.receipt !== null) {
+      try {
+        appendRecord(result.record as VerificationRecord);
+      } catch {
+        /* read-only filesystem */
+      }
+    }
 
     return NextResponse.json(result, { status: 200 });
   } catch (e) {

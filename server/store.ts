@@ -13,7 +13,7 @@
  * as live data.
  */
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
 import type { CallRecord } from "../shared/types.ts";
 
@@ -38,4 +38,22 @@ export function loadStore(): LoadedStore {
 
 export function loadRecords(): CallRecord[] {
   return loadStore().records;
+}
+
+/** Append one confirmed call to data/local.json (created from the seed if missing). Throws on a read-only FS. */
+export function appendRecord(record: CallRecord): void {
+  const path = "data/local.json";
+  let records: CallRecord[] = [];
+  if (existsSync(/* turbopackIgnore: true */ path)) {
+    const parsed: unknown = JSON.parse(readFileSync(/* turbopackIgnore: true */ path, "utf8"));
+    records = Array.isArray(parsed) ? (parsed as CallRecord[]) : ((parsed as { records?: CallRecord[] }).records ?? []);
+  } else {
+    records = loadStore().records;
+  }
+  if (records.some((r) => r.id === record.id)) return;
+  records.push(record);
+  writeFileSync(
+    /* turbopackIgnore: true */ path,
+    JSON.stringify({ updatedAt: new Date().toISOString(), count: records.length, records }, null, 2),
+  );
 }
