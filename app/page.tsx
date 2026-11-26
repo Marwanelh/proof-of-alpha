@@ -48,7 +48,8 @@ export default function VerifyPage() {
   const [text, setText] = useState(EXAMPLE);
   const [authorId, setAuthorId] = useState("CryptoNova");
   const [authorTouched, setAuthorTouched] = useState(false);
-  const [postedAt, setPostedAt] = useState("");
+  /** Read from the pasted post's own timestamp ("· Nov 23", "· 5h"); null means "just now". */
+  const [posted, setPosted] = useState<{ at: string; dayOnly: boolean; raw: string } | null>(null);
   const [sourceUrl, setSourceUrl] = useState("");
   const [useCournot, setUseCournot] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -74,6 +75,7 @@ export default function VerifyPage() {
     e.preventDefault();
     const c = cleanPastedPost(raw);
     setText(c.text);
+    setPosted(c.posted);
     if (c.author && !authorTouched) setAuthorId(c.author);
     setCleanNote(
       c.dropped > 0
@@ -86,7 +88,7 @@ export default function VerifyPage() {
     setText("");
     setAuthorId("");
     setAuthorTouched(false);
-    setPostedAt("");
+    setPosted(null);
     setSourceUrl("");
     setOk(null);
     setFail(null);
@@ -108,7 +110,8 @@ export default function VerifyPage() {
           text,
           authorId,
           useCournot,
-          postedAt: postedAt === "" ? undefined : new Date(postedAt).toISOString(),
+          // The time comes from the post itself: the pasted timestamp, else one still in the text, else now.
+          postedAt: posted?.at ?? cleanPastedPost(text).posted?.at,
         }),
       });
       const payload: unknown = await res.json();
@@ -145,7 +148,7 @@ export default function VerifyPage() {
       <section className="page-head">
         <h1>Verify a call</h1>
         <p>
-          Paste a post from CMC Community, Telegram or anywhere else, and when it was posted. We read the claim,
+          Paste a post from CMC Community, Telegram or anywhere else, with its timestamp. We read the claim,
           price it then and now, and tell you whether it was right. Checks are not recorded: the leaderboard only
           carries calls we have reviewed.
         </p>
@@ -164,26 +167,24 @@ export default function VerifyPage() {
           {cleanNote ? <span className="hint" style={{ color: "var(--lime)" }}>{cleanNote}</span> : null}
         </label>
 
-        <div className="form-grid">
-          <label className="field" htmlFor="kol">
-            <span className="label">KOL</span>
-            <input
-              id="kol"
-              type="text"
-              value={authorId}
-              onChange={(e) => {
-                setAuthorTouched(true);
-                setAuthorId(e.target.value);
-              }}
-              placeholder="read from “— Name” or @handle"
-              autoComplete="off"
-            />
-          </label>
-          <label className="field" htmlFor="posted">
-            <span className="label">Posted at (your time)</span>
-            <input id="posted" type="datetime-local" value={postedAt} onChange={(e) => setPostedAt(e.target.value)} />
-            <span className="hint">Leave empty for “just now”. An older post is priced at that moment.</span>
-          </label>
+        <div className="author-row">
+          <label className="label" htmlFor="kol">KOL</label>
+          <input
+            id="kol"
+            type="text"
+            value={authorId}
+            onChange={(e) => {
+              setAuthorTouched(true);
+              setAuthorId(e.target.value);
+            }}
+            placeholder="who made the call (read from “— Name” or @handle)"
+            autoComplete="off"
+          />
+          <span className="hint">
+            {posted
+              ? `Posted ${posted.raw.replace(/^[·•]\s*/, "")} — read from the post${posted.dayOnly ? " (the page shows the day only, so it is priced at 12:00 Bangkok)" : ""}.`
+              : "Paste the post with its timestamp (“· Nov 23”, “· 5h”) to check an older call; without one it is checked as posted just now."}
+          </span>
         </div>
 
         <div className="actions">

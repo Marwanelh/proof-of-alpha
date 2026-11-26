@@ -25,7 +25,7 @@ const BEARISH =
  * observes the present ("BNB is above $600") would be turned into a future prediction by the default
  * horizon, and we would be scoring a claim nobody made.
  */
-const FORWARD = /\b(will|going to|gonna|shall|should|by|before|until|next|tomorrow|this (week|month|quarter|year)|soon|coming|target(?:ing)?|reach(?:es)?|hits?|pump|dump|moon|send it|load(?:ing)?)\b/i;
+const FORWARD = /\b(will|going to|gonna|shall|should|could|may|might|expect(?:ing)?|by|before|until|next|tomorrow|this (week|month|quarter|year)|soon|coming|target(?:ing)?|reach(?:es)?|hits?|pump|dump|moon|send it|load(?:ing)?)\b/i;
 
 /**
  * A date the author stated that we could not parse ("by February 31", "before the end of next week").
@@ -44,8 +44,10 @@ export type ExtractInput = {
 };
 
 export async function extractClaim(input: ExtractInput): Promise<Claim | null> {
-  const text = input.text.trim();
-  if (text.length === 0) return null;
+  const original = input.text.trim();
+  if (original.length === 0) return null;
+  // "$74K" / "$1.2k" are prices in thousands. Expanded for parsing only; the stored text is the author's.
+  const text = original.replace(/\$\s?(\d+(?:\.\d+)?)\s?[kK]\b/g, (_m, n: string) => `$${Math.round(Number(n) * 1000)}`);
 
   const asset = findAsset(text);
   if (asset === null) return null;
@@ -87,7 +89,7 @@ export async function extractClaim(input: ExtractInput): Promise<Claim | null> {
   const claim: Claim = {
     source: input.source ?? "paste",
     authorId: input.authorId,
-    originalText: text,
+    originalText: original,
     postedAt: postedAt.toISOString(),
     asset,
     direction,

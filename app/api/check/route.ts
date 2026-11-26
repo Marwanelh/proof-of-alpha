@@ -17,8 +17,13 @@ export async function POST(request: Request) {
 
   const cleaned = cleanPastedPost(typeof body.text === "string" ? body.text : "");
   const authorId = (typeof body.authorId === "string" ? body.authorId.trim() : "") || (cleaned.author ?? "");
+  // The posting time: as sent, else the timestamp line still in the pasted text, else now.
   const postedAt =
-    typeof body.postedAt === "string" && body.postedAt.trim() !== "" ? new Date(body.postedAt) : new Date();
+    typeof body.postedAt === "string" && body.postedAt.trim() !== ""
+      ? new Date(body.postedAt)
+      : cleaned.posted
+        ? new Date(cleaned.posted.at)
+        : new Date();
   if (cleaned.text.length < 12) {
     return NextResponse.json({ state: "bad_request", message: "Paste the post itself." }, { status: 400 });
   }

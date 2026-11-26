@@ -71,4 +71,16 @@ Share`;
     const c = cleanPastedPost("BNB Chain has published a litepaper for its new Layer-1.\n🟡 #BNB #Blockchain\nCrypto Henry");
     assert.equal(c.author, "CryptoHenry");
   });
+
+  test("the page's timestamp line becomes the posting time", () => {
+    const now = new Date("2026-11-27T00:00:00Z");
+    const a = cleanPastedPost("$ETH breakout. TP1: $1,844\nAlek Carter\n@Alek_Carter\n· Nov 23", now);
+    assert.equal(a.posted?.at, "2026-11-23T05:00:00.000Z", "a date alone is 12:00 Bangkok that day");
+    assert.equal(a.posted?.dayOnly, true);
+    assert.ok(!a.text.includes("Nov 23"));
+    const b = cleanPastedPost("$BNB looking strong\nteresa\n@teresa211192\n· 5h", now);
+    assert.equal(b.posted?.at, "2026-11-26T19:00:00.000Z");
+    assert.equal(b.posted?.dayOnly, false);
+    assert.equal(cleanPastedPost("BNB to $700 by Dec 20").posted, null);
+  });
 });

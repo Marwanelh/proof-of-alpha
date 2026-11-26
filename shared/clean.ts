@@ -17,6 +17,11 @@ export type Cleaned = {
   sentiment: "bullish" | "bearish" | null;
   /** How many lines were dropped as UI, so the page can say it cleaned something. */
   dropped: number;
+  /**
+   * When the post was made, read from the page's own timestamp line ("· Nov 23", "· 5h"). `dayOnly` when the
+   * page showed a date without a time: the post is then taken as 12:00 Bangkok that day, and the UI says so.
+   */
+  posted: { at: string; dayOnly: boolean; raw: string } | null;
 };
 
 const UI_WORDS = new Set(
@@ -41,11 +46,55 @@ const LONE_PRICE = /^[+\-−]?\$\s?[\d,]+(?:\.\d+)?$/;
 const HANDLE = /^@([A-Za-z0-9_.]{2,32})$/;
 const INLINE_WIDGET = /\$?[A-Z]{2,10}\s+\$?[\d,]+(?:\.\d+)?\s*[+\-−▲▼]\s?\d+(?:\.\d+)?%/g;
 
-export function cleanPastedPost(raw: string): Cleaned {
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
+/** "5h", "2d", "just now", "Nov 23", "Nov 23, 2026", "23 Nov", "2026-11-23", "Nov 23 · 14:05" -> a time. */
+export function postedFrom(raw: string, now: Date = new Date()): { at: string; dayOnly: boolean; raw: string } | null {
+  const s = raw.replace(/^[·•]\s*/, "").trim().toLowerCase();
+  if (s === "" ) return null;
+  if (s === "just now" || s === "now") return { at: now.toISOString(), dayOnly: false, raw };
+  const rel = s.match(/^(\d+)\s*(s|m|h|d|w|sec|secs|min|mins|hr|hrs|hour|hours|day|days|week|weeks)(?:\s+ago)?$/);
+  if (rel) {
+    const n = Number(rel[1]);
+    const u = rel[2]!;
+    const ms = u.startsWith("s") ? n * 1e3 : u === "m" || u.startsWith("min") ? n * 6e4 : u.startsWith("h") ? n * 3.6e6 : u.startsWith("d") ? n * 8.64e7 : n * 6.048e8;
+    return { at: new Date(now.getTime() - ms).toISOString(), dayOnly: /^(d|day|days|w|week|weeks)$/.test(u), raw };
+  }
+  if (s === "yesterday") return { at: new Date(now.getTime() - 8.64e7).toISOString(), dayOnly: true, raw };
+  let y: number | null = null;
+  let mo = -1;
+  let d = 0;
+  let a = s.match(/^([a-z]{3})[a-z]*\.?\s+(\d{1,2})(?:,?\s*(\d{4}))?/);
+  if (a && MONTHS.includes(a[1]!)) {
+    mo = MONTHS.indexOf(a[1]!);
+    d = Number(a[2]);
+    y = a[3] ? Number(a[3]) : null;
+  } else if ((a = s.match(/^(\d{1,2})\s+([a-z]{3})[a-z]*\.?(?:\s+(\d{4}))?/)) && MONTHS.includes(a[2]!)) {
+    mo = MONTHS.indexOf(a[2]!);
+    d = Number(a[1]);
+    y = a[3] ? Number(a[3]) : null;
+  } else if ((a = s.match(/^(\d{4})-(\d{2})-(\d{2})/))) {
+    y = Number(a[1]);
+    mo = Number(a[2]) - 1;
+    d = Number(a[3]);
+  } else return null;
+  const time = s.match(/(\d{1,2}):(\d{2})\s*([ap]m)?/);
+  let year = y ?? now.getUTCFullYear();
+  const hh = time ? (Number(time[1]) % 12) + (time[3] === "pm" ? 12 : time[3] === "am" ? 0 : Number(time[1]) >= 12 ? 12 : 0) : 12;
+  const mm = time ? Number(time[2]) : 0;
+  const mk = (yr: number) => new Date(Date.UTC(yr, mo, d, hh - 7, mm)); // Bangkok, UTC+7
+  let at = mk(year);
+  if (y === null && at.getTime() > now.getTime() + 86_400_000) at = mk(--year); // "Dec 30" read in January
+  if (Number.isNaN(at.getTime())) return null;
+  return { at: at.toISOString(), dayOnly: time === null, raw };
+}
+
+export function cleanPastedPost(raw: string, now: Date = new Date()): Cleaned {
   const lines = raw
     .replace(/\r\n?/g, "\n")
     .split("\n")
     .map((l) => l.replace(/\s+/g, " ").trim());
+  let posted: Cleaned["posted"] = null;
 
   let author: string | null = null;
   let bull = false;
@@ -82,10 +131,15 @@ export function cleanPastedPost(raw: string): Cleaned {
       continue;
     }
     inList = false;
+    // The page's own timestamp ("· Nov 23", "5h") is when the post was made: keep it, drop the line.
+    const stamp = line.replace(/^[·•]\s*/, "");
+    if (RELATIVE_TIME.test(stamp) || ABS_DATE.test(stamp)) {
+      posted ??= postedFrom(stamp, now);
+      dropped += 1;
+      continue;
+    }
     if (
       UI_WORDS.has(lower) ||
-      RELATIVE_TIME.test(line) ||
-      ABS_DATE.test(line) ||
       COUNT.test(line) ||
       PRICE_WIDGET.test(line) ||
       LONE_TICKER.test(line) ||
@@ -121,7 +175,7 @@ export function cleanPastedPost(raw: string): Cleaned {
   const sentiment = bull && !bear ? "bullish" : bear && !bull ? "bearish" : null;
   if (sentiment !== null && !new RegExp(`\\b${sentiment}\\b`, "i").test(text)) text = `${text} (${sentiment})`;
 
-  return { text, author, sentiment, dropped };
+  return { text, author, sentiment, dropped, posted };
 }
 
 /** A display name: short, at most three words, no prices, digits runs, hashtags or sentence punctuation. */

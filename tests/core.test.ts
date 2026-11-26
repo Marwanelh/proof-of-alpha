@@ -171,6 +171,12 @@ Watching for bullish continuation. Manage your risk.`;
     assert.equal(await extractClaim({ ...base, text: "BNB long. TP1 $500 SL $525" }), null);
   });
 
+  test("reads $74K as 74000 and keeps the author's text", async () => {
+    const claim = await extractClaim({ ...base, text: "BTC: a push above $74K could bring fresh confidence. Bulls in control." });
+    assert.equal(claim?.targetUsd, "74000");
+    assert.ok(claim?.originalText.includes("$74K"));
+  });
+
   test("still accepts a forward-looking call with a defaulted horizon", async () => {
     const claim = await extractClaim({ ...base, text: "BNB above $600 is coming" });
     assert.ok(claim, "a forward-looking post must still extract");
