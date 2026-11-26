@@ -20,12 +20,16 @@
     "test:verify": "node --env-file-if-exists=.env.local --experimental-strip-types --test tests/verify.test.ts",
     "smoke": "node --env-file-if-exists=.env.local scripts/smoke.mjs",
     "postinstall": "git config core.hooksPath .githooks || true",
-    "setup": "git config core.hooksPath .githooks && node scripts/check-secrets.mjs"
+    "setup": "git config core.hooksPath .githooks && node scripts/check-secrets.mjs",
+    "deploy": "node --env-file-if-exists=.env.local scripts/deploy.mjs",
+    "deploy:check": "node --env-file-if-exists=.env.local scripts/deploy.mjs --check",
+    "deploy:verified": "node --env-file-if-exists=.env.local scripts/deploy.mjs --verified --check"
   },
   "devDependencies": {
     "@types/node": "^22.20.7",
     "@types/react": "^19.3.3",
     "@types/react-dom": "^19.3.0",
+    "solc": "^0.8.24",
     "typescript": "^5.9.3"
   },
   "dependencies": {
