@@ -64,7 +64,11 @@ for (const file of tracked) {
     continue;
   }
   scanned += 1;
-  for (const text of variants) {
+  // A transaction hash is public and is 64-hex, the same shape as a signer key. It is allowed ONLY as the
+  // path of a block-explorer transaction link, so a bare 64-hex value anywhere else still fails the gate.
+  const EXPLORER_TX = /https:\/\/(?:testnet\.)?bscscan\.com\/tx\/0x[0-9a-fA-F]{64}(?![0-9a-fA-F])/g;
+  for (const raw of variants) {
+    const text = raw.replace(EXPLORER_TX, "https://bscscan.com/tx/<hash>");
     for (const { name, re } of PATTERNS) {
       re.lastIndex = 0;
       const hit = re.exec(text);
