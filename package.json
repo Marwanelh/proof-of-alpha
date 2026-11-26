@@ -11,12 +11,15 @@
   "scripts": {
     "seed": "node scripts/seed.mjs",
     "check:secrets": "node scripts/check-secrets.mjs",
-    "test": "node scripts/check-secrets.mjs && node --env-file-if-exists=.env.local --experimental-strip-types --test tests/core.test.ts tests/verify.test.ts",
+    "test": "node scripts/check-secrets.mjs && node --env-file-if-exists=.env.local --experimental-strip-types --test tests/core.test.ts tests/verify.test.ts tests/registry.test.ts",
     "test:verify": "node --env-file-if-exists=.env.local --experimental-strip-types --test tests/verify.test.ts",
     "smoke": "node --env-file-if-exists=.env.local scripts/smoke.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.20.7",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "viem": "^2.58.7"
   }
 }
