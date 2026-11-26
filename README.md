@@ -122,8 +122,9 @@ Addresses: see [`docs/addresses.md`](docs/addresses.md) (fill in after deploy).
 The Cournot track asks for this section by name, so it answers its four questions directly.
 
 **Where we call it.** `server/cournot.ts` is the only place that talks to Cournot. It drives the official
-skill client against `https://interface.cournot.ai`, calling `resolve` to turn a social post into a
-probability for one discrete market, and `prepare` when a call needs the paid prepare step. Extraction —
+skill client against `https://interface.cournot.ai`, calling `resolve` to **match** a post to a discrete
+market — it returns candidate markets and a `matching_confidence`, **not** a probability — and `prepare` for
+the market-assigned probability, which is the metered step. Extraction —
 post → claim, direction, target, deadline — lives in `server/claim.ts`, and it refuses a post it cannot
 parse rather than guessing a claim to price.
 
@@ -139,8 +140,15 @@ returned probability, and Cournot's evidence verbatim. Our commentary is visuall
 `Our note`, so a reader can always tell the oracle's words from ours. The same panel sits on the KOL page
 and behind every leaderboard row.
 
-**Proof of a successful call.** `evidence/evidence.json` carries the request id and the sanitised
-response, written by `npm run smoke` and kept in the repo as the artifact the brief asks for.
+**What has actually been called, and what has not.** `resolve` is free and it **succeeded**:
+`evidence/cournot/live-resolve-raw.json` is the raw reply — `code: 0`, five candidate markets, best match
+`#113195` at `matching_confidence` 0.855, `charged: false`. `prepare` — the call that returns the probability —
+returned `payment_choice_required`, recorded verbatim in `evidence/cournot/prepare-raw.json`. So there is **no
+successful probability call yet, no request id, and `evidence/evidence.json` holds `null` for Cournot**: it is
+not the proof the brief asks for, and this section will not present it as one. The brief's gate is one
+successful live call whose returned probability drives a decision — that gate is **unmet** until one is
+funded. What is proven is the plumbing and the refusal: the pipeline would rather score nothing than label an
+invented number as Cournot's.
 
 **Current state, stated plainly.** This machine has spent its **three free calls** — Cournot meters three
 per IP with no reset — so calls made today carry `provenance: "fixture"`. That is not hidden. The response

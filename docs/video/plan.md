@@ -20,8 +20,9 @@ integration (25)" cannot audit our code during a 3-minute watch; they watch the 
 
 ## 1. Hard constraints
 
-- **≤ 3:00. Target 2:40, hard stop 2:55.** `docs/submission-checklist.md` line 43 and README line 164 both say
-  "Demo or video ≤ 3 minutes". Overrunning is a rubric risk for zero upside.
+- **≤ 3:00 hard limit** (`docs/submission-checklist.md` line 43, README line 164). **Target 2:00**, per the
+  review: at 160 s the cut waited 45 s for its strongest proof. Overrunning is a rubric risk for zero upside;
+  so is starving evidence. Both are settled by cutting exposition, never evidence.
 - **1920×1080, 30 fps, 16:9.** Not vertical — this is a submission video, not a social clip.
 - Resolution must survive a judge watching on a laptop at 50% size: **minimum on-screen text size 28 px at
   1080p**, code and block numbers **≥ 32 px**.
@@ -87,23 +88,34 @@ read as Cournot's forever"*), so a fixture run stays a draft even with recording
 registry is the team that declined to write to it, because the number it would hold was not real. That is
 what "tamper-proof" is worth — it protects the reader from us too.
 
-**Decision I need from Codex:** is this framing strong enough for the BNB Chain / RWA (20) and technical
-quality (15) scores, or should the video instead show the receipt and accept the fabrication risk? My
-position is that the honest version is worth more, and that the only correct way to get a receipt on screen
-is to spend one real Cournot call first — then re-render scene 5 with a true probability and a real
-`CallRecorded` event.
+**Verdict (review, adopted):** show the **testnet deploy and a genuine draft**, and explain **once** that the
+demo API excludes fixture probabilities from recording. Deployment earns the BNB credit; the refusal earns
+the safety credit; a recorded call stays honestly unproven. The blanket phrase "the writer refuses" is
+withdrawn — the guard lives in `app/api/verify/route.ts`, not in the shared encoder, so the claim is scoped to
+the demo API or it is false. The wallet nonce is cut from the video: it is audit detail a 26-second beat
+cannot afford, and it invites a question the format cannot answer.
 
-## 3. Structure — five beats in 2:40
+A recorded call remains the single gap in the on-chain story, and **gas cannot close it**: a timely
+transaction would not authorise writing fixture data. Only a real Cournot probability can, so the earlier "if
+gas lands, re-render beat 5 with the real tx" contingency is deleted — it was wrong on its own terms.
+
+## 3. Structure — five beats in 2:00
+
+Revision 1 opened on typography and first showed data at 0:45. The review's top finding was that the first 15
+seconds therefore earned nothing toward the 70 points in the top three dimensions. Beat 1 is now the working
+flow itself, and it is the money shot; every other beat supports it.
 
 | # | Beat | Time | Serves |
 |---|---|---|---|
-| 1 | The problem, in one sentence | 0:00–0:18 | Hook; originality |
-| 2 | The formula: Edge = outcome − probability | 0:18–0:45 | Originality (10) |
-| 3 | **Two sources, one frame** (the money shot) | 0:45–1:35 | Data integration (25) + BNB (20) |
-| 4 | The record: what it says about itself | 1:35–2:15 | Technical quality and safety (15) + real-world (25) |
-| 5 | The contract, the tests, the ask | 2:15–2:40 | BNB (20) + close |
+| 1 | **Paste → draft**: the real call, keyed CMC quote, block-pinned Atlas read, draft status | 0:00–0:32 | Data integration (25) + BNB (20) + demo (5), in the first impression |
+| 2 | What the draft computes: Edge, one **illustrative** worked example | 0:32–0:50 | Originality (10) |
+| 3 | One buyer, one decision: a launchpad reviewer declines to endorse pending a real probability | 0:50–1:12 | Real-world potential (25) |
+| 4 | The testnet deployment, and the scoped refusal to write to it | 1:12–1:38 | BNB (20) + technical quality and safety (15) |
+| 5 | What works today, what is missing, both links | 1:38–2:00 | Close; demo (5) |
 
-Scene 3 is where the video earns or loses its 25+20. Everything else supports it.
+Two beats from revision 1 are **gone**, both on the review's advice: the sample leaderboard (no time to
+explain a proxy, and an unexplained one is worse than none) and the plain-language answer panel (its counts
+did not agree with the sample row beside it). The video no longer shows either.
 
 ## 4. Visual system
 
@@ -151,10 +163,11 @@ screen-recording only if a beat needs motion the stills cannot convey.
 | Risk | Mitigation |
 |---|---|
 | Prices move between capture and render; video shows a price the judge can't reproduce | On-screen timestamps + block heights on every price; say "block 135,891,116" — a block is checkable even after the price moves |
-| Gas never lands, video has no on-chain receipt | Beat 5 built to show either a tx or the contract + `DRAFT` state; decided at render time, not at 08:50 |
+| The capture route fails and the demo cannot be filmed | **Stop before rendering** and verify a read-only draft from the target build; never fake the interaction. The video's whole value is that the first 15 seconds are a real screen |
+| Gas never lands, video has no on-chain receipt | Not a risk any more, and not a fix either: gas cannot make the probability real. Beat 4 shows the testnet deploy and the refusal, which is the honest version |
 | Render fails or takes hours on a laptop | Render at 1280×720 as a timing test first, then 1080p; cloud render is the fallback path |
-| 3-minute limit | Scene 4 is the trimmable one (it is 40 s and can lose 15 s without breaking the argument) |
-| Judge asks "what's fake here?" | The label is already in frame; the answer is the same sentence the screen says |
+| The 2:00 target or the 3:00 limit | The cut list is ranked in `docs/video/codex-review-1.md`; trimmable exposition goes before any evidence hold |
+| Judge asks "what's fake here?" | The labels are already in frame — `ILLUSTRATIVE INPUTS`, `sample`, `DRAFT`, `BSC TESTNET` — and the answer is the same sentence the screen says |
 
 ## 8. Definition of done
 
