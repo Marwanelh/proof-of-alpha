@@ -153,6 +153,12 @@ export function rank(summaries: readonly KolSummary[]): KolSummary[] {
       if (b.cournotEdge === null) return -1;
       if (b.cournotEdge !== a.cournotEdge) return b.cournotEdge - a.cournotEdge;
     }
+    // Among KOLs with no Cournot Edge, the labelled proxy Edge decides next — the board is sorted by Edge.
+    if (a.proxyEdge !== b.proxyEdge) {
+      if (a.proxyEdge === null) return 1;
+      if (b.proxyEdge === null) return -1;
+      if (b.proxyEdge !== a.proxyEdge) return b.proxyEdge - a.proxyEdge;
+    }
     if (a.hitRate !== b.hitRate) {
       if (a.hitRate === null) return 1;
       if (b.hitRate === null) return -1;
