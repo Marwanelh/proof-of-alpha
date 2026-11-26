@@ -18,7 +18,7 @@ function priceAtResolution(record: CallRecord): number | null {
 const fmt = (n: number) => n.toLocaleString("en-US");
 
 export default function LeaderboardPage() {
-  const { records, sample } = loadStore();
+  const { records, sample, backtested } = loadStore();
   const kolIds = [...new Set(records.map((r) => r.claim.authorId))].sort();
   const summaries: KolSummary[] = rank(kolIds.map((id) => summarise(id, records, priceAtResolution)));
   const totals = boardTotals(records);
@@ -27,7 +27,13 @@ export default function LeaderboardPage() {
   return (
     <main>
       <section className="page-head">
-        {sample ? <span className="chip">Sample data · backtested, not live-resolved</span> : <span className="chip" data-tone="live">Live record</span>}
+        {sample ? (
+          <span className="chip">Sample data · fictional KOLs</span>
+        ) : backtested ? (
+          <span className="chip" data-tone="live">Real CMC Community posts · backtested with a proxy baseline</span>
+        ) : (
+          <span className="chip" data-tone="live">Live record</span>
+        )}
         <h1>Who&rsquo;s actually right?</h1>
         <p>
           Every call is broken into a claim, scored against real prices and against what the market already

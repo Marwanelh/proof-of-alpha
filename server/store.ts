@@ -17,10 +17,16 @@ import { readFileSync, writeFileSync } from "node:fs";
 
 import type { CallRecord } from "../shared/types.ts";
 
-export type LoadedStore = { records: CallRecord[]; source: string; sample: boolean };
+/**
+ * `sample`: fictional seed rows are on the board. `backtested`: real posts scored after the fact against a
+ * proxy baseline. The leaderboard labels each, because they mean very different things.
+ */
+export type LoadedStore = { records: CallRecord[]; source: string; sample: boolean; backtested: boolean };
 
 /** Confirmed on-chain receipts. Committed, so a deployment shows them; appended by /api/verify. */
 export const LIVE_PATH = "data/live.json";
+/** Real CMC Community posts, backtested by scripts/backfill.mjs. When present it replaces the fictional seed. */
+export const BACKTEST_PATH = "data/backtest.json";
 
 function readRecords(path: string): CallRecord[] | null {
   try {
@@ -32,17 +38,17 @@ function readRecords(path: string): CallRecord[] | null {
 }
 
 /**
- * The working set (local.json, else the committed seed) plus every confirmed receipt in live.json, each id
- * once. Receipts live in their own committed file because local.json is gitignored and a deployment never
- * has it, and because seed.json is refused by the seed guard if it ever carries a receipt.
+ * Real backtested posts (else local.json, else the committed seed) plus every confirmed receipt in live.json,
+ * each id once. Receipts live in their own committed file because local.json is gitignored and a deployment
+ * never has it, and because the seed guard refuses a receipt in seed.json.
  */
 export function loadStore(): LoadedStore {
   let base: CallRecord[] = [];
   let source = "none";
-  for (const path of ["data/local.json", "data/seed.json"]) {
+  for (const path of [BACKTEST_PATH, "data/local.json", "data/seed.json"]) {
     const rows = readRecords(path);
     if (rows !== null && rows.length > 0) {
-      base = rows;
+      base = path === BACKTEST_PATH ? rows : rows.filter((r) => !(path !== "data/seed.json" && r.kind === "verified"));
       source = path;
       break;
     }
@@ -51,7 +57,12 @@ export function loadStore(): LoadedStore {
   const seen = new Set(base.map((r) => r.id));
   const records = [...base, ...live.filter((r) => !seen.has(r.id))];
   if (live.length > 0) source = `${source} + ${LIVE_PATH}`;
-  return { records, source, sample: records.some((r) => r.kind === "backtested") };
+  return {
+    records,
+    source,
+    sample: records.some((r) => r.id.startsWith("sample-")),
+    backtested: records.some((r) => r.kind === "backtested" && !r.id.startsWith("sample-")),
+  };
 }
 
 export function loadRecords(): CallRecord[] {
