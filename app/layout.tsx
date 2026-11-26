@@ -24,8 +24,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <div className="shell">
           <header className="masthead">
-            <p className="wordmark">Proof of Alpha</p>
-            <nav>
+            <Link href="/" className="wordmark"><span className="brand-mark" aria-hidden="true">α</span>Proof of Alpha</Link>
+            <nav aria-label="Primary">
               <Link href="/">Score a call</Link>
               <Link href="/leaderboard">Leaderboard</Link>
               <Link href="/method">Method</Link>

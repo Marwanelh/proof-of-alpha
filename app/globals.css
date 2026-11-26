@@ -14,7 +14,7 @@
   --paper-3: oklch(0.94 0.008 250);
   --ink: oklch(0.21 0.015 250);
   --ink-2: oklch(0.45 0.012 250);
-  --ink-3: oklch(0.62 0.01 250);
+  --ink-3: oklch(0.48 0.01 250);
   --rule: oklch(0.905 0.008 250);
   --rule-2: oklch(0.85 0.01 250);
   --focus: oklch(0.55 0.16 250);
@@ -64,7 +64,8 @@ body {
 
 /* Layout is fluid and flush left, per the shell it renders in. */
 .shell {
-  max-width: 1120px;
+  max-width: 1184px;
+  margin-inline: auto;
   padding: 0 24px 96px;
 }
 
@@ -82,11 +83,11 @@ a {
 
 .masthead {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 24px;
   padding: 28px 0 18px;
-  border-bottom: 1px solid var(--ink);
+  border-bottom: 1px solid var(--rule-2);
   margin-bottom: 40px;
 }
 
@@ -537,4 +538,96 @@ button.ghost {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  text-transform: none;
+  letter-spacing: -.035em;
+  font: 600 19px/1.1 var(--font-ui);
+}
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 6px;
+  font: italic 27px/1 Georgia, serif;
+}
+.score-intro { padding-block: clamp(12px, 3vw, 44px) 26px; margin-bottom: 26px; }
+.score-intro h1 {
+  font-size: clamp(42px, 5.8vw, 80px);
+  line-height: 1.05;
+  font-weight: 500;
+  letter-spacing: -.04em;
+}
+.score-intro .lede { max-width: 60ch; }
+.call-form { padding: clamp(20px, 3vw, 34px); background: white; }
+.call-form h2 { margin-bottom: 24px; }
+.call-form textarea { min-height: 106px; }
+.call-form .actions { margin-top: 20px; }
+
+/* Inset rim adapted from React Bits Star Border. */
+.call-form button { position: relative; isolation: isolate; overflow: hidden; }
+.call-form button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .24);
+  pointer-events: none;
+}
+.receipt-stage {
+  min-width: 0;
+  padding: clamp(18px, 3.4vw, 46px);
+  background: #202328;
+  border-radius: var(--radius-lg);
+  overflow-wrap: anywhere;
+}
+.receipt-stage > .hint { color: #d9dce0; }
+.receipt-preview {
+  padding: clamp(20px, 3vw, 34px);
+  background: #fffefa;
+  box-shadow: 0 8px 24px rgb(0 0 0 / .14);
+  position: relative;
+}
+.receipt-preview::after {
+  content: "";
+  position: absolute;
+  inset: 100% 0 auto;
+  height: 6px;
+  background: linear-gradient(135deg, #fffefa 25%, transparent 25%) 0 0 / 12px 12px,
+              linear-gradient(225deg, #fffefa 25%, transparent 25%) 0 0 / 12px 12px;
+}
+.receipt-preview header, .receipt-preview footer, .preview-fields div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.receipt-preview h2 { font: 500 clamp(22px, 2.5vw, 32px)/1.15 var(--font-ui); letter-spacing: -.04em; }
+.preview-fields { border-block: 1px dashed var(--rule-2); margin: 24px 0 18px; padding: 12px 0; }
+.preview-fields div { padding: 5px 0; font-size: 14px; }
+.preview-fields dd, .receipt-preview footer { margin: 0; font: 11px/1.5 var(--font-mono); color: var(--ink-2); }
+.barcode { width: 54px; height: 20px; background: repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 4px, var(--ink) 4px 5px, transparent 5px 9px); }
+@keyframes receipt-arrives {
+  from { opacity: .5; transform: translateY(-7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .receipt-stage > :is(.receipt, .refusal, .receipt-preview) { animation: receipt-arrives 320ms var(--ease) both; }
+  .call-form button:active { transform: translateY(1px); }
+}
+@media (max-width: 620px) {
+  .shell { padding-inline: 16px; }
+  .masthead { flex-wrap: wrap; gap: 10px 20px; padding-block: 16px; margin-bottom: 20px; }
+  .masthead nav { gap: 16px; }
+  .masthead nav a { display: inline-flex; align-items: center; min-height: 36px; }
+  .workbench { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .actions { flex-wrap: wrap; }
 }

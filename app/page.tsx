@@ -57,19 +57,14 @@ export default function ScorePage() {
 
   return (
     <main>
-      <section className="thesis">
-        <p className="label">The money shot</p>
-        <h1>Turn a KOL call into a receipt.</h1>
-        <p className="lede">
-          Paste what they said. We extract the claim, price the conviction against what the market already
-          expected, read BNB Chain and CoinMarketCap prices, and lock the whole thing before the outcome is
-          known. A call that cannot be proven wrong is refused, and we show you the refusal.
-        </p>
-        <p className="formula">Edge = outcome − probability</p>
+      <section className="thesis score-intro">
+        <h1>Turn a call into a receipt.</h1>
+        <p className="lede">Check a crypto prediction against market prices. Each receipt shows the original claim, its deadline, and where the evidence came from.</p>
       </section>
 
       <div className="workbench">
-        <form className="panel" onSubmit={submit}>
+        <form className="panel call-form" onSubmit={submit}>
+          <h2>Score a call</h2>
           <label className="field" htmlFor="kol">
             <span className="label">KOL handle</span>
             <input
@@ -86,8 +81,7 @@ export default function ScorePage() {
             <span className="label">The post</span>
             <textarea id="post" value={text} onChange={(e) => setText(e.target.value)} />
             <span className="hint">
-              Prefilled with a sample call. Replace it with a real post, or with something vague to watch the
-              refusal path.
+              Try the sample, or paste a prediction with a price target and deadline.
             </span>
           </label>
 
@@ -95,20 +89,21 @@ export default function ScorePage() {
             <button type="submit" disabled={busy}>
               {busy ? "Scoring…" : "Score this call"}
             </button>
-            <span className="hint" style={{ margin: 0 }}>
-              {busy ? "Extracting the claim, then reading three providers." : "Nothing is stored until a receipt exists."}
-            </span>
+
           </div>
         </form>
 
-        <div>
+        <section className="receipt-stage" aria-label="Scoring result" aria-live="polite" aria-busy={busy}>
           {ok === null && fail === null ? (
-            <div className="empty">
-              <h2>No receipt yet</h2>
-              <p className="hint">
-                The receipt appears here. Every value on it carries a stamp saying how it was obtained, and a
-                number we could not source is printed as absent rather than estimated.
-              </p>
+            <div className="receipt-preview">
+              <header><h2>Call receipt</h2><span className="label">{busy ? "Scoring" : "Preview"}</span></header>
+              <p className="hint">{busy ? "Checking the claim and reading the price sources…" : "Score the call to see its evidence."}</p>
+              <dl className="preview-fields">
+                {["Price target", "Market probability", "Atlas block"].map((field) => (
+                  <div key={field}><dt>{field}</dt><dd>Pending</dd></div>
+                ))}
+              </dl>
+              <footer><span className="barcode" aria-hidden="true" />Edge = outcome − probability</footer>
             </div>
           ) : null}
 
@@ -150,7 +145,7 @@ export default function ScorePage() {
               </p>
             </>
           ) : null}
-        </div>
+        </section>
       </div>
     </main>
   );
