@@ -72,6 +72,13 @@ Share`;
     assert.equal(c.author, "CryptoHenry");
   });
 
+  test("'5 minutes' is a timestamp, the way CMC writes recent posts", () => {
+    const now = new Date("2026-11-27T00:00:00Z");
+    const c = cleanPastedPost("Finora AI\n@FinoraAI\n· 5 minutes\n\n$BNB to $600 soon", now);
+    assert.equal(c.posted?.at, "2026-11-26T23:55:00.000Z");
+    assert.equal(c.posted?.dayOnly, false);
+  });
+
   test("poster, handle and timestamp above the post are read the same way", () => {
     const now = new Date("2026-11-27T00:00:00Z");
     const c = cleanPastedPost("BuySome_BTC\n@BuySome_BTC\n· 7h\n\n$BNB to $700 by end of month. Loading up.", now);

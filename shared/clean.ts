@@ -35,7 +35,7 @@ const UI_WORDS = new Set(
 );
 
 const RELATIVE_TIME =
-  /^(?:just now|now|\d+\s*(?:s|m|h|d|w|mo|y|sec|secs|min|mins|hr|hrs|hour|hours|day|days|week|weeks|month|months|year|years)(?:\s+ago)?|yesterday|today)$/i;
+  /^(?:just now|now|\d+\s*(?:s|m|h|d|w|mo|y|sec|secs|second|seconds|min|mins|minute|minutes|hr|hrs|hour|hours|day|days|week|weeks|month|months|year|years)(?:\s+ago)?|yesterday|today)$/i;
 const ABS_DATE =
   /^(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{1,2}(?:,\s*\d{4})?|\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*(?:\s+\d{4})?|\d{4}-\d{2}-\d{2})(?:\s*[·,]?\s*\d{1,2}:\d{2}(?:\s*[ap]m)?)?$/i;
 const COUNT = /^[+\-−]?\d[\d,.]*\s*[kmb]?(?:\s+(?:likes?|views?|comments?|replies|reposts?|shares?))?$/i;
@@ -53,7 +53,7 @@ export function postedFrom(raw: string, now: Date = new Date()): { at: string; d
   const s = raw.replace(/^[·•]\s*/, "").trim().toLowerCase();
   if (s === "" ) return null;
   if (s === "just now" || s === "now") return { at: now.toISOString(), dayOnly: false, raw };
-  const rel = s.match(/^(\d+)\s*(s|m|h|d|w|sec|secs|min|mins|hr|hrs|hour|hours|day|days|week|weeks)(?:\s+ago)?$/);
+  const rel = s.match(/^(\d+)\s*(s|m|h|d|w|sec|secs|second|seconds|min|mins|minute|minutes|hr|hrs|hour|hours|day|days|week|weeks)(?:\s+ago)?$/);
   if (rel) {
     const n = Number(rel[1]);
     const u = rel[2]!;

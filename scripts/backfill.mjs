@@ -68,10 +68,11 @@ const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "
  */
 function footerDate(raw) {
   const s = raw.trim().toLowerCase();
-  const rel = s.match(/^(\d+)\s*(m|h|d)$/);
+  const rel = s.match(/^(\d+)\s*(m|min|mins|minutes?|h|hrs?|hours?|d|days?)$/);
   if (rel) {
-    const ms = Number(rel[1]) * (rel[2] === "m" ? 60_000 : rel[2] === "h" ? 3_600_000 : 86_400_000);
-    return { at: new Date(Date.now() - ms), dayOnly: rel[2] === "d" };
+    const u = rel[2];
+    const ms = Number(rel[1]) * (u.startsWith("m") ? 60_000 : u.startsWith("h") ? 3_600_000 : 86_400_000);
+    return { at: new Date(Date.now() - ms), dayOnly: u.startsWith("d") };
   }
   const md = s.match(/^([a-z]{3})[a-z]*\.?\s+(\d{1,2})(?:,\s*(\d{4}))?$/);
   if (!md || MONTHS.indexOf(md[1]) < 0) return null;
