@@ -17,7 +17,22 @@ type CheckOk = { claim: Claim; atPost: PricePoint; now: PricePoint; atlasNow: At
 type CheckFail = { state: "refused" | "bad_request" | "provider" | "error"; message: string };
 
 const REPO_ISSUES = "https://github.com/Marwanelh/proof-of-alpha/issues/new";
-const EXAMPLE = "BNB to $1,200 before New Year. Accumulating every dip. — CryptoNova";
+/** A real CMC Community post, as copied (name, handle and timestamp included), so the first click shows a settled call. */
+const EXAMPLE_RAW = `$ETH is gearing up for a major breakout.
+
+Bulls are back in control. $1,844 is the key level to watch.
+
+Entry: $1,820
+TP1: $1,844
+TP2: $1,880
+TP3: $1,980
+SL: $1,710
+
+Break $1,844 and things could get explosive.
+Alek Carter
+@Alek_Carter
+· Nov 23`;
+const EXAMPLE = cleanPastedPost(EXAMPLE_RAW);
 const STEPS = ["Read the claim", "Price at posting", "Baseline probability", "Verdict"] as const;
 
 function authorFrom(text: string): string | null {
@@ -45,13 +60,12 @@ function Row({ label, children, note }: { label: string; children: ReactNode; no
 }
 
 export default function VerifyPage() {
-  const [text, setText] = useState(EXAMPLE);
-  const [authorId, setAuthorId] = useState("CryptoNova");
+  const [text, setText] = useState(EXAMPLE.text);
+  const [authorId, setAuthorId] = useState(EXAMPLE.author ?? "");
   const [authorTouched, setAuthorTouched] = useState(false);
   /** Read from the pasted post's own timestamp ("· Nov 23", "· 5h"); null means "just now". */
-  const [posted, setPosted] = useState<{ at: string; dayOnly: boolean; raw: string } | null>(null);
+  const [posted, setPosted] = useState<{ at: string; dayOnly: boolean; raw: string } | null>(EXAMPLE.posted);
   const [sourceUrl, setSourceUrl] = useState("");
-  const [useCournot, setUseCournot] = useState(false);
   const [busy, setBusy] = useState(false);
   const [tick, setTick] = useState(0);
   const [ok, setOk] = useState<CheckOk | null>(null);
@@ -109,7 +123,6 @@ export default function VerifyPage() {
         body: JSON.stringify({
           text,
           authorId,
-          useCournot,
           // The time comes from the post itself: the pasted timestamp, else one still in the text, else now.
           postedAt: posted?.at ?? cleanPastedPost(text).posted?.at,
         }),
@@ -149,8 +162,8 @@ export default function VerifyPage() {
         <h1>Verify a call</h1>
         <p>
           Paste a post from CMC Community, Telegram or anywhere else, with its timestamp. We read the claim,
-          price it then and now, and tell you whether it was right. Checks are not recorded: the leaderboard only
-          carries calls we have reviewed.
+          price it then and now, and tell you whether it was right against a volatility baseline. Checks are not
+          recorded: calls on the leaderboard are reviewed, priced by Cournot and locked on BNB Chain.
         </p>
       </section>
 
@@ -190,11 +203,6 @@ export default function VerifyPage() {
         <div className="actions">
           <button type="submit" disabled={busy}>{busy ? "Checking…" : "Analyze post"}</button>
           <button type="button" className="ghost" onClick={reset} disabled={busy}>Reset</button>
-          <label className="toggle" title="Off: a volatility proxy. On: Cournot's market probability, when it has priced this exact claim.">
-            <input type="checkbox" checked={useCournot} onChange={(e) => setUseCournot(e.target.checked)} />
-            <span className="toggle-track" aria-hidden="true"><span className="toggle-thumb" /></span>
-            <span>Cournot baseline {useCournot ? "on" : "off · proxy"}</span>
-          </label>
           <span className="hint">Step {busy ? tick + 1 : ok ? STEPS.length : 0} of {STEPS.length}</span>
         </div>
       </form>

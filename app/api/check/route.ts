@@ -42,7 +42,9 @@ export async function POST(request: Request) {
 
   try {
     const result = await checkCall(
-      { text: cleaned.text, authorId, postedAt, useCournot: body.useCournot === true },
+      // The public check always uses the proxy. Cournot is metered and reserved for reviewed calls that are
+      // written on chain (see /api/verify), so a visitor cannot spend it.
+      { text: cleaned.text, authorId, postedAt, useCournot: false },
       {
         extract: (i) => extractClaimSmart({ ...i, source: "paste" }),
         quoteNow: async (symbol) => {
