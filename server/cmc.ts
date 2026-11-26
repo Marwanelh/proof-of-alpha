@@ -29,6 +29,11 @@ export const CMC_ERRORS = {
   KEY_REQUIRED: 1005,
   /** The key is valid but the plan does not include this endpoint. Ask CMC, do not debug your code. */
   PLAN_EXCLUDES_ENDPOINT: 1006,
+  /**
+   * The ANONYMOUS keyless allowance for this IP is spent. Not a code defect and not fixable in code:
+   * the keyless base is a shared, unauthenticated pool. Use a key for anything that must keep working.
+   */
+  ANONYMOUS_LIMIT: 1022,
 } as const;
 
 export class CmcError extends Error {
@@ -259,6 +264,13 @@ async function request<T>(url: string, headers: Record<string, string>, fetchImp
       }
       if (code === CMC_ERRORS.INVALID_KEY) throw new CmcError(`${path}: the API key is invalid or revoked (error_code 1001)`, code);
       if (code === CMC_ERRORS.KEY_REQUIRED) throw new CmcError(`${path}: no API key reached the API (error_code 1005)`, code);
+      if (code === CMC_ERRORS.ANONYMOUS_LIMIT) {
+        throw new CmcError(
+          `${path}: the anonymous keyless allowance for this IP is spent (error_code 1022). ` +
+            "The keyless base is a shared unauthenticated pool — use CMC_API_KEY for anything that must keep working.",
+          code,
+        );
+      }
       throw new CmcError(`${path}: CMC error_code ${code}${message ? ` — ${message}` : ""}`, code);
     }
 

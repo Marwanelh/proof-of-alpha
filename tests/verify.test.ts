@@ -235,6 +235,15 @@ describe("cmc gateway", () => {
     );
   });
 
+  test("a 1022 says the anonymous pool is spent, not that the code is broken", async () => {
+    const fetchImpl = async () =>
+      okResponse({ status: { error_code: 1022, error_message: "You've reached the limit for anonymous access." } });
+    await assert.rejects(
+      () => keylessPrice("BNB", { fetchImpl, tries: 1 }),
+      (e) => e instanceof CmcError && e.errorCode === 1022 && /shared unauthenticated pool/.test(e.message),
+    );
+  });
+
   test("a classic-envelope response is reported as a shape error, not silently undefined", async () => {
     const fetchImpl = async () => okResponse({ data: [{ id: 1839, quote: { USD: { price: 552.38 } } }] });
     await assert.rejects(

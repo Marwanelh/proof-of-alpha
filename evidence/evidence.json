@@ -1,47 +1,52 @@
 {
-  "at": "2026-11-26T13:01:54.156Z",
+  "at": "2026-11-26T13:02:33.281Z",
   "results": [
     {
       "name": "cmc.keyless_price",
-      "ok": false,
-      "detail": "Error: /public-api/v2/simple/price: CMC error_code 1022 — You've reached the limit for anonymous access. Sign in to activate a free API plan or upgrade for higher limits.",
-      "at": "2026-11-26T13:01:53.860Z"
+      "ok": true,
+      "detail": "BNB=$551.7799755513895 source=keyless",
+      "extra": {
+        "priceUsd": "551.7799755513895",
+        "observedAt": "2026-11-26T13:02:33.012Z",
+        "source": "keyless"
+      },
+      "at": "2026-11-26T13:02:33.013Z"
     },
     {
       "name": "cmc.keyed_quotes",
       "ok": true,
-      "detail": "BNB=$551.7789691212778 CAKE=$1.5831347784465386 source=keyed credits=1",
+      "detail": "BNB=$551.7799755513895 CAKE=$1.5831052933340075 source=keyed credits=1",
       "extra": {
         "BNB": {
-          "priceUsd": "551.7789691212778",
-          "observedAt": "2026-11-26T13:01:54.155Z",
+          "priceUsd": "551.7799755513895",
+          "observedAt": "2026-11-26T13:02:33.280Z",
           "source": "keyed"
         },
         "CAKE": {
-          "priceUsd": "1.5831347784465386",
-          "observedAt": "2026-11-26T13:01:54.155Z",
+          "priceUsd": "1.5831052933340075",
+          "observedAt": "2026-11-26T13:02:33.280Z",
           "source": "keyed"
         }
       },
-      "at": "2026-11-26T13:01:54.155Z"
+      "at": "2026-11-26T13:02:33.280Z"
     },
     {
       "name": "atlas.multiFeed",
       "ok": false,
       "detail": "ATLAS_FEED_ADDRESS and ATLAS_FEED_ID (4 bytes) required — ask the Atlas team",
-      "at": "2026-11-26T13:01:54.155Z"
+      "at": "2026-11-26T13:02:33.280Z"
     },
     {
       "name": "cournot.live_call",
       "ok": false,
       "detail": "no captured call yet — the Cournot entry requires one real successful call",
-      "at": "2026-11-26T13:01:54.155Z"
+      "at": "2026-11-26T13:02:33.280Z"
     },
     {
       "name": "livingbrain.credentials",
       "ok": true,
       "detail": "key + subject present (prefix lbk_…); authenticated capture path to confirm at the booth",
-      "at": "2026-11-26T13:01:54.155Z"
+      "at": "2026-11-26T13:02:33.281Z"
     }
   ]
 }
