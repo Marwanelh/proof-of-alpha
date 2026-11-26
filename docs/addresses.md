@@ -7,7 +7,8 @@ Fill this in as you deploy. This is the file judges open first.
 | **Atlas SingleFeed — BNB/USD** | BSC mainnet (56) | **`0x9C0517F5b4c8657c7F18D68d2d79e2b3b1cd6438`** | **THE one we use.** `description()` = `bnb/usd`, `latestRoundData()` → $551.35 @18dp, block 135890573. Chainlink-compatible; no `fetch()` and no feedId |
 | Atlas MultiFeed | BSC mainnet (56) | `0xeace519ebb14fb8404fa6ddd23c3b34abade44aa` | Verified: `contractType()`=2, `decimals()`=18, `isOpenRead()`=true. Serves the tokenized-asset feeds |
 | Atlas feedId — #1164 (EWTB/USD) | BSC mainnet (56) | **`0x0000048c`** | Works today, keyless. Kept as the MultiFeed example — **not** the feed for a BNB call |
-| `CallRegistry` (Plan A, referenced) | BSC testnet (97) | _TBD_ | backend read Atlas on mainnet; receipt stores the price + mainnet block |
+| **`CallRegistry` (Plan A, referenced)** | BSC testnet (97) | **[`0x6860e45d869cb42d3552bd67aecc9d6fe4bf0360`](https://testnet.bscscan.com/address/0x6860e45d869cb42d3552bd67aecc9d6fe4bf0360)** | Deployed 2026-11-27, block 145032286, [deploy tx](https://testnet.bscscan.com/tx/0x8a1770c03320cd8343b9dbd7aaaaa318d18f6153860f3768dd34d7af6de6b201). Backend reads Atlas on mainnet; receipt stores the price + mainnet block |
+| Deployer / recorder wallet | BSC testnet (97) | [`0xC73256E295B7C64C38C99CD519f206FA36695717`](https://testnet.bscscan.com/address/0xC73256E295B7C64C38C99CD519f206FA36695717) | Dedicated wallet; key only in server env |
 | `CallRegistry` (Plan B, verified) | BSC mainnet (56) | _TBD_ | contract reads the feed itself; only if time allows |
 | CMC symbol watchlist | — | `BNB` | The content endpoint takes one symbol per call; our calls are BNB, so no further symbol is needed |
 
