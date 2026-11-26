@@ -154,4 +154,27 @@ call, which is what "usage verifiable via logs tied to your key" asks for. On th
 receipt reads `NOT ON CHAIN · DRAFT`. The on-chain write runs from the demo laptop. Reason in §4 above: a
 serverless function holding a signer is a public endpoint that spends gas.
 
+### The AI Gateway needs a card on file
+
+`LLM_MODEL` is `google/gemini-2.5-flash-lite` and `LLM_API_KEY` holds an AI Gateway key, so the deployed
+`ask` action is wired end to end and reports its own failure honestly:
+
+```
+source: composed | model request failed with HTTP 403
+"AI Gateway requires a valid credit card on file to service requests."
+```
+
+That is an account setting, not a code defect: **the key authenticates** — a wrong token returns `401`, not
+`403`, and that difference is how the correct key was identified without ever printing it. Until a card is
+added, the answer falls back to the composed path, and the panel says a model is configured but failed
+rather than pretending the composed text came from a model.
+
+Two traps worth keeping, both hit while setting this up:
+
+- The CLI prints **two** long tokens when creating a key: the 60-character **secret** and a 48-character key
+  **id**. Storing the id produces `401` on every request. Store the bare line, not the parenthesised one.
+- `vercel env rm NAME production` **does nothing** without `-y`; it does not error, so the old value stays
+  and the next deploy silently keeps using it.
+
+
 
