@@ -45,29 +45,43 @@ Full evidence with raw responses: [`docs/integration-findings.md`](docs/integrat
   and page backwards with `last_score`. Costs 0 credits, cache 5 minutes.
 - CMC also serves a **keyless** base on the same host: `https://pro-api.coinmarketcap.com/public-api/...`
   (prices, DEX, k-line). Its envelope puts quotes in an **array** (`data[0].quotes[0].price`).
-- Atlas free push feeds live on **BSC mainnet** (e.g. feed #1164, `Crypto`+`Free`), 60s heartbeat.
-  **The proxy is a MultiFeed**: `latestRoundData()` reverts; use `fetch(bytes4 feedId)` →
-  `PriceSnapshot{price, aggregatedTs, onchainTs}`. `isOpenRead()` was **true** on the feed we probed,
-  and `decimals()` is **18** (registry-wide). The catalogue number (#1164) is **not** the on-chain
-  `feedId` — `fetch()` reverts on it. Get the 4-byte id from the Atlas team before you wire the contract.
-  The registry reverts with `FeedNotOpenRead()` at deploy if the feed is whitelist-only.
+- Atlas publishes **two contract shapes**, both live and keyless on **BSC mainnet (56)**:
+  - **MultiFeed** — `0xeace519ebb14fb8404fa6ddd23c3b34abade44aa`, one contract serving many feeds, read with
+    `fetch(bytes4 feedId)` → `{price, aggregatedTs, onchainTs}`. **The catalogue number IS the on-chain id**
+    (#1164 → `0x0000048c`, verified live at `$85.94`), and `decimals()` is 18 registry-wide. The earlier
+    "catalogue ≠ feedId" claim was **wrong**: `fetch()` reverted because a `bytes4` argument must be
+    ABI-encoded as a **right-padded 32-byte word**, not four bare bytes.
+  - **SingleFeed** — one contract per pair per network, Chainlink-compatible: `latestRoundData()`, plus
+    `description()` naming the pair it prices. **BNB/USD on BSC mainnet is
+    `0x9C0517F5b4c8657c7F18D68d2d79e2b3b1cd6438`**; `description()` returns `bnb/usd`, and its price matches
+    CMC's BNB quote within cents at the same moment (verified live: `$551.35` vs `$551.42`). MultiFeed ids
+    in the catalogue do **not** cover the majors — the native BNB feed is a SingleFeed with its own address.
+- **A read is only a price *for an asset* if the feed says it prices that asset.** So every snapshot carries
+  the contract shape (`kind`) and the contract's own `description()`, and the receipt prints both. Reading a
+  feed that prices something else and labelling it carefully is not the same as reading the right feed.
 - **A testnet contract cannot read mainnet Atlas.** See "How we use Atlas" below.
 
 ## How we use Atlas
 
-We read Atlas prices **directly from the chain, with no key.** Atlas publishes prices to a MultiFeed
-contract on BSC mainnet; we call that contract over a free public RPC, the same way we read any other
-on-chain data — no sign-up, no key, no account, no billing. **This on its own satisfies the CMC × Atlas
-requirement** ("read an on-chain feed").
+We read Atlas prices **directly from the chain, with no key.** Atlas publishes to contracts on BSC mainnet;
+we call them over a free public RPC, the same way we read any other on-chain data — no sign-up, no key, no
+account, no billing. **This on its own satisfies the CMC × Atlas requirement** ("read an on-chain feed").
+
+Which contract we call depends on the asset, and the receipt says which one it used:
 
 | | |
 |---|---|
-| Contract | Atlas MultiFeed on BSC mainnet (56). One registry, one `feedId` per asset |
-| Read | `fetch(bytes4 feedId)` → `{uint80 price, uint48 aggregatedTs, uint48 onchainTs}`; `fetchBatch` for several assets in one call |
-| Precision | `decimals()` — one value for the whole registry (18 on the registry we probed) |
-| Access | `isOpenRead()` must be `true`. On a whitelist-only feed a contract read is blocked while a manual read looks fine |
-| Cost | Free. The paid tiers ($465+/mo) are for **creating** custom feeds, not for reading free ones |
-| Gotcha | The `feedId` is a 4-byte on-chain id, **not** the catalogue number in the UI, and it cannot be enumerated from the contract — see `docs/integration-findings.md` |
+| **BNB/USD (what our calls are about)** | SingleFeed `0x9C0517F5b4c8657c7F18D68d2d79e2b3b1cd6438` on BSC mainnet. `latestRoundData()` → `{roundId, answer, startedAt, updatedAt, answeredInRound}`, `description()` = `bnb/usd` |
+| **Tokenized-asset feeds** | MultiFeed `0xeace519ebb14fb8404fa6ddd23c3b34abade44aa`: `fetch(bytes4 feedId)` → `{price, aggregatedTs, onchainTs}`; `fetchBatch` for several in one call. Catalogue number = on-chain id |
+| Precision | `decimals()` — 18 on both contracts we read |
+| Access | Keyless and free. The paid tiers are for **creating** custom feeds, not for reading free ones |
+| Cost | Zero. No account, no key, no billing |
+| Gotcha | A `bytes4` argument must be ABI-padded to a 32-byte word, or `fetch()` reverts with an empty reason — which reads exactly like a wrong id. And a MultiFeed id cannot be enumerated from the contract, so the catalogue is the source |
+
+The address at the venue settled this: the native **BNB/USD** feed is a **SingleFeed**, not part of the
+MultiFeed registry. `server/atlas.ts` therefore has two paths — `feedId` set means MultiFeed, unset means
+SingleFeed — and both are pinned to a single block, so the receipt's "check it at this block" is a claim
+someone can actually check.
 
 ### A testnet contract cannot read mainnet Atlas
 
@@ -88,16 +102,18 @@ contract cannot read mainnet data**, and there is no cross-chain read without a 
 with `address(0)` only accepts referenced prices. Each refuses the other's call, so there is no way to
 silently present a referenced price as a verified one.
 
-### What we need before coding (both items are Atlas's to give)
+### Atlas access — resolved, and the last item was found rather than given
 
 - [x] **The MultiFeed contract address on BSC mainnet** — `0xeace519ebb14fb8404fa6ddd23c3b34abade44aa`
-      (verified live: `contractType()` = 2 MultiFeed, `decimals()` = 18, `isOpenRead()` = true). A MultiFeed
-      is one registry per chain holding many feeds, so this address serves every free BNB-Chain feed.
-- [x] **A working `feedId`** — catalogue `#1164` is feedId **`0x0000048c`**, and it reads live and keyless
-      (verified: `$85.94`, updated seconds before the read). **The earlier "you cannot get a feedId" claim was
-      wrong** — the calldata was malformed; see `docs/integration-findings.md` §2b.
-- [ ] **The `feedId` for the assets we actually track** (BNB, CAKE) — still worth asking Atlas at the venue.
-      The mechanism is proven; only the per-asset id is missing.
+      (`contractType()` = 2 MultiFeed, `decimals()` = 18, `isOpenRead()` = true).
+- [x] **A working `feedId`** — catalogue `#1164` is feedId **`0x0000048c`**, reading live and keyless.
+      **The earlier "you cannot get a feedId" claim was wrong** — the calldata was malformed.
+- [x] **The feed for the asset we actually track.** This was on the list to *ask Atlas for*. It did not need
+      asking: the public catalogue was searched by pair, and the native **BNB/USD** feed turned out to be a
+      **SingleFeed** at `0x9C0517F5b4c8657c7F18D68d2d79e2b3b1cd6438` on BSC mainnet rather than a MultiFeed
+      id. Verified live: `description()` = `bnb/usd`, `latestRoundData()` = `$551.35` at block 135890573
+      while CMC's keyed quote read `$551.42` in the same run. The receipt now shows a price for the asset the
+      call is about, with no disclaimer, because it is the right feed.
 
 Addresses: see [`docs/addresses.md`](docs/addresses.md) (fill in after deploy).
 

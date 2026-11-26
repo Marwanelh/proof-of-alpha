@@ -32,7 +32,7 @@ function verified(cournot: CournotResponse, direction: "bullish" | "bearish" = "
     cournot,
     probabilityReadAt: PAST,
     cmc: { priceUsd: "600", observedAt: PAST },
-    atlas: { feedAddress: "0x0000000000000000000000000000000000000001", feedId: "0x00000001", price: "1", decimals: 18, aggregatedTs: 1, onchainTs: 1, mainnetBlock: "1" },
+    atlas: { feedAddress: "0x0000000000000000000000000000000000000001", kind: "multifeed", description: "MultiFeed", feedId: "0x00000001", price: "1", decimals: 18, aggregatedTs: 1, onchainTs: 1, mainnetBlock: "1" },
     receipt: { chainId: 97, registry: "0x0000000000000000000000000000000000000002", txHash: "0xabc", callId: "1", atlasVerified: false },
     resolution: null,
   };

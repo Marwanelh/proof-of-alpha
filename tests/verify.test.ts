@@ -19,6 +19,8 @@ function makeDeps(overrides: Partial<VerifyDeps> = {}): VerifyDeps {
     readPrice: async () => ({ priceUsd: "552.38", observedAt: "2026-11-26T10:00:00Z", requestId: "req_cmc_1" }),
     readAtlas: async () => ({
       feedAddress: "0xeace519ebb14fb8404fa6ddd23c3b34abade44aa",
+      kind: "multifeed",
+      description: "MultiFeed",
       feedId: "0x0000048c",
       price: "552380000000000000000",
       decimals: 18,
@@ -164,18 +166,68 @@ describe("atlas gateway", () => {
 
   const snapshot = (price: bigint, ts: bigint) => ["0x", word(price), word(ts), word(ts)].join("");
 
+  /** description() returns an ABI-encoded string: offset word, length word, then the bytes. */
+  const descriptionReply = (text: string) => {
+    const bytes = [...new TextEncoder().encode(text)];
+    const hex = bytes.map((b) => b.toString(16).padStart(2, "0")).join("").padEnd(64, "0");
+    return "0x" + word(32n) + word(BigInt(bytes.length)) + hex;
+  };
+  const isDescription = (data: string) => data.startsWith("0x7284e416");
+  const isDecimals = (data: string) => data.startsWith("0x313ce567");
+
   test("sends bytes4 as a right-padded 32-byte word — the bare form reverts on the live contract", async () => {
-    const { calls, t } = transport((data) => (data.startsWith("0x313ce567") ? "0x" + word(18n) : snapshot(85_940_244_616_217_042_600n, 1_795_699_130n)));
+    const { calls, t } = transport((data) => (isDescription(data) ? descriptionReply("MultiFeed") : isDecimals(data) ? "0x" + word(18n) : snapshot(85_940_244_616_217_042_600n, 1_795_699_130n)));
     const snap = await readAtlas({ feedAddress: feed, feedId: "0x0000048c" }, t);
     assert.equal(snap.price, "85940244616217042600");
     assert.equal(snap.decimals, 18);
     assert.equal(snap.feedId, "0x0000048c");
+    // description() is read first now, so find the fetch call rather than assuming its position.
+    const fetchCall = calls.find((c) => c.data.startsWith("0x7ffc4b97"));
     // Regression, verified live: unpadded calldata reverts, so this exact string is load-bearing.
-    assert.equal(calls[0]?.data, "0x7ffc4b97" + "0000048c" + "0".repeat(56));
-  });
+    assert.equal(fetchCall?.data, "0x7ffc4b97" + "0000048c" + "0".repeat(56));
+    assert.equal(snap.kind, "multifeed");
+    assert.equal(snap.description, "MultiFeed", "the contract's own description is carried, not invented");
+    });
+
+    test("a SingleFeed is read with latestRoundData, and names the pair it prices", async () => {
+    // BNB/USD on BSC mainnet is a SingleFeed, not a MultiFeed. Verified live: description() returns
+    // "bnb/usd" and latestRoundData() answers a price matching CMC's BNB quote at the same moment.
+    const round = "0x" + word(1n) + word(551_204_312_249_279_700_000n) + word(1_795_710_090n) + word(1_795_710_090n) + word(1n);
+    const { calls, t } = transport((data) =>
+      isDescription(data) ? descriptionReply("bnb/usd") : isDecimals(data) ? "0x" + word(18n) : round,
+    );
+    const snap = await readAtlas({ feedAddress: feed }, t); // no feedId means SingleFeed
+    assert.equal(snap.kind, "singlefeed");
+    assert.equal(snap.description, "bnb/usd");
+    assert.equal(snap.feedId, undefined, "a SingleFeed prices one pair and has no bytes4 id");
+    assert.equal(snap.decimals, 18);
+    const price = Number(BigInt(snap.price)) / 10 ** snap.decimals;
+    assert.ok(Math.abs(price - 551.2043) < 0.001, `decoded price should look like BNB, got ${price}`);
+    assert.ok(calls.some((c) => c.data.startsWith("0xfeaf968c")), "reads latestRoundData()");
+    assert.ok(!calls.some((c) => c.data.startsWith("0x7ffc4b97")), "must not send fetch() to a SingleFeed");
+    });
+
+    test("a SingleFeed that never answered is refused rather than read as zero", async () => {
+    const round = "0x" + word(1n) + word(0n) + word(1n) + word(1n) + word(1n);
+    const { t } = transport((data) =>
+      isDescription(data) ? descriptionReply("bnb/usd") : isDecimals(data) ? "0x" + word(18n) : round,
+    );
+    await assert.rejects(
+      () => readAtlas({ feedAddress: feed }, t),
+      (e) => e instanceof AtlasError && /non-positive price/.test(e.message),
+    );
+    });
+
+    test("a revert on latestRoundData says this is not a SingleFeed, and points at feedId", async () => {
+    const { t } = transport((data) => (isDescription(data) ? descriptionReply("bnb/usd") : "0x"));
+    await assert.rejects(
+      () => readAtlas({ feedAddress: feed }, t),
+      (e) => e instanceof AtlasError && /not a Chainlink-compatible/.test(e.message) && /feedId/.test(e.message),
+    );
+    });
 
   test("every read is pinned to one block, and that block is what the snapshot records", async () => {
-    const { calls, t } = transport((data) => (data.startsWith("0x313ce567") ? "0x" + word(18n) : snapshot(1n, 1n)));
+    const { calls, t } = transport((data) => (isDescription(data) ? descriptionReply("MultiFeed") : isDecimals(data) ? "0x" + word(18n) : snapshot(1n, 1n)));
     const snap = await readAtlas({ feedAddress: feed, feedId: "0x0000048c" }, t);
     const tags = new Set(calls.map((c) => c.blockTag));
     assert.equal(tags.size, 1, "all reads must share one block tag, or mainnetBlock is not the block the price came from");
@@ -192,7 +244,7 @@ describe("atlas gateway", () => {
   });
 
   test("a known-but-never-updated feed returns zeros and is reported differently", async () => {
-    const { t } = transport((data) => (data.startsWith("0x313ce567") ? "0x" + word(18n) : "0x" + "0".repeat(192)));
+    const { t } = transport((data) => (isDescription(data) ? descriptionReply("MultiFeed") : isDecimals(data) ? "0x" + word(18n) : "0x" + "0".repeat(192)));
     await assert.rejects(
       () => readAtlas({ feedAddress: feed, feedId: "0x00001164" }, t),
       (e) => e instanceof AtlasError && /never been updated/.test(e.message),
@@ -319,6 +371,8 @@ describe("probability timing — the order of the steps", () => {
     readPrice: async () => ({ priceUsd: "552.00", observedAt: new Date().toISOString(), source: "keyless" }),
     readAtlas: async () => ({
       feedAddress: "0xeace519ebb14fb8404fa6ddd23c3b34abade44aa",
+      kind: "multifeed",
+      description: "MultiFeed",
       feedId: "0x0000048c",
       price: "85940244616217042600",
       decimals: 18,

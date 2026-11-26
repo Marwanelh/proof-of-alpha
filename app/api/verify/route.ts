@@ -21,14 +21,17 @@ function cournotMode(): CournotMode {
   return raw === "live" || raw === "recorded-live" ? raw : "fixture";
 }
 
-function atlasConfig(): { feedAddress: string; feedId: string } | null {
+/**
+ * Atlas is configured by address. A `feedId` selects the **MultiFeed** (`fetch(bytes4)`); leaving it unset
+ * selects the **Chainlink-compatible SingleFeed** at that address (`latestRoundData()`), which is how the
+ * native BNB/USD feed on BSC mainnet is read. The old code defaulted to the EWTB MultiFeed when unset —
+ * a silent default that could label a different asset's price as this call's. It now refuses instead.
+ */
+function atlasConfig(): { feedAddress: string; feedId?: string } | null {
   const feedAddress = process.env["ATLAS_FEED_ADDRESS"];
-  const feedId = process.env["ATLAS_FEED_ID"];
-  if (!feedAddress && !feedId) {
-    return { feedAddress: "0xeace519ebb14fb8404fa6ddd23c3b34abade44aa", feedId: "0x0000048c" };
-  }
-  if (!feedAddress || !feedId) return null;
-  return { feedAddress, feedId };
+  const feedId = process.env["ATLAS_FEED_ID"]?.trim();
+  if (!feedAddress || feedAddress.trim() === "") return null;
+  return feedId ? { feedAddress, feedId } : { feedAddress };
 }
 
 /** Keyed when a key is present, keyless otherwise. The receipt records which one produced the price. */
@@ -65,7 +68,7 @@ export async function POST(request: Request) {
   const atlas = atlasConfig();
   if (atlas === null) {
     return NextResponse.json(
-      { state: "provider", provider: "atlas", message: "ATLAS_FEED_ADDRESS and ATLAS_FEED_ID are not configured." },
+      { state: "provider", provider: "atlas", message: "ATLAS_FEED_ADDRESS is not configured." },
       { status: 503 },
     );
   }

@@ -1,73 +1,69 @@
 {
-  "at": "2026-11-26T14:08:28.359Z",
+  "at": "2026-11-26T17:58:09.597Z",
   "results": [
     {
       "name": "cmc.keyless_price",
-      "ok": true,
-      "detail": "BNB=$552.5283274591221 source=keyless",
-      "extra": {
-        "priceUsd": "552.5283274591221",
-        "observedAt": "2026-11-26T14:08:03.298Z",
-        "source": "keyless"
-      },
-      "at": "2026-11-26T14:08:03.300Z"
+      "ok": false,
+      "detail": "anonymous pool spent for this IP — need the key",
+      "at": "2026-11-26T17:57:47.638Z"
     },
     {
       "name": "cmc.keyed_quotes",
       "ok": true,
-      "detail": "BNB=$552.5283274591221 CAKE=$1.5852285365850423 source=keyed credits=1",
+      "detail": "BNB=$551.4197008574465 CAKE=$1.5659488059950915 source=keyed credits=1",
       "extra": {
         "BNB": {
-          "priceUsd": "552.5283274591221",
-          "observedAt": "2026-11-26T14:08:03.574Z",
+          "priceUsd": "551.4197008574465",
+          "observedAt": "2026-11-26T17:57:48.271Z",
           "source": "keyed"
         },
         "CAKE": {
-          "priceUsd": "1.5852285365850423",
-          "observedAt": "2026-11-26T14:08:03.574Z",
+          "priceUsd": "1.5659488059950915",
+          "observedAt": "2026-11-26T17:57:48.271Z",
           "source": "keyed"
         }
       },
-      "at": "2026-11-26T14:08:03.574Z"
+      "at": "2026-11-26T17:57:48.272Z"
     },
     {
-      "name": "atlas.multiFeed",
+      "name": "atlas.read",
       "ok": true,
-      "detail": "price=85935285729288212312 @18dp age=13s block=135859956",
+      "detail": "singlefeed \"bnb/usd\" price=551351682410872748630 @18dp age=20s block=135890573",
       "extra": {
-        "feedAddress": "0xeace519ebb14fb8404fa6ddd23c3b34abade44aa",
-        "feedId": "0x0000048c",
-        "price": "85935285729288212312",
+        "feedAddress": "0x9C0517F5b4c8657c7F18D68d2d79e2b3b1cd6438",
+        "kind": "singlefeed",
+        "description": "bnb/usd",
+        "price": "551351682410872748630",
         "decimals": 18,
-        "aggregatedTs": 1795702070,
-        "onchainTs": 1795702071,
-        "mainnetBlock": "135859956"
+        "aggregatedTs": 1795715850,
+        "onchainTs": 1795715850,
+        "mainnetBlock": "135890573"
       },
-      "at": "2026-11-26T14:08:04.237Z"
+      "at": "2026-11-26T17:57:49.653Z"
     },
     {
       "name": "cournot.live_call",
       "ok": false,
       "detail": "no captured call yet — the Cournot entry requires one real successful call",
-      "at": "2026-11-26T14:08:04.238Z"
+      "at": "2026-11-26T17:57:49.654Z"
     },
     {
       "name": "cmc.content_posts",
       "ok": false,
       "detail": "error 1006 — the key is VALID, the plan excludes Content. Not a code defect: upgrade, or paste posts.",
-      "at": "2026-11-26T14:08:04.630Z"
+      "at": "2026-11-26T17:57:49.925Z"
     },
     {
       "name": "livingbrain.capture",
       "ok": true,
-      "detail": "source 598ad965-ab25-4cac-8ded-55fcd3480111 status=completed after 21.9s",
+      "detail": "source 9b5828f0-f691-44dc-9a1e-bfa542e9c318 status=completed after 19.1s",
       "extra": {
-        "sourceId": "598ad965-ab25-4cac-8ded-55fcd3480111",
+        "sourceId": "9b5828f0-f691-44dc-9a1e-bfa542e9c318",
         "status": "completed",
-        "waitedMs": 21894,
+        "waitedMs": 19050,
         "timedOut": false
       },
-      "at": "2026-11-26T14:08:28.358Z"
+      "at": "2026-11-26T17:58:09.596Z"
     }
   ]
 }

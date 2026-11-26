@@ -165,9 +165,12 @@ export function Receipt({ data }: { data: ReceiptData }) {
           <Row label="Atlas feed read" stamp={<AtlasStamp atlas={atlas} verified={data.receipt?.atlasVerified === true} />}>
             <span className="value">${scaled(atlas.price, atlas.decimals)}</span>
             <span className="hint">
-              {" "}feed {atlas.feedId} · updated {ageSeconds}s before this page rendered. This is an Atlas feed we
-              read at a known block, not the price of {claim.asset}: the per-asset feed id for {claim.asset} is
-              still pending from Atlas, and we will not show this number as though it were.
+              {" "}
+              Atlas {atlas.kind === "singlefeed" ? "single feed" : "multi feed"} &ldquo;{atlas.description}&rdquo;,
+              read at mainnet block {atlas.mainnetBlock}, updated {ageSeconds}s before this page rendered.{" "}
+              {atlas.description.toLowerCase().includes(claim.asset.toLowerCase())
+                ? `This feed prices ${claim.asset}, the asset this call is about.`
+                : `Note this feed prices ${atlas.description}, not ${claim.asset}.`}
             </span>
           </Row>
         )}

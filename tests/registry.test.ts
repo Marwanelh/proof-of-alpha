@@ -39,6 +39,8 @@ const cmc: CmcSnapshot = { priceUsd: "552.38", observedAt: "2026-11-26T10:00:00Z
 
 const atlas: AtlasSnapshot = {
   feedAddress: "0xeace519ebb14fb8404fa6ddd23c3b34abade44aa",
+  kind: "multifeed",
+  description: "MultiFeed",
   feedId: "0x0000048c",
   price: "552380000000000000000",
   decimals: 18,

@@ -26,7 +26,7 @@ const text = args.filter((a) => !a.startsWith("--")).join(" ") || "BNB is going 
 const mode = process.env["COURNOT_MODE"] ?? "fixture";
 
 const feedAddress = process.env["ATLAS_FEED_ADDRESS"];
-const feedId = process.env["ATLAS_FEED_ID"];
+const feedId = process.env["ATLAS_FEED_ID"]?.trim();
 
 console.log(`\nPost: "${text}"\nCournot mode: ${mode}${wantChain ? " · writing a receipt" : " · no chain"}\n`);
 
@@ -35,13 +35,13 @@ const deps = {
   readCournot: (claim, m) => readCournot(m),
   readPrice: (symbol) => snapshotPrice(symbol),
   readAtlas: async () => {
-    if (!feedAddress || !feedId) {
+    if (!feedAddress || feedAddress.trim() === "") {
       throw new Error(
-        "ATLAS_FEED_ADDRESS / ATLAS_FEED_ID are not set. Only the Atlas team can supply the 4-byte feedId; " +
-          "until then this step must fail rather than invent a price.",
+        "ATLAS_FEED_ADDRESS is not set. With no ATLAS_FEED_ID this reads the Chainlink-compatible SingleFeed; " +
+          "until it is configured this step must fail rather than invent a price.",
       );
     }
-    return readAtlas({ feedAddress, feedId });
+    return readAtlas(feedId ? { feedAddress, feedId } : { feedAddress });
   },
   record: async (call) => {
     if (!wantChain) throw new Error("chain disabled");
@@ -60,7 +60,10 @@ try {
 } catch (e) {
   console.error(`FAILED: ${e.message}\n`);
   if (/ATLAS_FEED/.test(String(e.message))) {
-    console.error("Next step: get one BNB feedId from the Atlas team, then set ATLAS_FEED_ADDRESS and ATLAS_FEED_ID.");
+    console.error(
+      "Next step: set ATLAS_FEED_ADDRESS. With no ATLAS_FEED_ID the reader uses latestRoundData() — BNB/USD on " +
+        "BSC mainnet is 0x9C0517F5b4c8657c7F18D68d2d79e2b3b1cd6438, verified live.",
+    );
   }
   if (mode === "fixture") {
     console.error(`Note: fixture mode reads ${FIXTURE_PATH}. Recorded mode reads ${RECORDED_PATH}.`);

@@ -26,7 +26,7 @@ const cournotCall = (id: string, authorId: string, outcome: 0 | 1): Verification
   cournot: { provenance: "recorded-live", requestId: "r", probability: 0.2, evaluatedClaim: "x", evidence: "y" },
   probabilityReadAt: "2026-11-20T09:00:30Z",
   cmc: { priceUsd: "500", observedAt: "2026-11-20T09:00:00Z" },
-  atlas: { feedAddress: "0x0000000000000000000000000000000000000001", feedId: "0x00000001", price: "1", decimals: 0, aggregatedTs: 1, onchainTs: 1, mainnetBlock: "1" },
+  atlas: { feedAddress: "0x0000000000000000000000000000000000000001", kind: "multifeed", description: "MultiFeed", feedId: "0x00000001", price: "1", decimals: 0, aggregatedTs: 1, onchainTs: 1, mainnetBlock: "1" },
   receipt: { chainId: 97, registry: "0x0000000000000000000000000000000000000002", txHash: "0xabc", callId: "0", atlasVerified: false },
   resolution: { result: { outcome, resolvedAt: "2026-12-01T00:00:00Z", cmcPriceUsd: "610" }, score: cournotEdge(outcome, 0.2) },
 });

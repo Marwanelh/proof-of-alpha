@@ -41,8 +41,13 @@ export type CmcSnapshot = {
 
 export type AtlasSnapshot = {
   feedAddress: `0x${string}`;
-  feedId: `0x${string}`;
-  price: string; // raw uint80 as a decimal string
+  /** Which Atlas contract shape was read. Both are Atlas; they are read differently. */
+  kind: "multifeed" | "singlefeed";
+  /** MultiFeed only: the bytes4 id passed to fetch(). A SingleFeed prices one pair and has no id. */
+  feedId?: `0x${string}`;
+  /** The contract's own description(), verbatim — what the feed says it prices. */
+  description: string;
+  price: string; // raw uint as a decimal string
   decimals: number;
   aggregatedTs: number;
   onchainTs: number;

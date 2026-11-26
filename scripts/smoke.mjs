@@ -51,23 +51,25 @@ if (!process.env.CMC_API_KEY) {
   }
 }
 
-/* 3. Atlas MultiFeed — keyless public RPC, through the same gateway the app uses. */
+/* 3. Atlas — keyless public RPC, through the same gateway the app uses. The address decides the shape:
+      with a feedId it reads the MultiFeed via fetch(bytes4); without one it reads the Chainlink-compatible
+      SingleFeed via latestRoundData(). BNB/USD on BSC mainnet is a SingleFeed, so no feedId is needed. */
 const feed = process.env.ATLAS_FEED_ADDRESS;
-const feedId = process.env.ATLAS_FEED_ID;
-if (!feed || !feedId) {
-  record("atlas.multiFeed", false, "ATLAS_FEED_ADDRESS and ATLAS_FEED_ID (4 bytes) required");
+const feedId = process.env.ATLAS_FEED_ID?.trim();
+if (!feed) {
+  record("atlas.read", false, "ATLAS_FEED_ADDRESS is required");
 } else {
   try {
-    const snap = await readAtlas({ feedAddress: feed, feedId });
+    const snap = await readAtlas(feedId ? { feedAddress: feed, feedId } : { feedAddress: feed });
     const age = Math.round(Date.now() / 1000 - snap.onchainTs);
     record(
-      "atlas.multiFeed",
+      "atlas.read",
       true,
-      `price=${snap.price} @${snap.decimals}dp age=${Math.max(0, age)}s block=${snap.mainnetBlock}`,
+      `${snap.kind} "${snap.description}" price=${snap.price} @${snap.decimals}dp age=${Math.max(0, age)}s block=${snap.mainnetBlock}`,
       snap,
     );
   } catch (e) {
-    record("atlas.multiFeed", false, e instanceof AtlasError ? e.message : String(e));
+    record("atlas.read", false, e instanceof AtlasError ? e.message : String(e));
   }
 }
 

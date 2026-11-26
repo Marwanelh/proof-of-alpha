@@ -155,7 +155,7 @@ describe("aggregation", () => {
     cournot: { provenance: "recorded-live", probability: 0.2, evaluatedClaim: "BNB > 600", evidence: "src", requestId: "req_1" },
     probabilityReadAt: "2026-11-20T09:00:30Z",
     cmc: { priceUsd: "500", observedAt: "2026-11-20T09:00:00Z" },
-    atlas: { feedAddress: "0x0000000000000000000000000000000000000001", feedId: "0x00000001", price: "50000000000", decimals: 8, aggregatedTs: 1, onchainTs: 1, mainnetBlock: "1" },
+    atlas: { feedAddress: "0x0000000000000000000000000000000000000001", kind: "multifeed", description: "MultiFeed", feedId: "0x00000001", price: "50000000000", decimals: 8, aggregatedTs: 1, onchainTs: 1, mainnetBlock: "1" },
     receipt: { chainId: 97, registry: "0x0000000000000000000000000000000000000002", txHash: "0xabc", callId: "0", atlasVerified: false },
     resolution: { result: { outcome: 1, resolvedAt: "2026-12-01T00:00:00Z", cmcPriceUsd: "610" }, score: cournotEdge(1, 0.2) },
   };
