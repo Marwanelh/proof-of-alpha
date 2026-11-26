@@ -15,8 +15,10 @@ const WATCHLIST = ["BNB", "CAKE", "BTC", "ETH", "SOL", "XRP", "DOGE", "ADA", "LI
 /** The documented default horizon. Applied only when the author gave no date, and flagged. */
 const DEFAULT_HORIZON_DAYS = 7;
 
-const BULLISH = /\b(long|bullish|pump|moon|send it|break(?:s|ing)? out|rally|ath|buy|undervalued|accumulate|above)\b/i;
-const BEARISH = /\b(short|bearish|dump|crash|rekt|sell|overvalued|below|down|top(?:ped)? is in)\b/i;
+const BULLISH =
+  /\b(long(?:ing)?|bullish|pump(?:ing)?|moon(?:ing)?|send it|break(?:s|ing)? out|rally|ath|buy(?:ing)?|bid(?:ding)?|undervalued|accumulat(?:e|ing|ion)|load(?:ing|ed)?(?: up)?|above|higher|rip(?:ping)?)\b/i;
+const BEARISH =
+  /\b(short(?:ing)?|bearish|dump(?:ing)?|crash(?:ing)?|rekt|sell(?:ing)?|overvalued|below|down|lower|top(?:ped)? is in)\b/i;
 
 /**
  * A forward-looking marker. Required when the author gave no deadline: without one, a post that merely
@@ -104,7 +106,9 @@ function findTarget(text: string): string | null {
   // Comparison words win, because a bare "at $500" is usually a past entry price rather than the claim:
   // "I bought BNB at $500, now above $600" claims $600, and taking the leftmost match would score $500.
   const comparison = text.match(new RegExp(`\\b(?:above|below|over|under)\\s*\\$\\s?${num}`, "i"));
-  const directional = text.match(new RegExp(`\\b(?:to|at|target(?:ing)?|hits?|reaches?)\\s*\\$\\s?${num}`, "i"));
+  const directional = text.match(
+    new RegExp(`\\b(?:to|at|target(?:ing)?|hits?|reach(?:es)?|break(?:s|ing)?|past|through|flips?|tops?)\\s*\\$\\s?${num}`, "i"),
+  );
   const raw = comparison?.[1] ?? directional?.[1];
   if (raw === undefined) return null;
   const normalised = raw.replace(/,/g, "");
@@ -123,6 +127,45 @@ function findDirection(text: string, targetUsd: string): Claim["direction"] | nu
   if (bull && bear) return null; // contradictory post: not a claim we can score
   if (bull) return "bullish";
   if (bear) return "bearish";
+  return null;
+}
+
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
+/** 23:59 UTC on the given day. */
+function endOfDay(year: number, month: number, day: number): Date {
+  return new Date(Date.UTC(year, month, day, 23, 59, 0));
+}
+
+/**
+ * Named deadlines a KOL actually writes. Each maps to one unambiguous calendar day, so the deadline on the
+ * receipt is the one the author named, not a default. Anything vaguer still falls through to the flagged
+ * default horizon (or a refusal), exactly as before.
+ */
+function namedDeadline(text: string, postedAt: Date): Date | null {
+  const y = postedAt.getUTCFullYear();
+  const m = postedAt.getUTCMonth();
+  if (/\b(?:new\s*year(?:'s)?(?:\s+eve)?|end\s+of\s+(?:the\s+)?year|year[-\s]end|eoy)\b/i.test(text)) {
+    return endOfDay(y, 11, 31);
+  }
+  if (/\b(?:christmas|xmas)\b/i.test(text)) {
+    const d = endOfDay(y, 11, 25);
+    return d.getTime() > postedAt.getTime() ? d : endOfDay(y + 1, 11, 25);
+  }
+  if (/\b(?:end\s+of\s+(?:the\s+|this\s+)?month|month[-\s]end|eom)\b/i.test(text)) {
+    return endOfDay(y, m + 1, 0);
+  }
+  if (/\b(?:end\s+of\s+(?:the\s+|this\s+)?week|this\s+week|eow)\b/i.test(text)) {
+    const daysToSunday = (7 - postedAt.getUTCDay()) % 7;
+    return endOfDay(y, m, postedAt.getUTCDate() + daysToSunday);
+  }
+  // "by December", "before March": the end of that month, with no day given.
+  const monthOnly = text.match(/\b(?:by|before|until|in|end of)\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b(?!\.?\s+\d)/i);
+  if (monthOnly) {
+    const month = MONTHS.indexOf(monthOnly[1]!.toLowerCase().slice(0, 3));
+    const year = y + (month < m ? 1 : 0);
+    return endOfDay(year, month + 1, 0);
+  }
   return null;
 }
 
@@ -159,7 +202,7 @@ function findDeadline(text: string, postedAt: Date): Date | null {
     return Number.isNaN(d.getTime()) ? null : d;
   }
 
-  return null;
+  return namedDeadline(text, postedAt);
 }
 
 function escapeRe(s: string): string {

@@ -115,6 +115,25 @@ describe("Edge", () => {
     assert.equal(await extractClaim({ ...base, text: "BNB above $600 by February 31. Sending it." }), null);
   });
 
+  test("reads named deadlines a KOL actually writes, without defaulting the horizon", async () => {
+    const ny = await extractClaim({ ...base, text: "BNB to $1,200 before New Year. Accumulating every dip." });
+    assert.ok(ny);
+    assert.equal(ny.direction, "bullish");
+    assert.equal(ny.targetUsd, "1200");
+    assert.equal(ny.deadline, "2026-12-31T23:59:00.000Z");
+    assert.equal(ny.horizonDefaulted, false);
+
+    const eom = await extractClaim({ ...base, text: "CAKE breaks $4 before end of month. Loading here." });
+    assert.ok(eom);
+    assert.equal(eom.asset, "CAKE");
+    assert.equal(eom.deadline, "2026-11-30T23:59:00.000Z");
+
+    const xmas = await extractClaim({ ...base, text: "BNB below $450 before Christmas, selling here" });
+    assert.ok(xmas);
+    assert.equal(xmas.direction, "bearish");
+    assert.equal(xmas.deadline, "2026-12-25T23:59:00.000Z");
+  });
+
   test("still accepts a forward-looking call with a defaulted horizon", async () => {
     const claim = await extractClaim({ ...base, text: "BNB above $600 is coming" });
     assert.ok(claim, "a forward-looking post must still extract");
