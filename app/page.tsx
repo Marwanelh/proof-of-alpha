@@ -22,9 +22,7 @@ const EXAMPLE = "BNB to $1,200 before New Year. Accumulating every dip. — Cryp
 
 const REQUIREMENTS = [
   "one asset ticker (BNB, CAKE, BTC, ETH…)",
-  "a direction (bullish or bearish)",
-  "a price target in dollars",
-  "a deadline that is still in the future",
+  "a stance on its price: bullish or bearish (a target and a date make it sharper, but are optional)",
 ];
 
 const STEPS = ["Extract the claim", "Market probability", "CMC + Atlas prices", "Record on BNB Chain"] as const;
@@ -188,7 +186,7 @@ export default function VerifyPage() {
             <p>
               {fail.state === "bad_request"
                 ? fail.message
-                : "A call with no target or no deadline can never be scored, so scoring it would invent a claim the author did not make."}
+                : "This post takes no position on where a tracked coin is going. News, announcements and posts about stocks are not calls, and scoring one would invent a prediction the author never made."}
             </p>
             <p className="hint" style={{ marginTop: 12 }}>A scorable call needs:</p>
             <ul>

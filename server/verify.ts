@@ -67,7 +67,7 @@ export async function verify(
   let claim = await deps.extract(input);
   if (claim === null) {
     throw new VerifyError(
-      "no scorable claim in this post: it needs one asset, a direction, a price target and a future deadline",
+      "no call in this post: it needs one tracked coin and a stance on its price (bullish or bearish). News, announcements and posts about stocks are not calls",
     );
   }
 
