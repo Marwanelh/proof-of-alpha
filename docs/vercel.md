@@ -82,3 +82,22 @@ grep -rl "data/seed.json" .next --include="*.nft.json" | wc -l   # expect >= 4, 
 
 If that prints 0, the deployed leaderboard renders empty while working perfectly on localhost. Verified
 before the first deploy: 8 manifests, covering `/leaderboard`, `/kol/[id]`, `/api/memory` and `/api/verify`.
+
+### A 200 does not tell you *which* server answered
+
+Recorded here because it actually happened. A `next start` was reported as verified because every route
+returned 200 — but the process had failed to bind (`EADDRINUSE`) and an older dev server, whose child had
+survived a `taskkill`, was answering instead. The curls were green and proved nothing about the production
+build.
+
+To be sure the responder is your build:
+
+```bash
+netstat -ano | grep LISTENING | grep ":3000"     # is the owner the process you just started?
+curl -s http://localhost:3000/ | grep -c -E "react-refresh|__next_devtools|webpack-hmr"   # expect 0
+grep -i eaddrinuse <the server's log>            # a silent failure to bind is the tell
+```
+
+A dev server and a production server are indistinguishable from a status code. Kill the listener and restart
+if there is any doubt, and check the log for a bind failure rather than trusting the response.
+
