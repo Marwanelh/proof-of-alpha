@@ -28,7 +28,8 @@
     "test:memory": "node --experimental-strip-types --test tests/memory.test.ts",
     "test:resolve": "node --experimental-strip-types --test tests/resolve.test.ts",
     "resolve": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/resolve-due.mjs",
-    "resolve:write": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/resolve-due.mjs --write"
+    "resolve:write": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/resolve-due.mjs --write",
+    "cournot:record": "node scripts/cournot-record.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.20.7",
