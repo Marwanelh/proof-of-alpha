@@ -72,12 +72,24 @@ export async function verify(
   }
 
   const cournot = deps.readCournot(claim, options.cournotMode);
+  // Timestamp the moment the number was obtained, immediately after obtaining it.
+  const probabilityReadAt = new Date().toISOString();
   const cmc = await deps.readPrice(claim.asset);
   const atlas = await deps.readAtlas();
 
   if (!options.record) {
     return {
-      record: { kind: "verified", id: `draft-${claim.asset}`, claim, cournot, cmc, atlas, receipt: null, resolution: null },
+      record: {
+        kind: "verified",
+        id: `draft-${claim.asset}`,
+        claim,
+        cournot,
+        probabilityReadAt,
+        cmc,
+        atlas,
+        receipt: null,
+        resolution: null,
+      },
       evidenceEligible: isSponsorEvidence(cournot),
     };
   }
@@ -96,6 +108,7 @@ export async function verify(
       id: `call-${receipt.callId}`,
       claim,
       cournot,
+      probabilityReadAt,
       cmc,
       atlas,
       receipt,

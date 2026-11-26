@@ -11,6 +11,29 @@ import type {
 import { isSponsorEvidence } from "../shared/types.ts";
 import { AtlasStamp, CmcStamp, CournotStamp, ReceiptStamp, Stamp } from "./Stamp.tsx";
 
+/**
+ * How long after the post the probability was read.
+ *
+ * Edge is defined against the probability the market held AT POSTING. A number read an hour later is a
+ * different quantity, and calling it "P at posting" would be a false statement on the receipt's most
+ * load-bearing number. Five minutes absorbs clock skew and the time it takes to paste a post.
+ */
+const POSTING_WINDOW_MS = 5 * 60_000;
+
+function probabilityLag(claim: Claim, readAt: string | undefined): { late: boolean; text: string } {
+  if (readAt === undefined) return { late: false, text: "" };
+  const ms = new Date(readAt).getTime() - new Date(claim.postedAt).getTime();
+  if (!Number.isFinite(ms) || ms <= POSTING_WINDOW_MS) return { late: false, text: "" };
+  const minutes = Math.round(ms / 60_000);
+  const text =
+    minutes < 120
+      ? `${minutes} min after posting`
+      : minutes < 2880
+        ? `${Math.round(minutes / 60)} h after posting`
+        : `${Math.round(minutes / 1440)} d after posting`;
+  return { late: true, text };
+}
+
 /** Scale a raw integer price by its declared decimals without going through a float. */
 function scaled(raw: string, decimals: number): string {
   const negative = raw.startsWith("-");
@@ -47,6 +70,8 @@ type ReceiptData = {
   cmc: CmcSnapshot;
   /** Null for backtested samples: no Atlas read was made for them, and pretending otherwise is the lie. */
   atlas: AtlasSnapshot | null;
+  /** When the market probability was read. Absent on samples, which carry a labelled proxy instead. */
+  probabilityReadAt?: string | undefined;
   receipt: OnChainReceipt | null;
   sample?: boolean;
   proxyLabel?: string;
@@ -59,6 +84,7 @@ type ReceiptData = {
 export function Receipt({ data }: { data: ReceiptData }) {
   const { claim, atlas } = data;
   const ageSeconds = atlas === null ? 0 : Math.max(0, Math.round(Date.now() / 1000 - atlas.onchainTs));
+  const lag = probabilityLag(claim, data.probabilityReadAt);
 
   return (
     <article className="receipt">
@@ -91,10 +117,25 @@ export function Receipt({ data }: { data: ReceiptData }) {
         </Row>
 
         <Row
-          label="P at posting"
-          stamp={data.proxyLabel ? <Stamp state="referenced">Proxy · not Cournot</Stamp> : <CournotStamp cournot={data.cournot} />}
+          label={lag.late ? "P, read late" : "P at posting"}
+          stamp={
+            lag.late ? (
+              <Stamp state="referenced">Read {lag.text}</Stamp>
+            ) : data.proxyLabel ? (
+              <Stamp state="referenced">Proxy · not Cournot</Stamp>
+            ) : (
+              <CournotStamp cournot={data.cournot} />
+            )
+          }
         >
           <span className="value">{data.cournot.probability.toFixed(4)}</span>
+          {lag.late ? (
+            <span className="hint">
+              {" "}
+              This number was read {lag.text}, not when the post was made. Edge is defined against the
+              probability at posting, so this is not that number.
+            </span>
+          ) : null}
         </Row>
         <Row label="Evaluated as" quiet>
           <span style={{ fontSize: 13 }}>{data.cournot.evaluatedClaim}</span>

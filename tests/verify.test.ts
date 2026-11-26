@@ -306,3 +306,57 @@ describe("cmc gateway", () => {
     );
   });
 });
+
+describe("probability timing — the order of the steps", () => {
+  /**
+   * The team's sharpest observation: Edge is only meaningful against the probability the market held when
+   * the post was made. A record carrying a probability with no idea when it was read can present a current
+   * number as the posting-time one, which is the same class of lie the product exists to stop.
+   */
+  const deps: VerifyDeps = {
+    extract: (input) => extractClaim(input),
+    readCournot: () => ({ provenance: "fixture", fixtureId: "f1", probability: 0.3, evaluatedClaim: "x", evidence: "y" }),
+    readPrice: async () => ({ priceUsd: "552.00", observedAt: new Date().toISOString(), source: "keyless" }),
+    readAtlas: async () => ({
+      feedAddress: "0xeace519ebb14fb8404fa6ddd23c3b34abade44aa",
+      feedId: "0x0000048c",
+      price: "85940244616217042600",
+      decimals: 18,
+      aggregatedTs: 1_795_699_130,
+      onchainTs: 1_795_699_130,
+      mainnetBlock: "135857509",
+    }),
+    record: async () => {
+      throw new Error("record: false, the recorder must not be called");
+    },
+  };
+
+  const post = (postedAt: string) => ({
+    text: "BNB is going above $700 by December 5. Loading up.",
+    authorId: "kol-timing",
+    postedAt,
+    source: "paste" as const,
+  });
+
+  test("every record states when its probability was read", async () => {
+    const { record } = await verify(post(new Date(Date.now() - 60_000).toISOString()), deps, {
+      cournotMode: "fixture",
+      record: false,
+    });
+    assert.ok(record.probabilityReadAt, "a record must say when the number was read");
+    assert.ok(
+      new Date(record.probabilityReadAt).getTime() >= new Date(record.claim.postedAt).getTime(),
+      "the read cannot precede the post it scores",
+    );
+  });
+
+  test("a post pasted hours later cannot look like a posting-time read", async () => {
+    const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+    const { record } = await verify(post(sixHoursAgo), deps, { cournotMode: "fixture", record: false });
+    const lagMs = new Date(record.probabilityReadAt).getTime() - new Date(record.claim.postedAt).getTime();
+    assert.ok(
+      lagMs > 5 * 60_000,
+      "the lag must be visible on the record, or a backfilled call silently presents today's probability as the posting-time one",
+    );
+  });
+});

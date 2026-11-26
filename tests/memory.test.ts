@@ -29,6 +29,7 @@ const verified: VerificationRecord = {
     horizonDefaulted: false,
   },
   cournot: { provenance: "recorded-live", requestId: "req-1", probability: 0.4, evaluatedClaim: "BNB above 700", evidence: "market 113195" },
+  probabilityReadAt: "2026-11-26T09:00:20.000Z",
   cmc: { priceUsd: "552.40", observedAt: "2026-11-26T09:00:00.000Z", source: "keyed" },
   atlas: { feedAddress: "0xeace519ebb14fb8404fa6ddd23c3b34abade44aa", feedId: "0x0000048c", price: "85940244616217042600", decimals: 18, aggregatedTs: 1_795_699_130, onchainTs: 1_795_699_130, mainnetBlock: "135857509" },
   receipt: { chainId: 97, registry: "0x1111111111111111111111111111111111111111", txHash: "0xabc", callId: "7", atlasVerified: false },

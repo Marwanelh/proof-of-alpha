@@ -117,6 +117,15 @@ export type VerificationRecord = {
   id: string;
   claim: Claim;
   cournot: CournotResponse;
+  /**
+   * When this probability was obtained from the market. Required, and NOT the same thing as `claim.postedAt`.
+   *
+   * Edge is only meaningful against the probability the market held when the post was made. A call verified
+   * later, or a backfilled post scored weeks after the fact, carries a different number, and without this
+   * field the record presents a current probability as the posting-time one. Making it required turns that
+   * silence into a compile error, the same way the `never` fields stop a fabricated request id.
+   */
+  probabilityReadAt: string;
   cmc: CmcSnapshot;
   atlas: AtlasSnapshot;
   receipt: OnChainReceipt;
