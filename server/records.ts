@@ -23,6 +23,17 @@ export class ScoreError extends Error {}
  */
 const BPS = 10_000;
 
+/**
+ * Aggregate an Edge mean in basis points.
+ *
+ * Individual Edges are bps-exact, but averaging them in floats is not: (+0.8 + −0.2) / 2 lands on
+ * 0.30000000000000004. Edge is user-facing and decides the leaderboard order, so the mean is rounded back to
+ * bps for the same reason the arithmetic was moved into bps to begin with.
+ */
+function meanBps(sum: number, count: number): number {
+  return Math.round((sum / count) * BPS) / BPS;
+}
+
 function toBps(p: number): number {
   assertProbability(p);
   return Math.round(p * BPS);
@@ -122,9 +133,9 @@ export function summarise(
     proxyCalls,
     unresolved,
     hitRate: resolved === 0 ? null : hits / resolved,
-    cournotEdge: cournotCalls === 0 ? null : cournotEdgeSum / cournotCalls,
-    proxyEdge: proxyCalls === 0 ? null : proxyEdgeSum / proxyCalls,
-    meanReturn: returnCount === 0 ? null : returnSum / returnCount,
+    cournotEdge: cournotCalls === 0 ? null : meanBps(cournotEdgeSum, cournotCalls),
+    proxyEdge: proxyCalls === 0 ? null : meanBps(proxyEdgeSum, proxyCalls),
+    meanReturn: returnCount === 0 ? null : meanBps(returnSum, returnCount),
   };
 }
 

@@ -10,6 +10,7 @@ import {
   retrieve,
   waitForCompiled,
 } from "../../../server/memory.ts";
+import { answerWithModel, buildFacts, composeAnswer, llmConfigFromEnv } from "../../../server/answer.ts";
 import { loadRecords } from "../../../server/store.ts";
 import type { CallRecord } from "../../../shared/types.ts";
 
@@ -23,6 +24,12 @@ import type { CallRecord } from "../../../shared/types.ts";
  */
 
 type Body = { action?: unknown; kolId?: unknown; query?: unknown; recordId?: unknown; wait?: unknown };
+
+function priceAtResolution(record: CallRecord): number | null {
+  if (record.resolution === null) return null;
+  const price = Number(record.resolution.result.cmcPriceUsd);
+  return Number.isFinite(price) ? price : null;
+}
 
 export async function POST(request: Request) {
   let body: Body;
@@ -94,6 +101,57 @@ export async function POST(request: Request) {
       case "connect": {
         const graph = await connect(transport, brainId, 40);
         return NextResponse.json({ state: "ok", graph }, { status: 200 });
+      }
+
+      case "ask": {
+        // The answer's numbers come from the records; the brain supplies context, and a model is optional.
+        const kolId = typeof body.kolId === "string" ? body.kolId.trim() : "";
+        if (kolId === "") {
+          return NextResponse.json({ state: "bad_request", message: "ask needs a kolId" }, { status: 400 });
+        }
+        const question =
+          typeof body.query === "string" && body.query.trim() !== ""
+            ? body.query.trim()
+            : `What is ${kolId}'s track record?`;
+        const records = loadRecords();
+        const facts = buildFacts(kolId, records, priceAtResolution);
+
+        let memories: Array<{ title?: string; slug?: string; snippet?: string }> = [];
+        try {
+          memories = await retrieve(transport, brainId, question, 5);
+        } catch {
+          // A brain that cannot answer must not stop the arithmetic. The answer says which parts it has.
+        }
+
+        const config = llmConfigFromEnv();
+        if (config) {
+          try {
+            const text = await answerWithModel(question, facts, memories, config);
+            return NextResponse.json(
+              { state: "ok", text, source: "model", model: config.model, facts, memories },
+              { status: 200 },
+            );
+          } catch (e) {
+            // Report the failure instead of hiding it, and still answer from the records.
+            return NextResponse.json(
+              {
+                state: "ok",
+                text: composeAnswer(facts, memories),
+                source: "composed",
+                modelFailed: true,
+                modelNote: e instanceof Error ? e.message : String(e),
+                facts,
+                memories,
+              },
+              { status: 200 },
+            );
+          }
+        }
+
+        return NextResponse.json(
+          { state: "ok", text: composeAnswer(facts, memories), source: "composed", facts, memories },
+          { status: 200 },
+        );
       }
 
       case "health": {
