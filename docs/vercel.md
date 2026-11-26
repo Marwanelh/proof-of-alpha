@@ -100,3 +100,58 @@ grep -i eaddrinuse <the server's log>            # a silent failure to bind is t
 A dev server and a production server are indistinguishable from a status code. Kill the listener and restart
 if there is any doubt, and check the log for a bind failure rather than trusting the response.
 
+---
+
+## Live deployment (verified)
+
+| | |
+|---|---|
+| **Judge-facing URL** | **https://proof-of-alpha-three.vercel.app** (short form) |
+| Canonical | https://proof-of-alpha-marwanelhs-projects.vercel.app |
+| Project | `marwanelhs-projects/proof-of-alpha` · `prj_1qxb5sr3JvlO6BEhOHhHrlVtZ2tD` |
+| Repo | connected — every push to `main` auto-deploys |
+
+### The blocker that mattered: the site was private
+
+The first deployments were `Ready` but **every route returned 302 to a Vercel login**, because the project
+had `ssoProtection: {"deploymentType":"all_except_custom_domains"}`. A judge clicking the link would have hit
+an auth wall. Fixed with:
+
+```bash
+printf '{"ssoProtection":null}' | npx vercel api "/v9/projects/proof-of-alpha" -X PATCH --input -
+```
+
+Re-verified: `ssoProtection: null`, and every route returns 200 to an anonymous request.
+
+### Environment variables
+
+All six are now set on the project as encrypted **Secret** vars, production scope, added by piping each value
+straight from the gitignored `.env.local` so no value ever appeared on a command line or in a log:
+
+`CMC_API_KEY` · `LIVING_BRAIN_API_KEY` · `LIVING_BRAIN_SUBJECT_ID` · `LIVING_BRAIN_BRAIN_ID` ·
+`ATLAS_FEED_ADDRESS` · `ATLAS_FEED_ID`
+
+Project Node version was also aligned to `22.x` to match `engines: ^22.20.0` in `package.json`, which removes
+the build warning about the project's `26.x` being overridden.
+
+### Verified on the deployed site, not locally
+
+```
+/  /leaderboard  /method  /kol/[id]        200  (anonymous, no auth wall)
+POST /api/verify   cmc source=keyed, atlas block=135866231 feed=0x0000048c, receipt=draft
+POST /api/memory   health -> Freshness=94 Readiness=59 Strain=10
+                   retrieve -> 3 hits from the real brain (Proxy Baseline, Historical Volatility, …)
+/leaderboard       renders the sample rows and the "backtested sample, not live-resolved" label
+```
+
+The `cmc source=keyed` line is the one that matters for the CMC × Atlas entry: that is our key making the
+call, which is what "usage verifiable via logs tied to your key" asks for. On the deployed site it was
+`keyless` before the variables were set.
+
+### Still deliberately off on the deployment
+
+`ENABLE_ONCHAIN_RECORD` is unset and `DEPLOYER_PRIVATE_KEY` is **not** stored in Vercel, so the deployed
+receipt reads `NOT ON CHAIN · DRAFT`. The on-chain write runs from the demo laptop. Reason in §4 above: a
+serverless function holding a signer is a public endpoint that spends gas.
+
+
