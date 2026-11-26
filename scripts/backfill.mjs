@@ -60,19 +60,69 @@ function parseTime(raw) {
   return new Date(`${s.replace(" ", "T")}${s.length <= 16 ? ":00" : ""}+07:00`);
 }
 
-const blocks = readFileSync(INPUT, "utf8")
-  .split(/^\s*---\s*$/m)
-  .map((b) => b.trim())
-  .filter(Boolean)
-  .map((b) => {
-    const lines = b.split(/\r?\n/);
-    const head = {};
-    while (lines.length && /^\s*(author|posted|url)\s*:/i.test(lines[0])) {
-      const [, k, v] = lines.shift().match(/^\s*(\w+)\s*:\s*(.*)$/);
-      head[k.toLowerCase()] = v.trim();
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
+/**
+ * The CMC footer under every copied post: "Alek Carter" / "@Alek_Carter" / "· Nov 23" (or "· 5h", "· 2d").
+ * CMC shows only the day for older posts, so the time is taken as 12:00 Bangkok and the row says so.
+ */
+function footerDate(raw) {
+  const s = raw.trim().toLowerCase();
+  const rel = s.match(/^(\d+)\s*(m|h|d)$/);
+  if (rel) {
+    const ms = Number(rel[1]) * (rel[2] === "m" ? 60_000 : rel[2] === "h" ? 3_600_000 : 86_400_000);
+    return { at: new Date(Date.now() - ms), dayOnly: rel[2] === "d" };
+  }
+  const md = s.match(/^([a-z]{3})[a-z]*\.?\s+(\d{1,2})(?:,\s*(\d{4}))?$/);
+  if (!md || MONTHS.indexOf(md[1]) < 0) return null;
+  const year = md[3] ? Number(md[3]) : new Date().getUTCFullYear();
+  const mm = String(MONTHS.indexOf(md[1]) + 1).padStart(2, "0");
+  const dd = md[2].padStart(2, "0");
+  return { at: new Date(`${year}-${mm}-${dd}T12:00:00+07:00`), dayOnly: true };
+}
+
+function parseInput(text) {
+  const lines = text.split(/\r?\n/).filter((l) => !/^\s*#/.test(l));
+  const joined = lines.join("\n");
+  // Header format: blocks separated by '---', each starting with author:/posted: lines.
+  if (/^\s*---\s*$/m.test(joined) || /^\s*(author|posted)\s*:/im.test(joined)) {
+    return joined
+      .split(/^\s*---\s*$/m)
+      .map((b) => b.trim())
+      .filter(Boolean)
+      .map((b) => {
+        const ls = b.split(/\r?\n/);
+        const head = {};
+        while (ls.length && /^\s*(author|posted|url)\s*:/i.test(ls[0])) {
+          const [, k, v] = ls.shift().match(/^\s*(\w+)\s*:\s*(.*)$/);
+          head[k.toLowerCase()] = v.trim();
+        }
+        const postedAt = parseTime(head.posted ?? "");
+        return { author: head.author ?? "", postedAt, dayOnly: /^\d{4}-\d{2}-\d{2}$/.test((head.posted ?? "").trim()), url: head.url, text: ls.join("\n") };
+      });
+  }
+  // CMC copy format: each post ends with name, @handle, "· <date>".
+  const out = [];
+  let cur = [];
+  for (const line of lines) {
+    const dot = line.match(/^\s*·\s*(.+?)\s*$/);
+    const prev = [...cur].reverse().find((l) => l.trim() !== "");
+    if (dot && prev && /^\s*@[A-Za-z0-9_.]{2,32}\s*$/.test(prev)) {
+      const when = footerDate(dot[1]);
+      const body = [...cur];
+      while (body.length && body[body.length - 1].trim() === "") body.pop();
+      const handle = body.pop().trim().slice(1);
+      if (body.length && body[body.length - 1].trim().length <= 32) body.pop(); // display name
+      out.push({ author: handle, postedAt: when ? when.at : new Date(NaN), dayOnly: when?.dayOnly ?? true, text: body.join("\n") });
+      cur = [];
+    } else {
+      cur.push(line);
     }
-    return { head, text: lines.join("\n") };
-  });
+  }
+  return out;
+}
+
+const blocks = parseInput(readFileSync(INPUT, "utf8"));
 
 /* ------------------------------------------------------------------ CMC */
 
@@ -152,10 +202,9 @@ async function readClaim(text, authorId, postedAt) {
 
 const now = new Date();
 const out = [];
-for (const [i, { head, text }] of blocks.entries()) {
+for (const [i, { author, postedAt, dayOnly, url, text }] of blocks.entries()) {
   const label = `#${i + 1}`;
-  const postedAt = parseTime(head.posted ?? "");
-  const authorId = head.author || cleanPastedPost(text).author || "";
+  const authorId = author || cleanPastedPost(text).author || "";
   if (Number.isNaN(postedAt.getTime()) || authorId === "") {
     console.log(`SKIP   ${label} — needs 'author:' and a valid 'posted:' line`);
     continue;
@@ -167,7 +216,7 @@ for (const [i, { head, text }] of blocks.entries()) {
     continue;
   }
   claim.source = "cmc";
-  if (head.url) claim.sourcePostId = head.url;
+  if (url) claim.sourcePostId = url;
 
   if (claim.horizonDefaulted) {
     claim.deadline = new Date(postedAt.getTime() + DEFAULT_MARK_HOURS * 3_600_000).toISOString();
@@ -202,7 +251,7 @@ for (const [i, { head, text }] of blocks.entries()) {
       proxyBaseline: {
         probability: p,
         label: "Proxy baseline — not Cournot",
-        methodology: `Trailing 30-day daily volatility (σ ${(sd * 100).toFixed(2)}%/day), lognormal odds of ${claim.asset} being ${claim.direction === "bullish" ? "at or above" : "at or below"} $${claim.targetUsd} after ${days.toFixed(1)} days. CMC historical quotes.${claim.horizonDefaulted ? ` The post named no deadline, so it is scored at the ${DEFAULT_MARK_HOURS}-hour mark.` : ""}`,
+        methodology: `Trailing 30-day daily volatility (σ ${(sd * 100).toFixed(2)}%/day), lognormal odds of ${claim.asset} being ${claim.direction === "bullish" ? "at or above" : "at or below"} $${claim.targetUsd} after ${days.toFixed(1)} days. CMC historical quotes.${claim.horizonDefaulted ? ` The post named no deadline, so it is scored at the ${DEFAULT_MARK_HOURS}-hour mark.` : ""}${dayOnly ? " CMC shows only the posting day, so the post is priced at 12:00 Bangkok that day." : ""}`,
       },
       resolution: {
         result: { outcome, resolvedAt: atDeadline.observedAt, cmcPriceUsd: atDeadline.priceUsd },

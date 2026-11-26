@@ -1,2 +1,2 @@
-# Paste real CMC Community posts below, separated by a line containing only ---
-# Each block: author: <handle>, posted: <YYYY-MM-DD HH:MM Bangkok time>, then the post as copied.
+# Paste real CMC Community posts below, exactly as copied (each ends with the name, @handle and "· Nov 23").
+# Or use blocks with author:/posted: lines separated by ---. Then run: npm run backfill
