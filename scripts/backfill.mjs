@@ -101,7 +101,30 @@ function parseInput(text) {
         return { author: head.author ?? "", postedAt, dayOnly: /^\d{4}-\d{2}-\d{2}$/.test((head.posted ?? "").trim()), url: head.url, text: ls.join("\n") };
       });
   }
-  // CMC copy format: each post ends with name, @handle, "· <date>".
+  // CMC copy format: name, @handle, "· <date>" around each post. Copied from a profile page the header comes
+  // first ("BuySome_BTC / @BuySome_BTC / · 7h / post"); selected from the feed it can trail the post. The order
+  // is decided by what the file starts with.
+  const nonEmpty = lines.map((l) => l.trim()).filter(Boolean);
+  const headerFirst =
+    nonEmpty.length > 2 && /^@[A-Za-z0-9_.]{2,32}$/.test(nonEmpty[1]) && /^·\s*\S/.test(nonEmpty[2]);
+  if (headerFirst) {
+    const posts = [];
+    for (let i = 0; i < lines.length; i++) {
+      const l = lines[i].trim();
+      const next = lines.slice(i + 1).map((x) => x.trim()).filter(Boolean);
+      if (l && /^@[A-Za-z0-9_.]{2,32}$/.test(next[0] ?? "") && /^·\s*\S/.test(next[1] ?? "")) {
+        const handleIdx = lines.findIndex((x, j) => j > i && x.trim() === next[0]);
+        const dotIdx = lines.findIndex((x, j) => j > handleIdx && x.trim() === next[1]);
+        const when = footerDate(next[1].replace(/^·\s*/, ""));
+        posts.push({ author: next[0].slice(1), postedAt: when ? when.at : new Date(NaN), dayOnly: when?.dayOnly ?? true, body: [] });
+        i = dotIdx;
+      } else if (posts.length > 0) {
+        posts[posts.length - 1].body.push(lines[i]);
+      }
+    }
+    return posts.map(({ body, ...p }) => ({ ...p, text: body.join("\n") }));
+  }
+
   const out = [];
   let cur = [];
   for (const line of lines) {

@@ -72,6 +72,14 @@ Share`;
     assert.equal(c.author, "CryptoHenry");
   });
 
+  test("poster, handle and timestamp above the post are read the same way", () => {
+    const now = new Date("2026-11-27T00:00:00Z");
+    const c = cleanPastedPost("BuySome_BTC\n@BuySome_BTC\n· 7h\n\n$BNB to $700 by end of month. Loading up.", now);
+    assert.equal(c.author, "BuySome_BTC");
+    assert.equal(c.posted?.at, "2026-11-26T17:00:00.000Z");
+    assert.equal(c.text, "$BNB to $700 by end of month. Loading up.");
+  });
+
   test("the page's timestamp line becomes the posting time", () => {
     const now = new Date("2026-11-27T00:00:00Z");
     const a = cleanPastedPost("$ETH breakout. TP1: $1,844\nAlek Carter\n@Alek_Carter\n· Nov 23", now);

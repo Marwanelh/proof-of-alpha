@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { ClipboardEvent, FormEvent, ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { FormEvent, ReactNode } from "react";
 
 import { cleanPastedPost } from "../shared/clean.ts";
 import type { AtlasSnapshot, Claim, CournotResponse } from "../shared/types.ts";
@@ -17,8 +17,15 @@ type CheckOk = { claim: Claim; atPost: PricePoint; now: PricePoint; atlasNow: At
 type CheckFail = { state: "refused" | "bad_request" | "provider" | "error"; message: string };
 
 const REPO_ISSUES = "https://github.com/Marwanelh/proof-of-alpha/issues/new";
-/** A real CMC Community post, as copied (name, handle and timestamp included), so the first click shows a settled call. */
-const EXAMPLE_RAW = `$ETH is gearing up for a major breakout.
+/**
+ * A real CMC Community post, copied the way the page shows it: the poster, their handle and the timestamp, then
+ * the post. The first click shows a settled call, and the example teaches what to paste.
+ */
+const EXAMPLE_RAW = `Alek Carter
+@Alek_Carter
+· Nov 23
+
+$ETH is gearing up for a major breakout.
 
 Bulls are back in control. $1,844 is the key level to watch.
 
@@ -28,11 +35,7 @@ TP2: $1,880
 TP3: $1,980
 SL: $1,710
 
-Break $1,844 and things could get explosive.
-Alek Carter
-@Alek_Carter
-· Nov 23`;
-const EXAMPLE = cleanPastedPost(EXAMPLE_RAW);
+Break $1,844 and things could get explosive.`;
 const STEPS = ["Read the claim", "Price at posting", "Baseline probability", "Verdict"] as const;
 
 function authorFrom(text: string): string | null {
@@ -60,53 +63,36 @@ function Row({ label, children, note }: { label: string; children: ReactNode; no
 }
 
 export default function VerifyPage() {
-  const [text, setText] = useState(EXAMPLE.text);
-  const [authorId, setAuthorId] = useState(EXAMPLE.author ?? "");
+  const [text, setText] = useState(EXAMPLE_RAW);
+  const [authorId, setAuthorId] = useState("Alek_Carter");
   const [authorTouched, setAuthorTouched] = useState(false);
-  /** Read from the pasted post's own timestamp ("· Nov 23", "· 5h"); null means "just now". */
-  const [posted, setPosted] = useState<{ at: string; dayOnly: boolean; raw: string } | null>(EXAMPLE.posted);
   const [sourceUrl, setSourceUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [tick, setTick] = useState(0);
   const [ok, setOk] = useState<CheckOk | null>(null);
   const [fail, setFail] = useState<CheckFail | null>(null);
-  const [cleanNote, setCleanNote] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // The box keeps exactly what was pasted; what we read from it (poster, time, the post itself) is shown below.
+  const reading = useMemo(() => cleanPastedPost(text), [text]);
 
   useEffect(() => {
     if (authorTouched) return;
-    const found = authorFrom(text);
+    const found = reading.author ?? authorFrom(reading.text);
     if (found) setAuthorId(found);
-  }, [text, authorTouched]);
+  }, [reading, authorTouched]);
 
   useEffect(() => () => {
     if (timer.current) clearInterval(timer.current);
   }, []);
 
-  function onPaste(e: ClipboardEvent<HTMLTextAreaElement>) {
-    const raw = e.clipboardData.getData("text");
-    if (!raw.includes("\n") && raw.length < 400) return;
-    e.preventDefault();
-    const c = cleanPastedPost(raw);
-    setText(c.text);
-    setPosted(c.posted);
-    if (c.author && !authorTouched) setAuthorId(c.author);
-    setCleanNote(
-      c.dropped > 0
-        ? `Cleaned the paste: removed ${c.dropped} buttons, counts and price widgets${c.sentiment ? `, kept the ${c.sentiment} tag` : ""}${c.author ? `, author ${c.author}` : ""}.`
-        : null,
-    );
-  }
-
   function reset() {
     setText("");
     setAuthorId("");
     setAuthorTouched(false);
-    setPosted(null);
     setSourceUrl("");
     setOk(null);
     setFail(null);
-    setCleanNote(null);
   }
 
   async function submit(event: FormEvent) {
@@ -123,8 +109,8 @@ export default function VerifyPage() {
         body: JSON.stringify({
           text,
           authorId,
-          // The time comes from the post itself: the pasted timestamp, else one still in the text, else now.
-          postedAt: posted?.at ?? cleanPastedPost(text).posted?.at,
+          // The time comes from the post itself ("· Nov 23", "· 7h"); with none, the call is checked as of now.
+          postedAt: reading.posted?.at,
         }),
       });
       const payload: unknown = await res.json();
@@ -174,10 +160,9 @@ export default function VerifyPage() {
             id="post"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            onPaste={onPaste}
-            placeholder="Select the whole post on CMC Community and paste it here: buttons, counts and price widgets are removed for you."
+            style={{ minHeight: 220 }}
+            placeholder={"BuySome_BTC\n@BuySome_BTC\n· 7h\n\n$BNB to $700 by end of month. Loading up.\n\nCopy the poster, @handle and timestamp together with the post."}
           />
-          {cleanNote ? <span className="hint" style={{ color: "var(--lime)" }}>{cleanNote}</span> : null}
         </label>
 
         <div className="author-row">
@@ -193,10 +178,11 @@ export default function VerifyPage() {
             placeholder="who made the call (read from “— Name” or @handle)"
             autoComplete="off"
           />
-          <span className="hint">
-            {posted
-              ? `Posted ${posted.raw.replace(/^[·•]\s*/, "")} — read from the post${posted.dayOnly ? " (the page shows the day only, so it is priced at 12:00 Bangkok)" : ""}.`
-              : "Paste the post with its timestamp (“· Nov 23”, “· 5h”) to check an older call; without one it is checked as posted just now."}
+          <span className="hint" style={{ color: reading.posted ? "var(--lime)" : undefined }}>
+            {reading.posted
+              ? `Posted ${reading.posted.raw.replace(/^[·•]\s*/, "")} — read from the post${reading.posted.dayOnly ? " (the page shows the day only, so it is priced at 12:00 Bangkok)" : ""}.`
+              : "No timestamp found: copy the poster, @handle and “· 7h” / “· Nov 23” line with the post. Without one it is checked as posted just now."}
+            {reading.dropped > 0 ? ` Ignoring ${reading.dropped} line${reading.dropped === 1 ? "" : "s"} of page chrome (name, handle, time, buttons, counts).` : ""}
           </span>
         </div>
 
