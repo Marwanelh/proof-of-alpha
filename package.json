@@ -10,6 +10,8 @@
   },
   "scripts": {
     "seed": "node scripts/seed.mjs",
+    "leaderboard": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/leaderboard.mjs",
+    "verify:demo": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/verify-demo.mjs",
     "check:secrets": "node scripts/check-secrets.mjs",
     "test": "node scripts/check-secrets.mjs && node --env-file-if-exists=.env.local --experimental-strip-types --test tests/core.test.ts tests/verify.test.ts tests/registry.test.ts",
     "test:verify": "node --env-file-if-exists=.env.local --experimental-strip-types --test tests/verify.test.ts",

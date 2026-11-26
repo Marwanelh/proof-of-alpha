@@ -162,6 +162,8 @@ describe("the ABI matches the contract's signatures", () => {
 
 describe("writeReceipt", () => {
   const encoded = encodeCall(good);
+  const REGISTRY = "0x9f00000000000000000000000000000000000042" as const;
+  const TX = `0x${"cd".repeat(32)}` as const;
 
   /** Build a real CallRecorded log so the decode path is exercised, not stubbed. */
   const realLog = () => {
@@ -189,20 +191,43 @@ describe("writeReceipt", () => {
   };
 
   test("returns a receipt only after a successful transaction, and never claims a verified Atlas read", async () => {
+    let sentTo: string | null = null;
     const receipt = await writeReceipt(good, {
-      send: async () => `0x${"cd".repeat(32)}`,
+      registry: REGISTRY,
+      chainId: 97,
+      send: async (request) => {
+        sentTo = request.address;
+        return TX;
+      },
       wait: async () => ({ status: "success" as const, logs: [realLog()] }),
     });
+    assert.equal(sentTo, REGISTRY, "the configured registry is the one written to, not an environment variable");
     assert.equal(receipt.callId, "7");
     assert.equal(receipt.atlasVerified, false, "referenced mode must never report a verified read");
     assert.equal(receipt.chainId, 97);
+    assert.equal(receipt.txHash, TX);
+  });
+
+  test("refuses a registry address that is not a deployed address", async () => {
+    await assert.rejects(
+      () =>
+        writeReceipt(good, {
+          registry: "0x0" as `0x${string}`,
+          chainId: 97,
+          send: async () => TX,
+          wait: async () => ({ status: "success" as const, logs: [] }),
+        }),
+      (e) => e instanceof RegistryError && /not a deployed address/.test(e.message),
+    );
   });
 
   test("a reverted transaction never produces a receipt", async () => {
     await assert.rejects(
       () =>
         writeReceipt(good, {
-          send: async () => `0x${"cd".repeat(32)}`,
+          registry: REGISTRY,
+          chainId: 97,
+          send: async () => TX,
           wait: async () => ({ status: "reverted" as const, logs: [] }),
         }),
       (e) => e instanceof RegistryError && /does not exist/.test(e.message),
@@ -213,7 +238,9 @@ describe("writeReceipt", () => {
     await assert.rejects(
       () =>
         writeReceipt(good, {
-          send: async () => `0x${"cd".repeat(32)}`,
+          registry: REGISTRY,
+          chainId: 97,
+          send: async () => TX,
           wait: async () => ({ status: "success" as const, logs: [] }),
         }),
       (e) => e instanceof RegistryError && /refusing to invent a call id/.test(e.message),
@@ -234,7 +261,9 @@ describe("writeReceipt", () => {
     await assert.rejects(
       () =>
         writeReceipt(good, {
-          send: async () => `0x${"cd".repeat(32)}`,
+          registry: REGISTRY,
+          chainId: 97,
+          send: async () => TX,
           wait: async () => ({ status: "success" as const, logs: [{ topics, data }] }),
         }),
       (e) => e instanceof RegistryError && /refusing to invent a call id/.test(e.message),

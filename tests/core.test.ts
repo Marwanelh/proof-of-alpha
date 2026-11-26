@@ -37,6 +37,17 @@ describe("claim extraction", () => {
     assert.equal(await extractClaim({ ...base, text: "this will run soon, trust me" }), null);
   });
 
+  test("extracts the claimed target, not an earlier entry price", async () => {
+    // Regression: the leftmost $ figure was taken, so "bought at $500, now above $600" scored $500.
+    const claim = await extractClaim({
+      ...base,
+      text: "I bought BNB at $500, now above $600 by December 5. Loading up.",
+    });
+    assert.ok(claim);
+    assert.equal(claim.targetUsd, "600");
+    assert.equal(claim.direction, "bullish");
+  });
+
   test("refuses a post with no testable deadline in the past", async () => {
     assert.equal(await extractClaim({ ...base, text: "BNB above $600 by 2026-11-01" }), null);
   });

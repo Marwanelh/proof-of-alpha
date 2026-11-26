@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { extractClaim } from "../server/claim.ts";
 import { readFixture, readCournot, CournotError, FIXTURE_PATH } from "../server/cournot.ts";
 import { verify, VerifyError, type VerifyDeps } from "../server/verify.ts";
-import { readAtlas, AtlasError, type RpcCall } from "../server/atlas.ts";
+import { readAtlas, AtlasError, type AtlasTransport } from "../server/atlas.ts";
 import { keylessPrice, keyedQuotes, latestPosts, CmcError } from "../server/cmc.ts";
 import { isSponsorEvidence, type OnChainReceipt } from "../shared/types.ts";
 
@@ -148,38 +148,61 @@ describe("verify pipeline", () => {
 describe("atlas gateway", () => {
   const feed = "0xeace519ebb14fb8404fa6ddd23c3b34abade44aa";
   const word = (n: bigint) => n.toString(16).padStart(64, "0");
+  const BLOCK = 64_000_000n;
 
-  test("decodes a snapshot from fetch(bytes4) and records the block", async () => {
-    const snapshot = [
-      "0x",
-      word(552_380_000_000_000_000_000n),
-      word(1_764_000_000n),
-      word(1_764_000_030n),
-    ].join("");
-    const calls: Array<{ to: string; data: string }> = [];
-    const rpcCall: RpcCall = async (to, data) => {
-      calls.push({ to, data });
-      if (data.startsWith("0x313ce567")) return "0x" + word(18n);
-      return snapshot;
+  const transport = (onCall: (data: string) => string) => {
+    const calls: Array<{ data: string; blockTag: string }> = [];
+    const t: AtlasTransport = {
+      blockNumber: async () => BLOCK,
+      call: async (_to, data, blockTag) => {
+        calls.push({ data, blockTag });
+        return onCall(data);
+      },
     };
-    const snap = await readAtlas({ feedAddress: feed, feedId: "0x0000048c" }, rpcCall);
-    assert.equal(snap.price, "552380000000000000000");
+    return { calls, t };
+  };
+
+  const snapshot = (price: bigint, ts: bigint) => ["0x", word(price), word(ts), word(ts)].join("");
+
+  test("sends bytes4 as a right-padded 32-byte word — the bare form reverts on the live contract", async () => {
+    const { calls, t } = transport((data) => (data.startsWith("0x313ce567") ? "0x" + word(18n) : snapshot(85_940_244_616_217_042_600n, 1_795_699_130n)));
+    const snap = await readAtlas({ feedAddress: feed, feedId: "0x0000048c" }, t);
+    assert.equal(snap.price, "85940244616217042600");
     assert.equal(snap.decimals, 18);
     assert.equal(snap.feedId, "0x0000048c");
-    assert.equal(calls[0]?.data, "0x7ffc4b97" + "0000048c", "fetch(bytes4) selector + the 4-byte id");
+    // Regression, verified live: unpadded calldata reverts, so this exact string is load-bearing.
+    assert.equal(calls[0]?.data, "0x7ffc4b97" + "0000048c" + "0".repeat(56));
   });
 
-  test("an empty revert means a wrong feedId, and says so", async () => {
-    const rpcCall: RpcCall = async () => "0x";
+  test("every read is pinned to one block, and that block is what the snapshot records", async () => {
+    const { calls, t } = transport((data) => (data.startsWith("0x313ce567") ? "0x" + word(18n) : snapshot(1n, 1n)));
+    const snap = await readAtlas({ feedAddress: feed, feedId: "0x0000048c" }, t);
+    const tags = new Set(calls.map((c) => c.blockTag));
+    assert.equal(tags.size, 1, "all reads must share one block tag, or mainnetBlock is not the block the price came from");
+    assert.equal([...tags][0], "0x3d09000", "64,000,000 in hex");
+    assert.equal(snap.mainnetBlock, "64000000");
+  });
+
+  test("an empty revert means the id is not a known feed, and says so", async () => {
+    const { t } = transport(() => "0x");
     await assert.rejects(
-      () => readAtlas({ feedAddress: feed, feedId: "0x00001164" }, rpcCall),
-      (e) => e instanceof AtlasError && /catalogue number is not the on-chain id/.test(e.message),
+      () => readAtlas({ feedAddress: feed, feedId: "0x00001164" }, t),
+      (e) => e instanceof AtlasError && /not a known feed/.test(e.message),
+    );
+  });
+
+  test("a known-but-never-updated feed returns zeros and is reported differently", async () => {
+    const { t } = transport((data) => (data.startsWith("0x313ce567") ? "0x" + word(18n) : "0x" + "0".repeat(192)));
+    await assert.rejects(
+      () => readAtlas({ feedAddress: feed, feedId: "0x00001164" }, t),
+      (e) => e instanceof AtlasError && /never been updated/.test(e.message),
     );
   });
 
   test("rejects a feedId that is not exactly four bytes", async () => {
+    const { t } = transport(() => "0x");
     await assert.rejects(
-      () => readAtlas({ feedAddress: feed, feedId: "0x1164" }, async () => "0x"),
+      () => readAtlas({ feedAddress: feed, feedId: "0x1164" }, t),
       (e) => e instanceof AtlasError && /exactly 4 bytes/.test(e.message),
     );
   });

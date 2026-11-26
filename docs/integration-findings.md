@@ -161,6 +161,33 @@ ask the Atlas team at the venue to whitelist your registry address, or fall back
 
 ## 2b. Atlas — what the live contract actually answered (verified on BSC mainnet)
 
+### CORRECTION (found by Codex round 3, verified live): the calldata, not the feedId, was wrong
+
+This section originally concluded that "the catalogue number is not the on-chain feedId". **That was wrong.**
+The real cause was malformed ABI calldata: a `bytes4` argument must be sent as a **right-padded 32-byte word**,
+and the bare four bytes revert with an empty reason. Probed against
+`0xeace519ebb14fb8404fa6ddd23c3b34abade44aa`:
+
+```
+decimals()                              -> 0x…12  (18)
+selector + 4 bare bytes                 -> execution reverted: 0x        <-- what we shipped
+selector + bytes4 padded to 32 bytes    -> a real snapshot               <-- correct
+  price       = 85940244616217042600  (= $85.94 at 18dp)
+  timestamps  = 1795699130            (2026-11-26T13:18:50Z, 4 seconds old at read time)
+```
+
+So **the catalogue number IS the on-chain feed id**: catalogue `#1164` is feedId `0x0000048c`, and it reads
+live and keyless today. The supplier gate for a working feed is **closed** — only a *different asset's* id
+(BNB, CAKE) still needs asking for.
+
+Second defect, same file: the snapshot was read at `latest` and `eth_blockNumber` fetched separately, so the
+recorded reference block could be a block the price did not come from. Every read is now pinned to one block.
+
+The lesson worth keeping: an empty revert is not evidence about *which* argument was wrong. I inferred a
+false fact about the provider from a revert that my own encoder caused, and wrote it into the docs as verified.
+
+### What the interface actually is
+
 Read with `eth_call` against the free feed proxy shown on `atlasoracle.io/feeds/1164`
 (`0xeace519ebb14fb8404fa6ddd23c3b34abade44aa`), 2026-11-26:
 
@@ -171,11 +198,9 @@ description()  -> "MultiFeed"
 contractType() -> 2                 (2 == MultiFeed)
 version()      -> 2
 latestRoundData()                -> execution reverted      <-- it is NOT a SingleFeed
-fetch(0x0000048c)                -> execution reverted      <-- catalogue id 1164 is not the feedId
-fetch(0x00001164)                -> execution reverted
 ```
 
-Three consequences that would each have cost you an hour on stage:
+**Consequences:**
 
 1. **The proxy is a MultiFeed, not a SingleFeed.** A Chainlink-style `latestRoundData()` reverts on it,
    so the brief's Chainlink mental model does not apply to the free feeds. Use

@@ -80,9 +80,14 @@ function findAsset(text: string): string | null {
 
 /** A price target must be attached to a comparison word, or it is noise ("10 reasons", "$100K volume"). */
 function findTarget(text: string): string | null {
-  const m = text.match(/\b(?:above|below|over|under|to|at|target(?:ing)?|hits?)\s*\$\s?([0-9][0-9,]*(?:\.[0-9]+)?)/i);
-  if (m?.[1] === undefined) return null;
-  const normalised = m[1].replace(/,/g, "");
+  const num = "([0-9][0-9,]*(?:\\.[0-9]+)?)";
+  // Comparison words win, because a bare "at $500" is usually a past entry price rather than the claim:
+  // "I bought BNB at $500, now above $600" claims $600, and taking the leftmost match would score $500.
+  const comparison = text.match(new RegExp(`\\b(?:above|below|over|under)\\s*\\$\\s?${num}`, "i"));
+  const directional = text.match(new RegExp(`\\b(?:to|at|target(?:ing)?|hits?|reaches?)\\s*\\$\\s?${num}`, "i"));
+  const raw = comparison?.[1] ?? directional?.[1];
+  if (raw === undefined) return null;
+  const normalised = raw.replace(/,/g, "");
   const value = Number(normalised);
   if (!Number.isFinite(value) || value <= 0) return null;
   return normalised;

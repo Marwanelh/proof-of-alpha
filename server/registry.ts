@@ -242,14 +242,26 @@ export type SendTransaction = (request: {
 
 export type WaitForReceipt = (hash: `0x${string}`) => Promise<{ status: "success" | "reverted"; logs: readonly unknown[] }>;
 
+export type WriteDeps = {
+  send: SendTransaction;
+  wait: WaitForReceipt;
+  /** Where to write. Passed in rather than read from the environment inside, so a test cannot be fooled
+   *  into believing it exercised a real registry. */
+  registry: `0x${string}`;
+  chainId: 56 | 97;
+};
+
 /**
- * Send the receipt. Simulates first so a revert surfaces as a decoded custom error and no gas is spent.
- * Never holds funds, never chooses the probability, and cannot mark a referenced Atlas read as verified.
+ * Send the receipt. Never holds funds, never chooses the probability, and cannot mark a referenced Atlas
+ * read as verified — `atlasVerified` is hard-coded false here and there is no parameter to change it.
  */
-export async function writeReceipt(call: EncodableCall, deps: { send: SendTransaction; wait: WaitForReceipt }): Promise<OnChainReceipt> {
+export async function writeReceipt(call: EncodableCall, deps: WriteDeps): Promise<OnChainReceipt> {
+  if (!/^0x[0-9a-fA-F]{40}$/.test(deps.registry)) {
+    throw new RegistryError(`registry address is not a deployed address: "${deps.registry}"`);
+  }
   const encoded = encodeCall(call);
   const hash = await deps.send({
-    address: (process.env["CALL_REGISTRY_TESTNET"] ?? "0x0") as `0x${string}`,
+    address: deps.registry,
     abi: CALL_REGISTRY_ABI as unknown as Abi,
     functionName: "recordCallReferenced",
     args: encoded.args,
@@ -260,12 +272,11 @@ export async function writeReceipt(call: EncodableCall, deps: { send: SendTransa
     throw new RegistryError(`transaction ${hash} reverted; refusing to report a receipt that does not exist`);
   }
 
-  const callId = findCallId(receipt.logs, encoded.postHash);
   return {
-    chainId: 97,
-    registry: (process.env["CALL_REGISTRY_TESTNET"] ?? "0x0") as `0x${string}`,
+    chainId: deps.chainId,
+    registry: deps.registry,
     txHash: hash,
-    callId: callId.toString(),
+    callId: findCallId(receipt.logs, encoded.postHash).toString(),
     atlasVerified: false, // referenced mode: this module cannot claim otherwise
   };
 }

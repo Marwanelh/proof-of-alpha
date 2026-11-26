@@ -1,52 +1,61 @@
 {
-  "at": "2026-11-26T13:02:33.281Z",
+  "at": "2026-11-26T13:20:26.233Z",
   "results": [
     {
       "name": "cmc.keyless_price",
       "ok": true,
-      "detail": "BNB=$551.7799755513895 source=keyless",
+      "detail": "BNB=$552.014677049461 source=keyless",
       "extra": {
-        "priceUsd": "551.7799755513895",
-        "observedAt": "2026-11-26T13:02:33.012Z",
+        "priceUsd": "552.014677049461",
+        "observedAt": "2026-11-26T13:20:25.304Z",
         "source": "keyless"
       },
-      "at": "2026-11-26T13:02:33.013Z"
+      "at": "2026-11-26T13:20:25.305Z"
     },
     {
       "name": "cmc.keyed_quotes",
       "ok": true,
-      "detail": "BNB=$551.7799755513895 CAKE=$1.5831052933340075 source=keyed credits=1",
+      "detail": "BNB=$552.0095590663688 CAKE=$1.5833564375569031 source=keyed credits=1",
       "extra": {
         "BNB": {
-          "priceUsd": "551.7799755513895",
-          "observedAt": "2026-11-26T13:02:33.280Z",
+          "priceUsd": "552.0095590663688",
+          "observedAt": "2026-11-26T13:20:25.593Z",
           "source": "keyed"
         },
         "CAKE": {
-          "priceUsd": "1.5831052933340075",
-          "observedAt": "2026-11-26T13:02:33.280Z",
+          "priceUsd": "1.5833564375569031",
+          "observedAt": "2026-11-26T13:20:25.593Z",
           "source": "keyed"
         }
       },
-      "at": "2026-11-26T13:02:33.280Z"
+      "at": "2026-11-26T13:20:25.593Z"
     },
     {
       "name": "atlas.multiFeed",
-      "ok": false,
-      "detail": "ATLAS_FEED_ADDRESS and ATLAS_FEED_ID (4 bytes) required — ask the Atlas team",
-      "at": "2026-11-26T13:02:33.280Z"
+      "ok": true,
+      "detail": "price=85943421026547559425 @18dp age=36s block=135853649",
+      "extra": {
+        "feedAddress": "0xeace519ebb14fb8404fa6ddd23c3b34abade44aa",
+        "feedId": "0x0000048c",
+        "price": "85943421026547559425",
+        "decimals": 18,
+        "aggregatedTs": 1795699190,
+        "onchainTs": 1795699190,
+        "mainnetBlock": "135853649"
+      },
+      "at": "2026-11-26T13:20:26.232Z"
     },
     {
       "name": "cournot.live_call",
       "ok": false,
       "detail": "no captured call yet — the Cournot entry requires one real successful call",
-      "at": "2026-11-26T13:02:33.280Z"
+      "at": "2026-11-26T13:20:26.233Z"
     },
     {
       "name": "livingbrain.credentials",
       "ok": true,
       "detail": "key + subject present (prefix lbk_…); authenticated capture path to confirm at the booth",
-      "at": "2026-11-26T13:02:33.281Z"
+      "at": "2026-11-26T13:20:26.233Z"
     }
   ]
 }

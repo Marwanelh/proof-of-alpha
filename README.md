@@ -92,12 +92,12 @@ silently present a referenced price as a verified one.
 
 - [x] **The MultiFeed contract address on BSC mainnet** — `0xeace519ebb14fb8404fa6ddd23c3b34abade44aa`
       (verified live: `contractType()` = 2 MultiFeed, `decimals()` = 18, `isOpenRead()` = true). A MultiFeed
-      is one registry per chain holding many feeds, so this address is most likely shared by every free
-      BNB-Chain feed; what varies per asset is the `feedId`.
-- [ ] **The `feedId`s for the assets we track** (BNB, CAKE, …) — **only Atlas can give these.** The contract
-      exposes no enumeration function (probed: `feedCount()`, `feedIds()`, `getFeedIds()`, `feeds()`,
-      `getFeed(bytes4)`, `config(bytes4)` all revert), and `fetch()` reverts on an unknown id. Ask the Atlas
-      team at the venue, or use their feed detail page / dashboard.
+      is one registry per chain holding many feeds, so this address serves every free BNB-Chain feed.
+- [x] **A working `feedId`** — catalogue `#1164` is feedId **`0x0000048c`**, and it reads live and keyless
+      (verified: `$85.94`, updated seconds before the read). **The earlier "you cannot get a feedId" claim was
+      wrong** — the calldata was malformed; see `docs/integration-findings.md` §2b.
+- [ ] **The `feedId` for the assets we actually track** (BNB, CAKE) — still worth asking Atlas at the venue.
+      The mechanism is proven; only the per-asset id is missing.
 
 Addresses: see [`docs/addresses.md`](docs/addresses.md) (fill in after deploy).
 

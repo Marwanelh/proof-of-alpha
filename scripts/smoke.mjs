@@ -1,11 +1,16 @@
 #!/usr/bin/env node
 /**
- * PROVIDER PROOF RUNNER — nothing else.
+ * PROVIDER PROOF RUNNER — writes evidence/evidence.json, the artifact a sponsor asks for
+ * ("usage verifiable via logs tied to your key").
  *
- * Writes evidence/evidence.json, the artifact a sponsor asks for ("usage verifiable via logs tied to your
- * key"). It therefore reports only on providers: it never imports application modules, never requires the
- * Next app to be running, and does not test verify orchestration — that lives in tests/ and is reported
- * separately. "5/5 checks pass" means five provider proofs, not that the app works.
+ * It reports on PROVIDERS ONLY: it does not test orchestration (`verify.ts`, `records.ts`) and it needs no
+ * Next app running. Application behaviour lives in tests/ and is reported separately. "5/5 checks pass"
+ * means five provider proofs; it does not mean the app works.
+ *
+ * AMENDMENT to the ratified contract: this script NOW imports the provider GATEWAYS (cmc, atlas) instead of
+ * re-implementing them. Codex's round-3 review found the duplication had already let the same Atlas calldata
+ * defect exist in two places, and it is right — a proof runner with its own private implementation is a
+ * second implementation to keep correct. Provider modules: yes. Orchestration: no. That was the intent.
  *
  *   npm run smoke     (reads .env.local via --env-file-if-exists; no dotenv, no hand-rolled parser)
  */
@@ -13,6 +18,7 @@
 import { mkdirSync, writeFileSync, existsSync, readFileSync } from "node:fs";
 
 import { keyedQuotes, keylessPrice, CmcError, CMC_ERRORS } from "../server/cmc.ts";
+import { readAtlas, AtlasError } from "../server/atlas.ts";
 
 const results = [];
 
@@ -26,7 +32,8 @@ try {
   const snap = await keylessPrice("BNB");
   record("cmc.keyless_price", true, `BNB=$${snap.priceUsd} source=${snap.source}`, snap);
 } catch (e) {
-  record("cmc.keyless_price", false, String(e));
+  const code = e instanceof CmcError ? e.errorCode : null;
+  record("cmc.keyless_price", false, code === CMC_ERRORS.ANONYMOUS_LIMIT ? "anonymous pool spent for this IP — need the key" : String(e));
 }
 
 /* 2. CMC keyed — the live Pro API call the CMC × Atlas entry asks for. One credit covers both symbols. */
@@ -39,50 +46,27 @@ if (!process.env.CMC_API_KEY) {
     record("cmc.keyed_quotes", true, `${summary} source=keyed credits=1`, quotes);
   } catch (e) {
     const code = e instanceof CmcError ? e.errorCode : null;
-    const detail = code === CMC_ERRORS.PLAN_EXCLUDES_ENDPOINT ? "plan excludes this endpoint (1006) — ask CMC; the key is valid" : String(e);
-    record("cmc.keyed_quotes", false, detail);
+    record("cmc.keyed_quotes", false, code === CMC_ERRORS.PLAN_EXCLUDES_ENDPOINT ? "plan excludes this endpoint (1006) — the key is valid" : String(e));
   }
 }
 
-/* 3. Atlas MultiFeed — keyless public RPC. Needs the 4-byte feedId, which only Atlas can supply. */
-const SEL = { isOpenRead: "0xba94e9ff", decimals: "0x313ce567", contractType: "0xcb2ef6f7", fetch: "0x7ffc4b97" };
-const rpc = process.env.BSC_RPC || "https://bsc-dataseed.binance.org";
+/* 3. Atlas MultiFeed — keyless public RPC, through the same gateway the app uses. */
 const feed = process.env.ATLAS_FEED_ADDRESS;
 const feedId = process.env.ATLAS_FEED_ID;
-
 if (!feed || !feedId) {
-  record("atlas.multiFeed", false, "ATLAS_FEED_ADDRESS and ATLAS_FEED_ID (4 bytes) required — ask the Atlas team");
+  record("atlas.multiFeed", false, "ATLAS_FEED_ADDRESS and ATLAS_FEED_ID (4 bytes) required");
 } else {
   try {
-    const call = async (data) => {
-      const res = await fetch(rpc, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_call", params: [{ to: feed, data }, "latest"] }),
-      });
-      const body = await res.json();
-      return body.result ?? "0x";
-    };
-    const snapshot = await call(SEL.fetch + feedId.replace(/^0x/, "").padStart(8, "0"));
-    if (!snapshot || snapshot === "0x") {
-      record("atlas.multiFeed", false, `fetch(${feedId}) reverted — a wrong feedId reverts; the catalogue number is not it`);
-    } else {
-      const words = snapshot.slice(2).match(/.{64}/g) ?? [];
-      const price = BigInt("0x" + words[0]);
-      const onchainTs = Number(BigInt("0x" + words[2]));
-      const age = Math.round(Date.now() / 1000 - onchainTs);
-      const openRead = await call(SEL.isOpenRead);
-      const typeId = await call(SEL.contractType);
-      const decimals = Number(BigInt(await call(SEL.decimals)));
-      record(
-        "atlas.multiFeed",
-        price > 0n && openRead.endsWith("1"),
-        `price=${price} @${decimals}dp openRead=${openRead.endsWith("1")} type=${Number(BigInt(typeId)) === 2 ? "MultiFeed" : typeId} age=${age}s`,
-        { feedAddress: feed, feedId, price: price.toString(), decimals, onchainTs },
-      );
-    }
+    const snap = await readAtlas({ feedAddress: feed, feedId });
+    const age = Math.round(Date.now() / 1000 - snap.onchainTs);
+    record(
+      "atlas.multiFeed",
+      true,
+      `price=${snap.price} @${snap.decimals}dp age=${Math.max(0, age)}s block=${snap.mainnetBlock}`,
+      snap,
+    );
   } catch (e) {
-    record("atlas.multiFeed", false, String(e));
+    record("atlas.multiFeed", false, e instanceof AtlasError ? e.message : String(e));
   }
 }
 

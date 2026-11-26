@@ -5,9 +5,9 @@ Fill this in as you deploy. This is the file judges open first.
 | Thing | Network | Address | Notes |
 |---|---|---|---|
 | Atlas MultiFeed | BSC mainnet (56) | `0xeace519ebb14fb8404fa6ddd23c3b34abade44aa` | Verified: `contractType()`=2, `decimals()`=18, `isOpenRead()`=true |
-| Atlas feedId — BNB | — | _TBD_ | **Only Atlas can supply this.** 4 bytes, not the catalogue number |
+| Atlas feedId — BNB | — | _TBD_ | Ask Atlas at the venue; the mechanism is proven |
 | Atlas feedId — CAKE | — | _TBD_ | as above |
-| Atlas feedId — … | — | _TBD_ | one per asset on the same MultiFeed |
+| **Atlas feedId — #1164 (EWTB/USD)** | BSC mainnet (56) | **`0x0000048c`** | **WORKS today, keyless**: price 85940244616217042600 @18dp, updated ~4s before the read |
 | `CallRegistry` (Plan A, referenced) | BSC testnet (97) | _TBD_ | backend read Atlas on mainnet; receipt stores the price + mainnet block |
 | `CallRegistry` (Plan B, verified) | BSC mainnet (56) | _TBD_ | contract reads the feed itself; only if time allows |
 | CMC symbol watchlist | — | _TBD_ | e.g. BNB, CAKE, … — the content endpoint takes one symbol per call |
