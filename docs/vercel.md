@@ -154,7 +154,37 @@ call, which is what "usage verifiable via logs tied to your key" asks for. On th
 receipt reads `NOT ON CHAIN · DRAFT`. The on-chain write runs from the demo laptop. Reason in §4 above: a
 serverless function holding a signer is a public endpoint that spends gas.
 
-### The AI Gateway needs a card on file
+### A free model, no card: OpenRouter's free tier
+
+The Gateway needs a card, so the answer model runs on an OpenRouter **`:free`** model instead. Same
+OpenAI-compatible interface, so nothing in the code changed beyond three values:
+
+```
+LLM_API_BASE=https://openrouter.ai/api/v1
+LLM_MODEL=nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free
+LLM_API_KEY=<an OpenRouter key>
+```
+
+The model was chosen by measurement, not by reading a leaderboard. Four free models were given the app's
+real prompt (system message + the `facts` JSON + a question) and compared: gemma-4-31b returned 429
+upstream rate-limited, nemotron-3.5-lightning and ling-3.2-flash returned 200 with no `message.content`,
+and nemotron-3-nano-omni returned a grounded paragraph that used the facts correctly — it read `resolved: 3`
+of `calls: 4` as 75% resolved without confusing it with the 67% hit rate. That is the job, so that is the
+model.
+
+Two caveats to keep in mind. Free models are rate-limited per account, and this key is the same one the
+agent session uses, so a burst from the site can be felt elsewhere. And pinning a `:free` model keeps the
+cost at zero: a public endpoint that could spend money is a liability.
+
+Note the failure mode this avoids. A model that returns 200 with an empty `content` is not a transport
+error, and two of the four candidates did exactly that. `answerWithModel` already treats "no text came
+back" as a failure and falls through to the composed answer, rather than printing an empty panel and
+calling it model-written.
+
+
+### The AI Gateway needs a card on file (it was replaced, and why)
+
+The first attempt used Vercel's AI Gateway. It is wired correctly and reports its own failure honestly:
 
 `LLM_MODEL` is `google/gemini-2.5-flash-lite` and `LLM_API_KEY` holds an AI Gateway key, so the deployed
 `ask` action is wired end to end and reports its own failure honestly:
