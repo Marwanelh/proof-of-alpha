@@ -134,6 +134,27 @@ describe("Edge", () => {
     assert.equal(xmas.deadline, "2026-12-25T23:59:00.000Z");
   });
 
+  test("a long setup scores its first take-profit, with a flagged default horizon", async () => {
+    const text = `$BNB is showing signs of recovery on the 4H chart. Buyers are stepping in after sweeping liquidity
+near $527. A breakout above $569 could open the door for a move towards $600.
+Long setup: Entry: $550–$554 TP1: $569 TP2: $582 TP3: $599 SL: $525
+Watching for bullish continuation. Manage your risk.`;
+    const claim = await extractClaim({ ...base, text });
+    assert.ok(claim, "a trade setup with a TP is a call");
+    assert.equal(claim.asset, "BNB");
+    assert.equal(claim.direction, "bullish");
+    assert.equal(claim.targetUsd, "569");
+    assert.equal(claim.horizonDefaulted, true, "no date was written, so the horizon must be visibly defaulted");
+  });
+
+  test("a short setup reads bearish, and a TP on the wrong side of the stop is refused", async () => {
+    const short = await extractClaim({ ...base, text: "CAKE short. Entry $1.60 TP1 $1.40 SL $1.72" });
+    assert.ok(short);
+    assert.equal(short.direction, "bearish");
+    assert.equal(short.targetUsd, "1.40");
+    assert.equal(await extractClaim({ ...base, text: "BNB long. TP1 $500 SL $525" }), null);
+  });
+
   test("still accepts a forward-looking call with a defaulted horizon", async () => {
     const claim = await extractClaim({ ...base, text: "BNB above $600 is coming" });
     assert.ok(claim, "a forward-looking post must still extract");

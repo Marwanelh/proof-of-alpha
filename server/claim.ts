@@ -50,10 +50,14 @@ export async function extractClaim(input: ExtractInput): Promise<Claim | null> {
   const asset = findAsset(text);
   if (asset === null) return null;
 
-  const targetUsd = findTarget(text);
+  // A trade setup (Long/Short, TP1…, SL) is the most common shape of a KOL call. Its first take-profit is the
+  // claim: the price the author says will be reached first. Later TPs are optional extensions, not the call.
+  const setup = findSetup(text);
+
+  const targetUsd = setup?.tp1 ?? findTarget(text);
   if (targetUsd === null) return null;
 
-  const direction = findDirection(text, targetUsd);
+  const direction = setup?.direction ?? findDirection(text, targetUsd);
   if (direction === null) return null;
 
   const postedAt = new Date(input.postedAt);
@@ -65,7 +69,8 @@ export async function extractClaim(input: ExtractInput): Promise<Claim | null> {
     // A date was named but we could not parse it: refuse rather than substitute a horizon the author
     // never wrote. Otherwise an observation with no forward-looking grammar is not a prediction at all.
     if (DEADLINE_LIKE.test(text)) return null;
-    if (!FORWARD.test(text)) return null;
+    // A setup with a take-profit is forward-looking by construction, so it takes the flagged default horizon.
+    if (setup === null && !FORWARD.test(text)) return null;
   }
   const deadline =
     explicit ?? new Date(postedAt.getTime() + DEFAULT_HORIZON_DAYS * 86_400_000);
@@ -98,6 +103,33 @@ function findAsset(text: string): string | null {
   }
   // Ambiguous posts ("BNB and CAKE both look strong") are not one claim.
   return hits.size === 1 ? [...hits][0]! : null;
+}
+
+type Setup = { tp1: string; direction: Claim["direction"] };
+
+/**
+ * "Long setup: Entry $550 · TP1 $569 · TP2 $582 · SL $525". Needs a take-profit. Direction comes from the
+ * author's Long/Short word, else from TP vs SL; a setup whose TP sits on the wrong side of its own stop is
+ * contradictory and is refused rather than guessed.
+ */
+function findSetup(text: string): Setup | null {
+  const num = "([0-9][0-9,]*(?:\\.[0-9]+)?)";
+  const tp = text.match(new RegExp(`\\b(?:tp\\s*1?|take[\\s-]?profit\\s*1?|target\\s*1)\\s*[:=\\-–]?\\s*\\$?\\s?${num}`, "i"));
+  if (!tp) return null;
+  const tp1 = tp[1]!.replace(/,/g, "");
+  if (!(Number(tp1) > 0)) return null;
+
+  const sl = text.match(new RegExp(`\\b(?:sl|stop[\\s-]?loss|stop|invalidation)\\s*[:=\\-–]?\\s*\\$?\\s?${num}`, "i"));
+  const stop = sl ? Number(sl[1]!.replace(/,/g, "")) : null;
+
+  const long = /\blong(?:ing|s)?\b/i.test(text);
+  const short = /\bshort(?:ing|s)?\b/i.test(text);
+  let direction: Claim["direction"] | null = long && !short ? "bullish" : short && !long ? "bearish" : null;
+  if (direction === null && stop !== null) direction = Number(tp1) > stop ? "bullish" : "bearish";
+  if (direction === null) return null;
+
+  if (stop !== null && (direction === "bullish" ? Number(tp1) <= stop : Number(tp1) >= stop)) return null;
+  return { tp1, direction };
 }
 
 /** A price target must be attached to a comparison word, or it is noise ("10 reasons", "$100K volume"). */
