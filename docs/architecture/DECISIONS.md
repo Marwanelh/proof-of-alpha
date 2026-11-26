@@ -48,14 +48,14 @@ fixture lives in `data/`.
 
 ## Still open — owner: the humans
 
-| Item | Blocking |
+| Item | Status |
 |---|---|
-| Teammate's GitHub handle | Adding the collaborator with push access (repo can be created and pushed without it) |
-| Whether the teammate writes code, and on which axis | Phase time-boxes: the plan assumes two coders. If not, B's column becomes UI/story/video and the code has to be produced by agents |
-| CMC Content access on the free key | Phase 4 (ingest), and the CMC × Atlas track |
-| The Atlas BNB `bytes4` feedId | Phase 4 (real on-chain read); only Atlas can supply it |
-| Cournot credit or pack | Phase 4 and the Cournot track's minimum viable proof: one real successful call |
-| Living Brain key + subject id | Phases 0B and 5 (ChatAndBuild track) |
+| Teammate's GitHub handle | **RESOLVED — `yaokaiyuan`**, invited with push access |
+| Do both builders write code, and on which axis | **RESOLVED — both are strong TypeScript engineers.** Codex's two-coder time-boxes stand unchanged. Solidity is the shared gap: mitigated because `CallRegistry.sol` is already written, compiles under solc 0.8.24, and Phase 2 only adds the Foundry install and one address-zero branch to the deploy script |
+| CMC Content access on the free key | Open — blocks Phase 4 (ingest) and the CMC × Atlas track |
+| The Atlas BNB `bytes4` feedId | Open — blocks Phase 4's real on-chain read; only Atlas can supply it |
+| Cournot credit or pack | Open — blocks Phase 4 and the Cournot track's minimum viable proof: one real successful call |
+| Living Brain key + subject id | Open — blocks Phases 0B and 5 (ChatAndBuild track) |
 
 ## Environment note (not a project decision)
 
