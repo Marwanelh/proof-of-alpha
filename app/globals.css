@@ -322,6 +322,7 @@ button.ghost {
 /* ------------------------------------------------------------------ receipt */
 
 .receipt {
+  container-type: inline-size;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lift);
   background: var(--paper);
@@ -351,7 +352,8 @@ button.ghost {
 /* Each row is a ledger line: label, value, and the stamp that qualifies it, aligned in a notary margin. */
 .row {
   display: grid;
-  grid-template-columns: 148px minmax(0, 1fr) auto;
+  margin: 0;
+  grid-template-columns: 136px minmax(0, 1fr) 195px;
   gap: 16px;
   align-items: baseline;
   padding: 11px 20px;
@@ -377,13 +379,6 @@ button.ghost {
   overflow-wrap: anywhere;
 }
 
-/* A number must never break mid-digit: "$85.9432838362509 / 8567" reads as two numbers. Prose may wrap
-   anywhere; values may not. */
-.row .value {
-  overflow-wrap: normal;
-  white-space: nowrap;
-}
-
 .row[data-tone="quiet"] > dd {
   color: var(--ink-2);
 }
@@ -394,13 +389,23 @@ button.ghost {
   background: var(--paper-2);
 }
 
-@media (max-width: 620px) {
+.row > dd:empty { display: none; }
+.row > dd:last-child:not(:empty) { justify-self: end; }
+.row .stamp { max-width: 100%; white-space: normal; }
+.row .value { white-space: normal; overflow-wrap: anywhere; }
+
+@container (max-width: 760px) {
+  .row { grid-template-columns: 100px minmax(0, 1fr); gap: 4px 12px; }
+  .row > dd:last-child:not(:empty) { grid-column: 2; justify-self: start; }
+}
+
+@container (max-width: 420px) {
   .row {
     grid-template-columns: 1fr;
     gap: 4px;
   }
-  .row > dd:last-child {
-    justify-self: start;
+  .row > dd:last-child:not(:empty) {
+    grid-column: 1;
   }
 }
 
@@ -445,6 +450,9 @@ button.ghost {
   font-size: 13.5px;
   max-width: var(--measure);
 }
+
+.register caption { width: min(100cqw, var(--measure)); }
+.register .kol, .register td.num { white-space: nowrap; }
 
 .register th {
   text-align: left;
@@ -500,6 +508,7 @@ button.ghost {
 }
 
 .table-scroll {
+  container-type: inline-size;
   overflow-x: auto;
 }
 
@@ -589,6 +598,11 @@ button.ghost {
   border-radius: var(--radius-lg);
   overflow-wrap: anywhere;
 }
+.receipt-stage:has(.receipt-preview) {
+  align-self: stretch;
+  display: grid;
+  align-content: center;
+}
 .receipt-stage > .hint { color: #d9dce0; }
 .receipt-preview {
   padding: clamp(20px, 3vw, 34px);
@@ -630,4 +644,14 @@ button.ghost {
   .masthead nav a { display: inline-flex; align-items: center; min-height: 36px; }
   .workbench { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   .actions { flex-wrap: wrap; }
+}
+
+.method-rules { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; }
+.method-rules h2 { font-size: 16px; margin-bottom: 8px; }
+.method-rules p { font-size: 15px; }
+@media (max-width: 900px) {
+  .method-rules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 620px) {
+  .method-rules { grid-template-columns: minmax(0, 1fr); gap: 24px; }
 }

@@ -41,7 +41,7 @@ export default function MethodPage() {
         </p>
       </section>
 
-      <section className="notes" style={{ borderTop: 0, paddingTop: 0, marginTop: 0 }}>
+      <section className="notes method-rules" style={{ borderTop: 0, paddingTop: 0, marginTop: 0 }}>
         {RULES.map((r) => (
           <div key={r.h}>
             <h2>{r.h}</h2>
