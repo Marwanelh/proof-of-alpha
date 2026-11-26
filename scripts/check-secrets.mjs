@@ -34,7 +34,8 @@ const PATTERNS = [
 ];
 
 /** Generated files that legitimately contain long hashes. Listed in the output, never silently skipped. */
-const HASH_FILE = [/package-lock\.json$/, /(^|\/)evidence\/(evidence|.*)\.json$/, /\.bin$/, /\.abi$/];
+// data/live.json holds confirmed on-chain receipts (tx hashes, post hashes), written by /api/verify only.
+const HASH_FILE = [/package-lock\.json$/, /(^|\/)evidence\/(evidence|.*)\.json$/, /(^|\/)data\/live\.json$/, /\.bin$/, /\.abi$/];
 /** Genuinely non-text assets: still read as bytes, but only the raw and UTF-16 decodings are searched. */
 const MEDIA_FILE = /\.(png|jpe?g|gif|webp|ico|woff2?|ttf|otf|mp4|webm|zip|gz|pdf)$/i;
 

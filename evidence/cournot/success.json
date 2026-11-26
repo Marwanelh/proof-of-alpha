@@ -1,0 +1,10 @@
+{
+  "$comment": "Real Cournot response, normalised by scripts/cournot-record.mjs from evidence/cournot/success-raw.json (kept verbatim).",
+  "provenance": "recorded-live",
+  "requestId": "sha256:c7f95d41d1eb9bd2f7739ac09558e75918d484f1624f268ec4aa369d2c561c9b",
+  "requestIdSource": "sha256-of-raw-response",
+  "probability": 0.2902,
+  "evaluatedClaim": "BNB price below $500.00 at any time before 2026-12-01 05:00 UTC",
+  "evidence": "[{\"source\":\"polymarket\",\"summary\":\"polymarket latest yes price 0.3100 for \\\"[BNB price below $500.00 at any time before 2026-12-01 05:00 UTC](<https://polymarket.com/market/will-bnb-dip-to-500-in-november-2026>)\\\" (1 legs), ends 2026-12-01 05:00:00 UTC\",\"time\":\"2026-11-26 20:42:43 UTC\"},{\"source\":\"kalshi\",\"summary\":\"kalshi latest yes price 0.2600 for \\\"[BNB price below $500.00 at any time before 2026-12-01 05:00 UTC](<https://kalshi.com/markets/kxbnbminmon/kxbnbminmon-bnb-26nov30?op_market_ticker=KXBNBMINMON-BNB-26NOV30-50000>)\\\" (1 legs), ends 2026-12-01 04:59:59 UTC\",\"time\":\"2026-11-26 20:42:36 UTC\"},{\"source\":\"binance\",\"summary\":\"[Over the 14 calendar days, BNB fell from 657.1 to 555.52 with a return of -15.4588% and a max drawdown of -17.6762%, while mark price closed at 555.53 with a long-short ratio of 2.3602.](<https://www.binance.com/en/futures/BNBUSDT>)\",\"time\":\"2026-11-26 20:22:45 UTC\"},{\"source\":\"venues\",\"summary\":\"[Across venues, BNB mark prices span from 554.79 to 555.53 with 24-hour price changes between 0.003762 and 0.005563, while funding rates range from -0.000018 to 0.0001 and open interest changes vary from -0.075071 to 0.00286.](<https://www.coinglass.com/currencies/BNB>)\",\"time\":\"2026-11-26 20:22:45 UTC\"},{\"source\":\"forecast\",\"summary\":\"On 2026-11-26, the 3 models forecasted BNB over a 1-hour horizon, with Kronos showing a 50% probability of going up, Chronos predicting 100%, and TimesFM indicating 0.\",\"time\":\"2026-11-26 19:52:50 UTC\"}]",
+  "recordedAt": "2026-11-26T20:44:48.722Z"
+}

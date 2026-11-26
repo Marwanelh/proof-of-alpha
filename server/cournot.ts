@@ -126,3 +126,17 @@ function requireText(v: unknown, field: string, path: string): string {
   }
   return v;
 }
+
+/**
+ * Does a recorded Cournot response price THIS claim? A recorded response is one real call about one market
+ * ("BNB price below $500.00 … before 2026-12-01"). Pinning it to every pasted post would show a real
+ * probability for a claim nobody asked Cournot about, so it applies only when coin, side and strike match.
+ */
+export function recordedMatches(claim: Claim, cournot: CournotResponse): boolean {
+  const m = cournot.evaluatedClaim.match(/^\s*([A-Za-z]+)\b.*?\b(above|below)\s*\$\s?([\d,]+(?:\.\d+)?)/i);
+  if (!m) return false;
+  const asset = m[1]!.toUpperCase();
+  const side = m[2]!.toLowerCase() === "above" ? "bullish" : "bearish";
+  const strike = Number(m[3]!.replace(/,/g, ""));
+  return asset === claim.asset && side === claim.direction && Math.abs(strike - Number(claim.targetUsd)) < 1e-9;
+}

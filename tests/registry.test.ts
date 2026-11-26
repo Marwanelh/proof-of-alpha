@@ -1,3 +1,4 @@
+import { encodeFunctionData } from "viem";
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
@@ -110,6 +111,13 @@ describe("encodeCall", () => {
     assert.equal(args[9], 1_764_000_030, "atlasOnchainTs");
     assert.equal(args[10], 64_000_000n, "atlasRefBlock");
     assert.match(postHash, /^0x[0-9a-f]{64}$/);
+    assert.equal(args[0], postHash, "postHash is passed as bytes32 hex");
+    assert.equal(args[1], kolId, "kolId is passed as bytes32 hex");
+    // Encode through the real ABI, which is what the live transport does. A fake transport cannot catch a
+    // type viem rejects, and that is how a bigint bytes32 reached the first live write.
+    assert.doesNotThrow(() =>
+      encodeFunctionData({ abi: CALL_REGISTRY_ABI, functionName: "recordCallReferenced", args: args as never }),
+    );
     assert.match(kolId, /^0x[0-9a-f]{64}$/);
   });
 

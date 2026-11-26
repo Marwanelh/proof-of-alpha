@@ -2,7 +2,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
 import { extractClaim } from "../server/claim.ts";
-import { readFixture, readCournot, CournotError, FIXTURE_PATH } from "../server/cournot.ts";
+import { readFixture, readCournot, readRecorded, recordedMatches, CournotError, FIXTURE_PATH } from "../server/cournot.ts";
 import { verify, VerifyError, type VerifyDeps } from "../server/verify.ts";
 import { readAtlas, AtlasError, type AtlasTransport } from "../server/atlas.ts";
 import { keylessPrice, keyedQuotes, latestPosts, CmcError } from "../server/cmc.ts";
@@ -78,7 +78,23 @@ describe("verify pipeline", () => {
   });
 
   test("recorded-live mode fails loudly while no real response has been captured", () => {
-    assert.throws(() => readCournot("recorded-live"), (e) => e instanceof CournotError);
+    assert.throws(() => readRecorded("evidence/cournot/does-not-exist.json"), (e) => e instanceof CournotError);
+  });
+
+  test("a recorded response applies only to the claim it priced", () => {
+    const r = readCournot("recorded-live");
+    const claim = { source: "paste", authorId: "a", originalText: "t", postedAt: "2026-11-27T00:00:00Z", asset: "BNB", direction: "bearish", targetUsd: "500", deadline: "2026-12-01T23:59:00Z", horizonDefaulted: false } as const;
+    assert.equal(recordedMatches(claim, r), true);
+    assert.equal(recordedMatches({ ...claim, targetUsd: "700" }, r), false);
+    assert.equal(recordedMatches({ ...claim, direction: "bullish" }, r), false);
+    assert.equal(recordedMatches({ ...claim, asset: "CAKE" }, r), false);
+  });
+
+  test("the captured Cournot response is real, carries an id, and is never a fixture", () => {
+    const r = readCournot("recorded-live");
+    assert.equal(r.provenance, "recorded-live");
+    assert.ok(r.requestId.length > 0);
+    assert.ok(r.probability >= 0 && r.probability <= 1);
   });
 
   test("no scorable claim stops the pipeline before any provider is called", async () => {

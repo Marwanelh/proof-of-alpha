@@ -13,47 +13,58 @@
  * as live data.
  */
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 
 import type { CallRecord } from "../shared/types.ts";
 
 export type LoadedStore = { records: CallRecord[]; source: string; sample: boolean };
 
+/** Confirmed on-chain receipts. Committed, so a deployment shows them; appended by /api/verify. */
+export const LIVE_PATH = "data/live.json";
+
+function readRecords(path: string): CallRecord[] | null {
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(/* turbopackIgnore: true */ path, "utf8"));
+    return Array.isArray(parsed) ? (parsed as CallRecord[]) : ((parsed as { records?: CallRecord[] }).records ?? []);
+  } catch {
+    return null; // missing or corrupt: not a reason to invent a leaderboard
+  }
+}
+
+/**
+ * The working set (local.json, else the committed seed) plus every confirmed receipt in live.json, each id
+ * once. Receipts live in their own committed file because local.json is gitignored and a deployment never
+ * has it, and because seed.json is refused by the seed guard if it ever carries a receipt.
+ */
 export function loadStore(): LoadedStore {
+  let base: CallRecord[] = [];
+  let source = "none";
   for (const path of ["data/local.json", "data/seed.json"]) {
-    try {
-      const parsed: unknown = JSON.parse(readFileSync(/* turbopackIgnore: true */ path, "utf8"));
-      const records = Array.isArray(parsed)
-        ? (parsed as CallRecord[])
-        : ((parsed as { records?: CallRecord[] }).records ?? []);
-      if (records.length > 0) {
-        return { records, source: path, sample: records.some((r) => r.kind === "backtested") };
-      }
-    } catch {
-      continue; // a corrupt store is not a reason to invent a leaderboard
+    const rows = readRecords(path);
+    if (rows !== null && rows.length > 0) {
+      base = rows;
+      source = path;
+      break;
     }
   }
-  return { records: [], source: "none", sample: true };
+  const live = readRecords(LIVE_PATH) ?? [];
+  const seen = new Set(base.map((r) => r.id));
+  const records = [...base, ...live.filter((r) => !seen.has(r.id))];
+  if (live.length > 0) source = `${source} + ${LIVE_PATH}`;
+  return { records, source, sample: records.some((r) => r.kind === "backtested") };
 }
 
 export function loadRecords(): CallRecord[] {
   return loadStore().records;
 }
 
-/** Append one confirmed call to data/local.json (created from the seed if missing). Throws on a read-only FS. */
+/** Append one confirmed on-chain call to data/live.json. Throws on a read-only filesystem. */
 export function appendRecord(record: CallRecord): void {
-  const path = "data/local.json";
-  let records: CallRecord[] = [];
-  if (existsSync(/* turbopackIgnore: true */ path)) {
-    const parsed: unknown = JSON.parse(readFileSync(/* turbopackIgnore: true */ path, "utf8"));
-    records = Array.isArray(parsed) ? (parsed as CallRecord[]) : ((parsed as { records?: CallRecord[] }).records ?? []);
-  } else {
-    records = loadStore().records;
-  }
+  const records = readRecords(LIVE_PATH) ?? [];
   if (records.some((r) => r.id === record.id)) return;
   records.push(record);
   writeFileSync(
-    /* turbopackIgnore: true */ path,
-    JSON.stringify({ updatedAt: new Date().toISOString(), count: records.length, records }, null, 2),
+    /* turbopackIgnore: true */ LIVE_PATH,
+    JSON.stringify({ updatedAt: new Date().toISOString(), count: records.length, records }, null, 2) + "\n",
   );
 }

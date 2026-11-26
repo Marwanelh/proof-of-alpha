@@ -158,7 +158,7 @@ function requireUint(value: bigint, max: bigint, what: string): bigint {
 }
 
 export type EncodedCall = {
-  args: readonly [bigint, bigint, `0x${string}`, number, bigint, bigint, bigint, bigint, bigint, number, bigint];
+  args: readonly [`0x${string}`, `0x${string}`, `0x${string}`, number, bigint, bigint, bigint, bigint, bigint, number, bigint];
   postHash: `0x${string}`;
   kolId: `0x${string}`;
 };
@@ -210,8 +210,8 @@ export function encodeCall(call: EncodableCall): EncodedCall {
 
   return {
     args: [
-      BigInt(postHash),
-      BigInt(kolId),
+      postHash, // bytes32: a 0x-hex string, not a number — viem refuses a bigint for bytesN
+      kolId,
       symbolToBytes4(claim.asset),
       claim.direction === "bullish" ? 1 : -1,
       target,

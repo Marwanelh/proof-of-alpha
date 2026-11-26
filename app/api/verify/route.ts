@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 
 import { extractClaimSmart } from "../../../server/llm-claim.ts";
 import { cleanPastedPost } from "../../../shared/clean.ts";
-import { readCournot as readCournotResponse, CournotError, type CournotMode } from "../../../server/cournot.ts";
+import {
+  readCournot as readCournotResponse,
+  readFixture,
+  recordedMatches,
+  CournotError,
+  type CournotMode,
+} from "../../../server/cournot.ts";
 import { keylessPrice, keyedQuotes, CmcError } from "../../../server/cmc.ts";
 import { readAtlas, AtlasError } from "../../../server/atlas.ts";
 import { verify, VerifyError } from "../../../server/verify.ts";
@@ -112,7 +118,11 @@ export async function POST(request: Request) {
         extract: (input) => extractClaimSmart(input),
         // Signature differs on purpose: the adapter takes (mode, skillDir, claim), the pipeline takes
         // (claim, mode). Adapted here rather than changing either contract.
-        readCournot: (claim, m) => readCournotResponse(m, process.env["COURNOT_SKILL_DIR"], claim),
+        readCournot: (claim, m) => {
+          const r = readCournotResponse(m, process.env["COURNOT_SKILL_DIR"], claim);
+          // The recorded real call prices one market. Any other claim gets the labelled fixture instead.
+          return m === "recorded-live" && !recordedMatches(claim, r) ? readFixture() : r;
+        },
         readPrice,
         readAtlas: () => readAtlas(atlas),
         record: async (call) => {

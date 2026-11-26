@@ -36,8 +36,8 @@ Or in one line, through our own reader: `npm run smoke` prints
 `atlas.read singlefeed "bnb/usd" price=… block=…`.
 
 ## On-chain proof to cite in the submission
-- `recordCall` / `recordCallReferenced` tx: _TBD_
-- The `CallRecorded` event it emitted: _TBD_ (`atlasVerified` is in the event — cite it either way)
-- The mainnet block the Atlas price was read at (Plan A) / the feed read inside the tx (Plan B): _TBD_
-- Cournot request id: _TBD_
+- `recordCallReferenced` tx (call #0, BNB bearish below $500 by 1 Dec, Cournot p = 0.2902): [`0x25270499…dd9a4a80`](https://testnet.bscscan.com/tx/0x252704994cb18087439d79462ce8ffbd1079135c71028f1aae29b901dd9a4a80) — block 145045939, status success
+- The `CallRecorded` event it emitted: id 0, `cournotBps` 2902, `atlasVerified` = false (referenced read, Plan A) — readable with `getCall(0)` on the registry
+- Atlas BNB/USD read on BSC mainnet at block **135913072** ($555.62), stored in the receipt as `atlasRefBlock`
+- Cournot: market #111338, probability **0.2902** (free quota, 1 of 3 used). The response carries no request id, so the receipt cites `sha256:c7f95d41…2c561c9b` of the raw response kept verbatim in `evidence/cournot/success-raw.json`
 - Living Brain capture id: `9b5828f0-f691-44dc-9a1e-bfa542e9c318` (`status=completed after 19.1s`)
