@@ -1,0 +1,80 @@
+[
+  {
+    "$comment": "SAMPLE DATA. Every handle, number and date below is fictional and exists to make the leaderboard demonstrable offline. No row carries a Cournot probability or an on-chain receipt — the type forbids it, and scripts/seed.mjs fails the build if one appears. Replace with a real backtest once keyed CMC Content access is confirmed (Phase 6).",
+    "kind": "backtested",
+    "id": "sample-001",
+    "claim": {
+      "source": "cmc",
+      "authorId": "sample-kol-alpha",
+      "originalText": "BNB is going above $600 by November 30. Loading up.",
+      "postedAt": "2026-11-18T09:00:00.000Z",
+      "asset": "BNB",
+      "direction": "bullish",
+      "targetUsd": "600",
+      "deadline": "2026-11-30T23:59:00.000Z",
+      "horizonDefaulted": false
+    },
+    "cmcAtPost": { "priceUsd": "541.20", "observedAt": "2026-11-18T09:00:00.000Z" },
+    "proxyBaseline": {
+      "probability": 0.62,
+      "label": "Proxy baseline — not Cournot",
+      "methodology": "Historical volatility: how often BNB moved +10.9% within 13 days over the trailing window."
+    },
+    "resolution": {
+      "result": { "outcome": 1, "resolvedAt": "2026-11-30T23:59:00.000Z", "cmcPriceUsd": "604.80" },
+      "score": { "kind": "proxy-edge", "label": "Proxy Edge — not Cournot", "probability": 0.62, "edge": 0.38 }
+    }
+  },
+  {
+    "$comment": "SAMPLE DATA — the story beat: a high hit rate built on calls the market already expected. Proxy Edge is barely positive, which is the point.",
+    "kind": "backtested",
+    "id": "sample-002",
+    "claim": {
+      "source": "cmc",
+      "authorId": "sample-kol-beta",
+      "originalText": "CAKE above $1.60 by November 25, momentum is clean",
+      "postedAt": "2026-11-19T14:30:00.000Z",
+      "asset": "CAKE",
+      "direction": "bullish",
+      "targetUsd": "1.60",
+      "deadline": "2026-11-25T23:59:00.000Z",
+      "horizonDefaulted": false
+    },
+    "cmcAtPost": { "priceUsd": "1.58", "observedAt": "2026-11-19T14:30:00.000Z" },
+    "proxyBaseline": {
+      "probability": 0.88,
+      "label": "Proxy baseline — not Cournot",
+      "methodology": "Historical volatility: a 1.3% move over 6 days was already priced in on 88% of comparable windows."
+    },
+    "resolution": {
+      "result": { "outcome": 1, "resolvedAt": "2026-11-25T23:59:00.000Z", "cmcPriceUsd": "1.61" },
+      "score": { "kind": "proxy-edge", "label": "Proxy Edge — not Cournot", "probability": 0.88, "edge": 0.12 }
+    }
+  },
+  {
+    "$comment": "SAMPLE DATA — a confident miss, so the leaderboard shows a negative Edge.",
+    "kind": "backtested",
+    "id": "sample-003",
+    "claim": {
+      "source": "cmc",
+      "authorId": "sample-kol-gamma",
+      "originalText": "BNB below $480 by November 22, this breaks down now",
+      "postedAt": "2026-11-20T08:15:00.000Z",
+      "asset": "BNB",
+      "direction": "bearish",
+      "targetUsd": "480",
+      "deadline": "2026-11-22T23:59:00.000Z",
+      "horizonDefaulted": false
+    },
+    "cmcAtPost": { "priceUsd": "556.40", "observedAt": "2026-11-20T08:15:00.000Z" },
+    "proxyBaseline": {
+      "probability": 0.31,
+      "label": "Proxy baseline — not Cournot",
+      "methodology": "Historical volatility: a -13.7% move within 3 days occurred in 31% of comparable windows."
+    },
+    "resolution": {
+      "result": { "outcome": 0, "resolvedAt": "2026-11-22T23:59:00.000Z", "cmcPriceUsd": "549.10" },
+      "score": { "kind": "proxy-edge", "label": "Proxy Edge — not Cournot", "probability": 0.31, "edge": -0.31 }
+    }
+  }
+]

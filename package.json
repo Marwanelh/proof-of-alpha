@@ -1,0 +1,21 @@
+{
+  "name": "proof-of-alpha",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A credit record for crypto KOLs: verifiable calls, Edge scored against the market's own expectation, receipts on BNB Chain.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.20"
+  },
+  "scripts": {
+    "seed": "node scripts/seed.mjs",
+    "test": "node --env-file-if-exists=.env.local --experimental-strip-types --test tests/core.test.ts",
+    "test:verify": "node --env-file-if-exists=.env.local --experimental-strip-types --test tests/verify.test.ts",
+    "smoke": "node --env-file-if-exists=.env.local scripts/smoke.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.7",
+    "typescript": "^5.9.3"
+  }
+}

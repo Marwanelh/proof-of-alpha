@@ -1,0 +1,9 @@
+{
+  "$comment": "FIXTURE — synthetic, for development and rehearsal only. Not sponsor evidence, never presented as a live call. Replace by running the official Cournot client once credits are available and committing the sanitised real response to evidence/cournot/success.json. Deliberately kept out of evidence/ because that tree is reserved for sponsor-verifiable proof.",
+  "provenance": "fixture",
+  "fixtureId": "fixture-bnb-600-before-2026-12-01",
+  "probability": 0.35,
+  "evaluatedClaim": "BNB/USD price above $600.00 at any time before 2026-12-01 05:00 UTC",
+  "evidence": "Synthetic fixture. The real response carries the assessed claim, the market-implied inputs and their roles, returned verbatim by the official client's bundled request.",
+  "requestId": null
+}
