@@ -12,7 +12,7 @@ import type { AtlasSnapshot, Claim, CournotResponse } from "../shared/types.ts";
 import { isSponsorEvidence } from "../shared/types.ts";
 
 import { directionHit } from "./resolve.ts";
-import { readCournot, readFixture, recordedMatches } from "./cournot.ts";
+import { readFixture, recordedFor } from "./cournot.ts";
 
 const BASE = "https://pro-api.coinmarketcap.com";
 export const DEFAULT_MARK_HOURS = 24;
@@ -136,8 +136,7 @@ export async function checkCall(
   if (input.useCournot) {
     let cournot: CournotResponse;
     try {
-      const recorded = readCournot("recorded-live");
-      cournot = recordedMatches(c, recorded) ? recorded : readFixture();
+      cournot = recordedFor(c) ?? readFixture();
     } catch {
       cournot = readFixture();
     }

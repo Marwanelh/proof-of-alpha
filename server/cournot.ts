@@ -12,7 +12,7 @@
  * NOTE: add `import "server-only"` here once the Next app lands (that package arrives with Next).
  */
 
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 
 import type { Claim, CournotResponse, FixtureCournotResponse, ProvenCournotResponse } from "../shared/types.ts";
 
@@ -132,11 +132,63 @@ function requireText(v: unknown, field: string, path: string): string {
  * ("BNB price below $500.00 … before 2026-12-01"). Pinning it to every pasted post would show a real
  * probability for a claim nobody asked Cournot about, so it applies only when coin, side and strike match.
  */
+const ASSET_NAMES: Record<string, string> = {
+  bitcoin: "BTC", btc: "BTC", ethereum: "ETH", ether: "ETH", eth: "ETH", solana: "SOL", sol: "SOL",
+  bnb: "BNB", xrp: "XRP", dogecoin: "DOGE", doge: "DOGE", cardano: "ADA", ada: "ADA", chainlink: "LINK",
+  link: "LINK", tron: "TRX", trx: "TRX", cake: "CAKE", pancakeswap: "CAKE",
+};
+
+/**
+ * Read a Cournot market title into coin, side and strike. Handles the shapes Cournot returns:
+ * "Bitcoin price above $62,500 at any time before …", "BNB price below $500.00 …",
+ * "Will the price of Ethereum be above $1,900 on December 1?", "… be less than $1,200 …".
+ */
+export function parseMarket(title: string): { asset: string; side: "bullish" | "bearish"; strike: number } | null {
+  const lower = title.toLowerCase();
+  const word = Object.keys(ASSET_NAMES).find((n) => new RegExp(`\\b${n}\\b`).test(lower));
+  const m = lower.match(/\b(above|over|greater than|below|under|less than)\s*\$\s?([\d,]+(?:\.\d+)?)/);
+  if (!word || !m) return null;
+  return {
+    asset: ASSET_NAMES[word]!,
+    side: /above|over|greater/.test(m[1]!) ? "bullish" : "bearish",
+    strike: Number(m[2]!.replace(/,/g, "")),
+  };
+}
+
+/**
+ * Does a recorded Cournot response price THIS claim? A recorded response is one real call about one market.
+ * Pinning it to every pasted post would show a real probability for a claim nobody asked Cournot about, so it
+ * applies only when coin, side and strike match.
+ */
 export function recordedMatches(claim: Claim, cournot: CournotResponse): boolean {
-  const m = cournot.evaluatedClaim.match(/^\s*([A-Za-z]+)\b.*?\b(above|below)\s*\$\s?([\d,]+(?:\.\d+)?)/i);
-  if (!m) return false;
-  const asset = m[1]!.toUpperCase();
-  const side = m[2]!.toLowerCase() === "above" ? "bullish" : "bearish";
-  const strike = Number(m[3]!.replace(/,/g, ""));
-  return asset === claim.asset && side === claim.direction && Math.abs(strike - Number(claim.targetUsd)) < 1e-9;
+  const m = parseMarket(cournot.evaluatedClaim);
+  return m !== null && m.asset === claim.asset && m.side === claim.direction && Math.abs(m.strike - Number(claim.targetUsd)) < 1e-9;
+}
+
+/** Every recorded real Cournot response: evidence/cournot/recorded/*.json, plus the first capture. */
+export const RECORDED_DIR = "evidence/cournot/recorded";
+
+export function readAllRecorded(): ProvenCournotResponse[] {
+  const out: ProvenCournotResponse[] = [];
+  const paths = [RECORDED_PATH];
+  try {
+    for (const f of readdirSync(/* turbopackIgnore: true */ RECORDED_DIR)) {
+      if (f.endsWith(".json") && !f.endsWith("-raw.json")) paths.push(`${RECORDED_DIR}/${f}`);
+    }
+  } catch {
+    /* no directory yet */
+  }
+  for (const p of paths) {
+    try {
+      out.push(readRecorded(p));
+    } catch {
+      /* missing or malformed: skip */
+    }
+  }
+  return out;
+}
+
+/** The recorded real Cournot response that priced this claim, if any. */
+export function recordedFor(claim: Claim): ProvenCournotResponse | null {
+  return readAllRecorded().find((r) => recordedMatches(claim, r)) ?? null;
 }

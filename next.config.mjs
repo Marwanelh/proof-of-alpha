@@ -22,7 +22,8 @@ const nextConfig = {
   // perfectly on localhost. The build script verifies the emitted trace manifest actually contains the file.
   outputFileTracingIncludes: {
     "/**/*": ["./data/**/*.json"],
-    "/api/verify": ["./evidence/cournot/success.json"],
+    "/api/verify": ["./evidence/cournot/success.json", "./evidence/cournot/recorded/*.json"],
+    "/api/check": ["./evidence/cournot/success.json", "./evidence/cournot/recorded/*.json"],
   },
 };
 

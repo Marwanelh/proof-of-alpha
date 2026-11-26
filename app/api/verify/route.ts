@@ -5,7 +5,7 @@ import { cleanPastedPost } from "../../../shared/clean.ts";
 import {
   readCournot as readCournotResponse,
   readFixture,
-  recordedMatches,
+  recordedFor,
   CournotError,
   type CournotMode,
 } from "../../../server/cournot.ts";
@@ -119,9 +119,9 @@ export async function POST(request: Request) {
         // Signature differs on purpose: the adapter takes (mode, skillDir, claim), the pipeline takes
         // (claim, mode). Adapted here rather than changing either contract.
         readCournot: (claim, m) => {
-          const r = readCournotResponse(m, process.env["COURNOT_SKILL_DIR"], claim);
-          // The recorded real call prices one market. Any other claim gets the labelled fixture instead.
-          return m === "recorded-live" && !recordedMatches(claim, r) ? readFixture() : r;
+          // Each recorded real call prices one market. A claim gets the one that priced it, else the fixture.
+          if (m === "recorded-live") return recordedFor(claim) ?? readFixture();
+          return readCournotResponse(m, process.env["COURNOT_SKILL_DIR"], claim);
         },
         readPrice,
         readAtlas: () => readAtlas(atlas),

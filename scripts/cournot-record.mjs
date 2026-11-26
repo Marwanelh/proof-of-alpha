@@ -16,8 +16,9 @@
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
-const OUT = "evidence/cournot/success.json";
-const RAW_OUT = "evidence/cournot/success-raw.json";
+// Each capture is kept under its market id, so a second real call never overwrites the first.
+let OUT = "evidence/cournot/success.json";
+let RAW_OUT = "evidence/cournot/success-raw.json";
 
 const args = process.argv.slice(2);
 const input = args.find((a) => !a.startsWith("--"));
@@ -74,7 +75,12 @@ if (!evaluatedClaim) fail("could not find the evaluated claim; pass --market-tit
 const basis = find(data, ["basis"], (v) => v !== null && v !== undefined);
 const evidence = basis !== undefined ? JSON.stringify(basis) : JSON.stringify(data.result ?? data);
 
-mkdirSync("evidence/cournot", { recursive: true });
+const marketId = find(data, ["id"], (v) => typeof v === "number" || (typeof v === "string" && /^\d+$/.test(v)));
+if (marketId !== undefined) {
+  OUT = `evidence/cournot/recorded/${marketId}.json`;
+  RAW_OUT = `evidence/cournot/recorded/${marketId}-raw.json`;
+}
+mkdirSync("evidence/cournot/recorded", { recursive: true });
 writeFileSync(RAW_OUT, rawText);
 writeFileSync(
   OUT,
