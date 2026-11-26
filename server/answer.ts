@@ -142,7 +142,26 @@ export type Answer = {
   modelFailed?: boolean;
 };
 
-export type LlmConfig = { apiKey: string; baseUrl: string; model: string; oidc?: string };
+export type LlmConfig = {
+  apiKey: string;
+  baseUrl: string;
+  /** The preferred model. */
+  model: string;
+  /**
+   * Fallbacks, tried in order when the preferred model fails. Free tiers rate-limit per model, so a second
+   * model is often the difference between an answer and a fallback message while someone is watching.
+   */
+  models?: readonly string[];
+  oidc?: string;
+};
+
+/** `LLM_MODEL` may hold a comma-separated list. The first is preferred; the rest are fallbacks. */
+export function modelsFromEnv(raw: string | undefined): string[] {
+  return (raw ?? "")
+    .split(",")
+    .map((m) => m.trim())
+    .filter((m) => m !== "");
+}
 
 /**
  * The provider, if one is configured. Prefers an explicit key; falls back to Vercel's AI Gateway using the
@@ -156,16 +175,18 @@ const GATEWAY_BASE = "https://ai-gateway.vercel.sh/v1";
 
 export function llmConfigFromEnv(): LlmConfig | null {
   const key = process.env["LLM_API_KEY"];
-  const model = process.env["LLM_MODEL"];
+  const models = modelsFromEnv(process.env["LLM_MODEL"]);
   const oidc = process.env["VERCEL_OIDC_TOKEN"];
   const explicit = process.env["LLM_API_BASE"];
   const onVercel = process.env["VERCEL"] !== undefined;
 
-  if (!model) return null;
+  if (models.length === 0) return null;
+  const [model = "", ...fallbacks] = models;
+  const rest = fallbacks.length > 0 ? { models: fallbacks } : {};
   if (key && key.trim() !== "") {
-    return { apiKey: key, baseUrl: explicit ?? (onVercel ? GATEWAY_BASE : "https://api.openai.com/v1"), model };
+    return { apiKey: key, baseUrl: explicit ?? (onVercel ? GATEWAY_BASE : "https://api.openai.com/v1"), model, ...rest };
   }
-  if (oidc && oidc.trim() !== "") return { apiKey: oidc, baseUrl: explicit ?? GATEWAY_BASE, model, oidc };
+  if (oidc && oidc.trim() !== "") return { apiKey: oidc, baseUrl: explicit ?? GATEWAY_BASE, model, ...rest, oidc };
   return null;
 }
 
@@ -191,53 +212,74 @@ export async function answerWithModel(
   config: LlmConfig,
   fetchImpl: typeof fetch = fetch,
   timeoutMs = 12_000,
-): Promise<string> {
+): Promise<{ text: string; model: string }> {
   const context = memories
     .map((m) => `- ${m.title ?? m.slug ?? "page"}${m.snippet ? `: ${m.snippet}` : ""}`)
     .join("\n");
 
-  const payload = {
-    model: config.model,
-    temperature: 0,
-    // Generous on purpose. Models that reason before answering spend tokens on reasoning that never reaches
-    // us, so a budget sized for the visible answer alone truncates it — two free models returned 200 with
-    // an empty content because of exactly that. The answer itself is two or three sentences.
-    max_tokens: 900,
-    messages: [
-      { role: "system", content: SYSTEM },
-      { role: "user", content: `FACTS (authoritative, use verbatim):\n${JSON.stringify(facts, null, 2)}\n\nBRAIN PAGES:\n${context || "(none)"}\n\nQUESTION: ${question}` },
-    ],
-  };
-  const post = () =>
-    fetchImpl(`${config.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${config.apiKey}` },
-      body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(timeoutMs),
-    });
+  const candidates = [config.model, ...(config.models ?? [])]
+    .filter((m, i, all) => m !== "" && all.indexOf(m) === i)
+    .slice(0, 3);
+  if (candidates.length === 0) throw new AnswerError("no model is configured to ask");
 
-  let res = await post();
-  // Free tiers rate-limit, and a judge clicking a panel is the worst moment to show the fallback. Retry once,
-  // and only for the statuses that mean "ask again" — never for a 4xx that means the request itself is wrong.
-  if (res.status === 429 || res.status >= 500) {
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    res = await post();
+  let lastError: unknown = null;
+  for (const model of candidates) {
+    try {
+      // The model that answered is returned, not the one we hoped would: a fallback silently taking over
+      // would make the panel attribute the sentence to the wrong model.
+      return { text: await askOne(model), model };
+    } catch (error) {
+      lastError = error;
+    }
   }
+  throw lastError instanceof AnswerError
+    ? lastError
+    : new AnswerError(`every configured model failed: ${lastError instanceof Error ? lastError.message : String(lastError)}`);
 
-  if (!res.ok) throw new AnswerError(`model request failed with HTTP ${res.status}`);
-  const body = (await res.json()) as {
-    choices?: Array<{ message?: { content?: string }; finish_reason?: string }>;
-  };
-  const choice = body.choices?.[0];
-  let text = choice?.message?.content?.trim();
-  if (!text) throw new AnswerError("the model returned no content");
+  async function askOne(model: string): Promise<string> {
+    const payload = {
+      model,
+      temperature: 0,
+      // Generous on purpose. Models that reason before answering spend tokens on reasoning that never reaches
+      // us, so a budget sized for the visible answer alone truncates it — two free models returned 200 with
+      // an empty content because of exactly that. The answer itself is two or three sentences.
+      max_tokens: 900,
+      messages: [
+        { role: "system", content: SYSTEM },
+        { role: "user", content: `FACTS (authoritative, use verbatim):\n${JSON.stringify(facts, null, 2)}\n\nBRAIN PAGES:\n${context || "(none)"}\n\nQUESTION: ${question}` },
+      ],
+    };
+    const post = () =>
+      fetchImpl(`${config.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${config.apiKey}` },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(timeoutMs),
+      });
 
-  // A response that stopped on "length" was cut off mid-thought. Showing half a sentence as if it were the
-  // answer looks broken on a panel a judge is reading, so drop the dangling fragment at the last complete
-  // sentence. If there is no complete sentence, keep what came back — it is still the model's words.
-  if (choice?.finish_reason === "length") {
-    const lastEnd = text.search(/[.!?][^.!?]*$/);
-    if (lastEnd !== -1) text = text.slice(0, lastEnd + 1).trim();
+    let res = await post();
+    // Free tiers rate-limit, and a judge clicking a panel is the worst moment to show the fallback. Retry
+    // once, and only for the statuses that mean "ask again" — never a 4xx that means the request is wrong.
+    if (res.status === 429 || res.status >= 500) {
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      res = await post();
+    }
+
+    if (!res.ok) throw new AnswerError(`model request failed with HTTP ${res.status}`);
+    const body = (await res.json()) as {
+      choices?: Array<{ message?: { content?: string }; finish_reason?: string }>;
+    };
+    const choice = body.choices?.[0];
+    let text = choice?.message?.content?.trim();
+    if (!text) throw new AnswerError("the model returned no content");
+
+    // A response that stopped on "length" was cut off mid-thought. Showing half a sentence as if it were the
+    // answer looks broken on a panel a judge is reading, so drop the dangling fragment at the last complete
+    // sentence. If there is no complete sentence, keep what came back — it is still the model's words.
+    if (choice?.finish_reason === "length") {
+      const lastEnd = text.search(/[.!?][^.!?]*$/);
+      if (lastEnd !== -1) text = text.slice(0, lastEnd + 1).trim();
+    }
+    return text;
   }
-  return text;
 }

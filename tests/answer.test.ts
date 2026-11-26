@@ -1,7 +1,7 @@
 import { test, describe, afterEach } from "node:test";
 import assert from "node:assert/strict";
 
-import { AnswerError, answerWithModel, buildFacts, composeAnswer, llmConfigFromEnv } from "../server/answer.ts";
+import { AnswerError, answerWithModel, buildFacts, composeAnswer, llmConfigFromEnv, modelsFromEnv } from "../server/answer.ts";
 import { cournotEdge, proxyEdge } from "../server/records.ts";
 import type { BacktestedCallRecord, VerificationRecord } from "../shared/types.ts";
 
@@ -228,7 +228,7 @@ describe("answer — the model is optional and its failure is reported", () => {
       }),
     })) as unknown as typeof fetch;
     const facts = buildFacts("kol-a", [cournotCall("c1", "kol-a", 1)], price);
-    const text = await answerWithModel("q", facts, [], { apiKey: "k", baseUrl: "https://x/v1", model: "m" }, cut);
+    const text = (await answerWithModel("q", facts, [], { apiKey: "k", baseUrl: "https://x/v1", model: "m" }, cut)).text;
     assert.equal(text, "Three of four calls were right.");
   });
 
@@ -241,7 +241,7 @@ describe("answer — the model is optional and its failure is reported", () => {
     })) as unknown as typeof fetch;
     const facts = buildFacts("kol-a", [cournotCall("c1", "kol-a", 1)], price);
     assert.equal(
-      await answerWithModel("q", facts, [], { apiKey: "k", baseUrl: "https://x/v1", model: "m" }, done),
+      (await answerWithModel("q", facts, [], { apiKey: "k", baseUrl: "https://x/v1", model: "m" }, done)).text,
       "First sentence. Second sentence.",
     );
   });
@@ -255,7 +255,7 @@ describe("answer — the model is optional and its failure is reported", () => {
       return { ok: true, json: async () => ({ choices: [{ message: { content: "second try" }, finish_reason: "stop" }] }) };
     }) as unknown as typeof fetch;
     const facts = buildFacts("kol-a", [cournotCall("c1", "kol-a", 1)], price);
-    const text = await answerWithModel("q", facts, [], { apiKey: "k", baseUrl: "https://x/v1", model: "m" }, flaky);
+    const text = (await answerWithModel("q", facts, [], { apiKey: "k", baseUrl: "https://x/v1", model: "m" }, flaky)).text;
     assert.equal(text, "second try");
     assert.equal(calls, 2, "asked twice — not once, and not forever");
   });
@@ -272,5 +272,42 @@ describe("answer — the model is optional and its failure is reported", () => {
       (e) => e instanceof AnswerError && /400/.test(e.message),
     );
     assert.equal(calls, 1, "a 400 is the request's fault, so it is not repeated");
+  });
+
+  test("a rate-limited model hands over to the next, and the one that answered is reported", async () => {
+    const asked: string[] = [];
+    const chain = (async (_url: string, init: { body: string }) => {
+      const model = (JSON.parse(init.body) as { model: string }).model;
+      asked.push(model);
+      if (model === "first") return { ok: false, status: 429 };
+      return { ok: true, json: async () => ({ choices: [{ message: { content: "from the second" }, finish_reason: "stop" }] }) };
+    }) as unknown as typeof fetch;
+    const facts = buildFacts("kol-a", [cournotCall("c1", "kol-a", 1)], price);
+    const answered = await answerWithModel(
+      "q",
+      facts,
+      [],
+      { apiKey: "k", baseUrl: "https://x/v1", model: "first", models: ["second"] },
+      chain,
+    );
+    assert.equal(answered.text, "from the second");
+    assert.equal(answered.model, "second", "the panel must name the model that actually answered");
+    // 'first' is asked twice — a 429 earns one retry — then the chain moves on rather than giving up.
+    assert.deepEqual(asked, ["first", "first", "second"]);
+  });
+
+  test("when every model fails, the reported error is the real one, not a generic message", async () => {
+    const dead = (async () => ({ ok: false, status: 503 })) as unknown as typeof fetch;
+    const facts = buildFacts("kol-a", [cournotCall("c1", "kol-a", 1)], price);
+    await assert.rejects(
+      () => answerWithModel("q", facts, [], { apiKey: "k", baseUrl: "https://x/v1", model: "a", models: ["b"] }, dead),
+      (e) => e instanceof AnswerError && /503/.test(e.message),
+    );
+  });
+
+  test("LLM_MODEL may carry fallbacks, and blank entries are ignored", () => {
+    assert.deepEqual(modelsFromEnv("a,b , c"), ["a", "b", "c"]);
+    assert.deepEqual(modelsFromEnv(""), []);
+    assert.deepEqual(modelsFromEnv(undefined), []);
   });
 });

@@ -126,9 +126,9 @@ export async function POST(request: Request) {
         const config = llmConfigFromEnv();
         if (config) {
           try {
-            const text = await answerWithModel(question, facts, memories, config);
+            const answered = await answerWithModel(question, facts, memories, config);
             return NextResponse.json(
-              { state: "ok", text, source: "model", model: config.model, facts, memories },
+              { state: "ok", text: answered.text, source: "model", model: answered.model, facts, memories },
               { status: 200 },
             );
           } catch (e) {
