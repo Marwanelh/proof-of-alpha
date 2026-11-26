@@ -1,48 +1,60 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { ClipboardEvent, FormEvent } from "react";
+import type { ClipboardEvent, FormEvent, ReactNode } from "react";
 
-import { Receipt } from "../components/Receipt.tsx";
 import { cleanPastedPost } from "../shared/clean.ts";
-import type { OnChainReceipt, VerificationRecord } from "../shared/types.ts";
+import type { AtlasSnapshot, Claim, CournotResponse } from "../shared/types.ts";
 
-type ApiOk = {
-  record: Omit<VerificationRecord, "receipt"> & { receipt: OnChainReceipt | null };
-  evidenceEligible: boolean;
-};
+type PricePoint = { priceUsd: string; observedAt: string };
+type Baseline =
+  | { kind: "proxy"; probability: number; label: string; methodology: string }
+  | { kind: "cournot"; probability: number; cournot: CournotResponse; live: boolean };
+type Verdict =
+  | { state: "resolved"; hit: boolean; atDeadline: PricePoint; edge: number }
+  | { state: "open"; winningNow: boolean; distancePct: number };
+type CheckOk = { claim: Claim; atPost: PricePoint; now: PricePoint; atlasNow: AtlasSnapshot | null; baseline: Baseline; verdict: Verdict };
+type CheckFail = { state: "refused" | "bad_request" | "provider" | "error"; message: string };
 
-type ApiFailure = {
-  state: "refused" | "bad_request" | "provider" | "error";
-  message: string;
-  provider?: string;
-};
-
+const REPO_ISSUES = "https://github.com/Marwanelh/proof-of-alpha/issues/new";
 const EXAMPLE = "BNB to $1,200 before New Year. Accumulating every dip. — CryptoNova";
+const STEPS = ["Read the claim", "Price at posting", "Baseline probability", "Verdict"] as const;
 
-const REQUIREMENTS = [
-  "one asset ticker (BNB, CAKE, BTC, ETH…)",
-  "a stance on its price: bullish or bearish (a target and a date make it sharper, but are optional)",
-];
-
-const STEPS = ["Extract the claim", "Market probability", "CMC + Atlas prices", "Record on BNB Chain"] as const;
-
-type StepState = "idle" | "active" | "done" | "skipped" | "failed";
-
-/** "… — CryptoNova", "… - @CryptoNova", "… via CryptoNova" -> "CryptoNova". The post body is left as written. */
 function authorFrom(text: string): string | null {
   const m = text.trim().match(/(?:[—–-]|\bvia\b)\s*@?([A-Za-z0-9_.]{2,32})\s*$/);
   return m ? m[1]! : null;
+}
+
+const usd = (s: string) => {
+  const n = Number(s);
+  return `$${n >= 1 ? n.toLocaleString("en-US", { maximumFractionDigits: 2 }) : n.toPrecision(4)}`;
+};
+const when = (iso: string) =>
+  new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" }) + " BKK";
+const pct = (p: number) => `${Math.round(p * 100)}%`;
+const signed = (v: number, d = 2) => `${v > 0 ? "+" : v < 0 ? "−" : "±"}${Math.abs(v).toFixed(d)}`;
+
+function Row({ label, children, note }: { label: string; children: ReactNode; note?: ReactNode }) {
+  return (
+    <dl className="row">
+      <dt>{label}</dt>
+      <dd>{children}</dd>
+      <dd>{note ?? null}</dd>
+    </dl>
+  );
 }
 
 export default function VerifyPage() {
   const [text, setText] = useState(EXAMPLE);
   const [authorId, setAuthorId] = useState("CryptoNova");
   const [authorTouched, setAuthorTouched] = useState(false);
+  const [postedAt, setPostedAt] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [useCournot, setUseCournot] = useState(false);
   const [busy, setBusy] = useState(false);
   const [tick, setTick] = useState(0);
-  const [ok, setOk] = useState<ApiOk | null>(null);
-  const [fail, setFail] = useState<ApiFailure | null>(null);
+  const [ok, setOk] = useState<CheckOk | null>(null);
+  const [fail, setFail] = useState<CheckFail | null>(null);
   const [cleanNote, setCleanNote] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -56,29 +68,29 @@ export default function VerifyPage() {
     if (timer.current) clearInterval(timer.current);
   }, []);
 
-  /** Copying a post off a page drags its buttons and price widgets along; keep only the post. */
   function onPaste(e: ClipboardEvent<HTMLTextAreaElement>) {
     const raw = e.clipboardData.getData("text");
-    if (!raw.includes("\n") && raw.length < 400) return; // a plain sentence: let the browser paste it
+    if (!raw.includes("\n") && raw.length < 400) return;
     e.preventDefault();
     const c = cleanPastedPost(raw);
     setText(c.text);
     if (c.author && !authorTouched) setAuthorId(c.author);
     setCleanNote(
       c.dropped > 0
-        ? `Cleaned the paste: removed ${c.dropped} buttons, counts and price widgets${c.sentiment ? `, kept the ${c.sentiment} tag` : ""}${c.author ? `, author ${c.author}` : ""}. Edit anything that is wrong.`
+        ? `Cleaned the paste: removed ${c.dropped} buttons, counts and price widgets${c.sentiment ? `, kept the ${c.sentiment} tag` : ""}${c.author ? `, author ${c.author}` : ""}.`
         : null,
     );
   }
 
   function reset() {
-    setCleanNote(null);
     setText("");
     setAuthorId("");
     setAuthorTouched(false);
+    setPostedAt("");
+    setSourceUrl("");
     setOk(null);
     setFail(null);
-    setTick(0);
+    setCleanNote(null);
   }
 
   async function submit(event: FormEvent) {
@@ -87,50 +99,55 @@ export default function VerifyPage() {
     setOk(null);
     setFail(null);
     setTick(0);
-    // The route is one request; the step indicator walks while it runs and settles on the real outcome.
-    timer.current = setInterval(() => setTick((t) => Math.min(t + 1, STEPS.length - 1)), 700);
+    timer.current = setInterval(() => setTick((t) => Math.min(t + 1, STEPS.length - 1)), 900);
     try {
-      const res = await fetch("/api/verify", {
+      const res = await fetch("/api/check", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text, authorId }),
+        body: JSON.stringify({
+          text,
+          authorId,
+          useCournot,
+          postedAt: postedAt === "" ? undefined : new Date(postedAt).toISOString(),
+        }),
       });
       const payload: unknown = await res.json();
-      if (res.ok) setOk(payload as ApiOk);
-      else setFail(payload as ApiFailure);
+      if (res.ok) setOk(payload as CheckOk);
+      else setFail(payload as CheckFail);
     } catch (e) {
-      setFail({ state: "error", message: `could not reach the scoring route: ${String(e)}` });
+      setFail({ state: "error", message: `could not reach the checker: ${String(e)}` });
     } finally {
       if (timer.current) clearInterval(timer.current);
       setBusy(false);
     }
   }
 
-  const steps: { state: StepState; note: string }[] = STEPS.map((_, i) => {
-    if (busy) return { state: i < tick ? "done" : i === tick ? "active" : "idle", note: i === tick ? "working…" : "" };
-    if (fail) {
-      if (fail.state === "refused" || fail.state === "bad_request") return { state: i === 0 ? "failed" : "idle", note: i === 0 ? "refused" : "" };
-      const at = fail.provider === "cournot" ? 1 : fail.provider === "cmc" || fail.provider === "atlas" ? 2 : fail.provider === "registry" ? 3 : 0;
-      return { state: i < at ? "done" : i === at ? "failed" : "idle", note: i === at ? `${fail.provider ?? "error"} failed` : "" };
-    }
-    if (ok) {
-      const r = ok.record;
-      if (i === 0) return { state: "done", note: `${r.claim.asset} ${r.claim.direction}` };
-      if (i === 1) return ok.evidenceEligible ? { state: "done", note: `Cournot ${(r.cournot.probability * 100).toFixed(0)}%` } : { state: "skipped", note: "fixture · not live" };
-      if (i === 2) return { state: "done", note: `$${Number(r.cmc.priceUsd).toFixed(2)}` };
-      return r.receipt ? { state: "done", note: "confirmed" } : { state: "skipped", note: "draft · not on chain" };
-    }
-    return { state: "idle", note: "" };
-  });
-  const doneCount = steps.filter((s) => s.state === "done").length;
+  const reviewUrl = ok
+    ? `${REPO_ISSUES}?${new URLSearchParams({
+        title: `Submission: ${ok.claim.authorId} — ${ok.claim.asset} ${ok.claim.direction}`,
+        labels: "submission",
+        body: [
+          `**KOL:** ${ok.claim.authorId}`,
+          `**Posted at:** ${ok.claim.postedAt}`,
+          `**Source URL (required for review):** ${sourceUrl || "<paste the CMC post link>"}`,
+          `**Claim as read:** ${ok.claim.asset} ${ok.claim.direction} · target $${ok.claim.targetUsd}${ok.claim.targetSource === "price-at-posting" ? " (price at posting)" : ""} · deadline ${ok.claim.deadline}${ok.claim.horizonDefaulted ? " (default)" : ""}`,
+          "",
+          "**Post:**",
+          "```",
+          ok.claim.originalText,
+          "```",
+        ].join("\n"),
+      }).toString()}`
+    : "";
 
   return (
     <main className="shell-narrow">
       <section className="page-head">
         <h1>Verify a call</h1>
         <p>
-          Paste a post from CMC Community, Telegram or anywhere else. The agent turns it into a claim, prices it,
-          and records it on BNB Chain before the outcome is known.
+          Paste a post from CMC Community, Telegram or anywhere else, and when it was posted. We read the claim,
+          price it then and now, and tell you whether it was right. Checks are not recorded: the leaderboard only
+          carries calls we have reviewed.
         </p>
       </section>
 
@@ -146,77 +163,203 @@ export default function VerifyPage() {
           />
           {cleanNote ? <span className="hint" style={{ color: "var(--lime)" }}>{cleanNote}</span> : null}
         </label>
-        <div className="author-row">
-          <label className="label" htmlFor="kol">KOL</label>
-          <input
-            id="kol"
-            type="text"
-            value={authorId}
-            onChange={(e) => {
-              setAuthorTouched(true);
-              setAuthorId(e.target.value);
-            }}
-            placeholder="who made the call (read from “— Name” at the end of the post)"
-            autoComplete="off"
-          />
+
+        <div className="form-grid">
+          <label className="field" htmlFor="kol">
+            <span className="label">KOL</span>
+            <input
+              id="kol"
+              type="text"
+              value={authorId}
+              onChange={(e) => {
+                setAuthorTouched(true);
+                setAuthorId(e.target.value);
+              }}
+              placeholder="read from “— Name” or @handle"
+              autoComplete="off"
+            />
+          </label>
+          <label className="field" htmlFor="posted">
+            <span className="label">Posted at (your time)</span>
+            <input id="posted" type="datetime-local" value={postedAt} onChange={(e) => setPostedAt(e.target.value)} />
+            <span className="hint">Leave empty for “just now”. An older post is priced at that moment.</span>
+          </label>
         </div>
+
         <div className="actions">
-          <button type="submit" disabled={busy}>{busy ? "Analyzing…" : "Analyze post"}</button>
+          <button type="submit" disabled={busy}>{busy ? "Checking…" : "Analyze post"}</button>
           <button type="button" className="ghost" onClick={reset} disabled={busy}>Reset</button>
-          <span className="hint">Step {busy ? tick + 1 : doneCount} of {STEPS.length}</span>
+          <label className="toggle" title="Off: a volatility proxy. On: Cournot's market probability, when it has priced this exact claim.">
+            <input type="checkbox" checked={useCournot} onChange={(e) => setUseCournot(e.target.checked)} />
+            <span className="toggle-track" aria-hidden="true"><span className="toggle-thumb" /></span>
+            <span>Cournot baseline {useCournot ? "on" : "off · proxy"}</span>
+          </label>
+          <span className="hint">Step {busy ? tick + 1 : ok ? STEPS.length : 0} of {STEPS.length}</span>
         </div>
       </form>
 
-      {busy || ok || fail ? (
+      {busy || ok ? (
         <ol className="steps" aria-label="Progress" style={{ listStyle: "none", padding: 0 }}>
-          {STEPS.map((label, i) => (
-            <li key={label} className="step" data-state={steps[i]!.state}>
-              <b>{steps[i]!.state === "done" ? "✓" : steps[i]!.state === "failed" ? "✕" : steps[i]!.state === "skipped" ? "!" : `0${i + 1}`} {steps[i]!.note}</b>
-              {label}
-            </li>
-          ))}
+          {STEPS.map((label, i) => {
+            const state = ok ? "done" : i < tick ? "done" : i === tick ? "active" : "idle";
+            return (
+              <li key={label} className="step" data-state={state}>
+                <b>{state === "done" ? "✓" : `0${i + 1}`}</b>
+                {label}
+              </li>
+            );
+          })}
         </ol>
       ) : null}
 
       <section aria-live="polite" aria-busy={busy} style={{ marginTop: 8 }}>
-        {fail !== null && (fail.state === "refused" || fail.state === "bad_request") ? (
+        {fail ? (
           <div className="refusal">
-            <p className="label" style={{ color: "var(--orange)" }}>Refused</p>
-            <h2>Nothing here can be proven wrong.</h2>
-            <p>
-              {fail.state === "bad_request"
-                ? fail.message
-                : "This post takes no position on where a tracked coin is going. News, announcements and posts about stocks are not calls, and scoring one would invent a prediction the author never made."}
-            </p>
-            <p className="hint" style={{ marginTop: 12 }}>A scorable call needs:</p>
-            <ul>
-              {REQUIREMENTS.map((r) => (
-                <li key={r}>{r}</li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-
-        {fail !== null && fail.state !== "refused" && fail.state !== "bad_request" ? (
-          <div className="refusal">
-            <p className="label" style={{ color: "var(--orange)" }}>{fail.provider ? `Provider: ${fail.provider}` : "Request"}</p>
-            <h2>Could not complete the receipt</h2>
+            <p className="label" style={{ color: "var(--orange)" }}>{fail.state === "refused" ? "Refused" : "Could not check"}</p>
+            <h2>{fail.state === "refused" ? "Nothing here can be proven wrong." : "The check did not complete"}</h2>
             <p>{fail.message}</p>
-            <p className="hint" style={{ marginTop: 10 }}>
-              We stop rather than fill the gap. A receipt with a substituted value would be worse than none.
-            </p>
           </div>
         ) : null}
 
-        {ok !== null ? (
-          <>
-            <Receipt data={{ ...ok.record, receipt: ok.record.receipt }} />
-            <p className="hint" style={{ marginTop: 14 }}>
-              {ok.evidenceEligible
-                ? "The probability on this receipt came from a real Cournot call."
-                : "The probability on this receipt is a FIXTURE, labelled on the value. It is not Cournot evidence and the call will not be scored as Cournot Edge."}
-            </p>
-          </>
+        {ok ? (
+          <article className="receipt">
+            <div className="receipt-head">
+              <div>
+                <p className="label">Check · not recorded</p>
+                <h2>
+                  {ok.claim.authorId}: {ok.claim.asset} {ok.claim.direction}
+                </h2>
+              </div>
+              {ok.verdict.state === "resolved" ? (
+                <span className={`badge ${ok.verdict.hit ? "hit" : "miss"}`} style={{ fontSize: 15, padding: "6px 14px" }}>
+                  {ok.verdict.hit ? "RIGHT" : "WRONG"}
+                </span>
+              ) : (
+                <span className="badge open" style={{ fontSize: 15, padding: "6px 14px" }}>
+                  OPEN · {ok.verdict.winningNow ? "winning now" : "not there yet"}
+                </span>
+              )}
+            </div>
+
+            <div className="receipt-body">
+              <Row label="Post">
+                <span style={{ fontSize: 14 }}>“{ok.claim.originalText}”</span>
+              </Row>
+              <Row
+                label="Claim"
+                note={
+                  <span className="stamp" data-state={ok.claim.extractor && ok.claim.extractor !== "rules" ? "verified" : "referenced"}>
+                    {ok.claim.extractor && ok.claim.extractor !== "rules" ? `Read by AI · ${ok.claim.extractor.split("/").pop()}` : "Read by rules"}
+                  </span>
+                }
+              >
+                {ok.claim.targetSource === "price-at-posting"
+                  ? `${ok.claim.asset} ${ok.claim.direction === "bullish" ? "higher" : "lower"} than ${usd(ok.claim.targetUsd)} (price at posting — no target named)`
+                  : `${ok.claim.asset} ${ok.claim.direction === "bullish" ? "at or above" : "at or below"} ${usd(ok.claim.targetUsd)}`}
+              </Row>
+              <Row
+                label="Deadline"
+                note={
+                  <span className="stamp" data-state={ok.claim.horizonDefaulted ? "referenced" : "verified"}>
+                    {ok.claim.horizonDefaulted ? "No date named · 24h mark" : "Stated"}
+                  </span>
+                }
+              >
+                {when(ok.claim.deadline)}
+              </Row>
+              <Row label="At posting" note={<span className="stamp" data-state="verified">CMC · {when(ok.atPost.observedAt)}</span>}>
+                <span className="value">{usd(ok.atPost.priceUsd)}</span>
+              </Row>
+              {ok.verdict.state === "resolved" ? (
+                <Row label="At deadline" note={<span className="stamp" data-state="verified">CMC history</span>}>
+                  <span className="value">{usd(ok.verdict.atDeadline.priceUsd)}</span>
+                  <span className="hint"> {ok.verdict.hit ? "On the claimed side of the target." : "Not on the claimed side of the target."}</span>
+                </Row>
+              ) : (
+                <Row label="Now" note={<span className="stamp" data-state="verified">CMC live</span>}>
+                  <span className="value">{usd(ok.now.priceUsd)}</span>
+                  <span className="hint">
+                    {" "}
+                    {ok.verdict.winningNow
+                      ? "Already on the claimed side — it still has to hold until the deadline."
+                      : `${Math.abs(ok.verdict.distancePct).toFixed(2)}% away from the target.`}
+                  </span>
+                </Row>
+              )}
+              {ok.atlasNow ? (
+                <Row label="Atlas now" note={<span className="stamp" data-state="referenced">Atlas · block {ok.atlasNow.mainnetBlock}</span>}>
+                  <span className="value">${(Number(BigInt(ok.atlasNow.price)) / 10 ** ok.atlasNow.decimals).toFixed(2)}</span>
+                  <span className="hint"> On-chain BNB/USD on BSC mainnet, a second source for the current price.</span>
+                </Row>
+              ) : null}
+              <Row
+                label="Market expected"
+                note={
+                  ok.baseline.kind === "proxy" ? (
+                    <span className="stamp" data-state="referenced">Proxy · not Cournot</span>
+                  ) : ok.baseline.live ? (
+                    <span className="stamp" data-state="verified">Cournot · real</span>
+                  ) : (
+                    <span className="stamp" data-state="referenced">Fixture · not live</span>
+                  )
+                }
+              >
+                <span className="value">{pct(ok.baseline.probability)}</span>
+                <span className="hint">
+                  {" "}
+                  {ok.baseline.kind === "proxy"
+                    ? ok.baseline.methodology
+                    : ok.baseline.live
+                      ? `Cournot evaluated: “${ok.baseline.cournot.evaluatedClaim}”.`
+                      : "Cournot has not priced this exact claim; this is a labelled fixture, not Cournot's number."}
+                </span>
+              </Row>
+              {ok.verdict.state === "resolved" ? (
+                <Row label="Edge">
+                  <span className={`value ${ok.verdict.edge >= 0 ? "tone-pos" : "tone-neg"}`}>{signed(ok.verdict.edge)}</span>
+                  <span className="hint">
+                    {" "}
+                    outcome ({ok.verdict.hit ? 1 : 0}) − expected ({ok.baseline.probability.toFixed(2)}).{" "}
+                    {ok.verdict.hit && ok.baseline.probability >= 0.7
+                      ? "Right, but the market already expected it."
+                      : ok.verdict.hit
+                        ? "Right against the odds: that is real edge."
+                        : ok.baseline.probability >= 0.5
+                          ? "A confident call that missed."
+                          : "A long shot that missed."}
+                  </span>
+                </Row>
+              ) : (
+                <Row label="Edge">
+                  <span className="hint">
+                    Settles at the deadline: {signed(1 - ok.baseline.probability)} if right, {signed(-ok.baseline.probability)} if wrong.
+                  </span>
+                </Row>
+              )}
+            </div>
+
+            <div className="receipt-foot">
+              <div className="actions" style={{ justifyContent: "space-between" }}>
+                <span className="hint" style={{ maxWidth: "52ch" }}>
+                  This check is not on the leaderboard. Submit it with the link to the original post and we review it:
+                  a pasted post alone does not prove who wrote it.
+                </span>
+                <div className="actions">
+                  <input
+                    type="text"
+                    value={sourceUrl}
+                    onChange={(e) => setSourceUrl(e.target.value)}
+                    placeholder="https://coinmarketcap.com/community/post/…"
+                    aria-label="Link to the original post"
+                    style={{ width: 280, padding: "9px 12px", fontSize: 14 }}
+                  />
+                  <a className="btn" href={reviewUrl} target="_blank" rel="noreferrer" style={{ padding: "9px 16px", fontSize: 14 }}>
+                    Submit for review ↗
+                  </a>
+                </div>
+              </div>
+            </div>
+          </article>
         ) : null}
       </section>
     </main>
