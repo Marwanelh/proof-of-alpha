@@ -84,6 +84,14 @@ contract CallRegistry {
     error NotYetDue(uint64 deadline);
     error AlreadyResolved();
     error UnknownCall(uint256 id);
+    // Semantic invariants. This registry is PUBLIC: server-side validation protects our application,
+    // not the chain. Anything a caller can write here is what a judge reads as the record, so the cheap
+    // invariants are enforced on-chain and not merely trusted from the writer.
+    error InvalidDirection(int8 direction);
+    error InvalidProbability(uint16 cournotBps);
+    error EmptyField(string field);
+    error DeadlineNotFuture(uint64 deadline);
+    error MissingAtlasReference();
 
     /// @param multiFeed the Atlas MultiFeed proxy on THIS chain; pass address(0) for referenced mode
     /// @param feedId the 4-byte on-chain feed identifier — NOT the catalogue number shown in the UI
@@ -115,6 +123,20 @@ contract CallRegistry {
         uint64 atlasRefBlock,
         bool verified
     ) private returns (uint256 id) {
+        // Validate before storing: a caller bypassing our backend must not be able to write a record that
+        // cannot be true (direction 2, a probability over 100%, an empty asset, an already-expired call).
+        if (direction != 1 && direction != -1) revert InvalidDirection(direction);
+        if (cournotBps > 10_000) revert InvalidProbability(cournotBps);
+        if (asset == bytes4(0)) revert EmptyField("asset");
+        if (postHash == bytes32(0)) revert EmptyField("postHash");
+        if (kolId == bytes32(0)) revert EmptyField("kolId");
+        if (target == 0) revert EmptyField("target");
+        if (cmcPrice == 0) revert EmptyField("cmcPrice");
+        if (deadline <= uint64(block.timestamp)) revert DeadlineNotFuture(deadline);
+        // Verified mode records 0 here on purpose (the read IS the transaction). Referenced mode must
+        // carry the block, or the receipt cannot be checked against Atlas history and is worthless.
+        if (!verified && atlasRefBlock == 0) revert MissingAtlasReference();
+
         _calls.push(
             Call({
                 postHash: postHash,

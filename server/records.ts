@@ -131,15 +131,23 @@ export function summarise(
 /**
  * Leaderboard order. KOLs with no Cournot Edge sort last regardless of hit rate — that is the whole
  * point of the metric: a high hit rate built on consensus calls is not a track record.
+ *
+ * Total and deterministic: ties break on kolId, so the order does not depend on the order the records
+ * were loaded in. Without that, two copies of the same data can render two different leaderboards.
  */
 export function rank(summaries: readonly KolSummary[]): KolSummary[] {
   return [...summaries].sort((a, b) => {
-    if (a.cournotEdge === null && b.cournotEdge === null) {
-      return (b.hitRate ?? -1) - (a.hitRate ?? -1);
+    if (a.cournotEdge !== b.cournotEdge) {
+      if (a.cournotEdge === null) return 1;
+      if (b.cournotEdge === null) return -1;
+      if (b.cournotEdge !== a.cournotEdge) return b.cournotEdge - a.cournotEdge;
     }
-    if (a.cournotEdge === null) return 1;
-    if (b.cournotEdge === null) return -1;
-    return b.cournotEdge - a.cournotEdge;
+    if (a.hitRate !== b.hitRate) {
+      if (a.hitRate === null) return 1;
+      if (b.hitRate === null) return -1;
+      if (b.hitRate !== a.hitRate) return b.hitRate - a.hitRate;
+    }
+    return a.kolId.localeCompare(b.kolId);
   });
 }
 

@@ -2,7 +2,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
 import { extractClaim } from "../server/claim.ts";
-import { cournotEdge, proxyEdge, summarise, rank, ScoreError } from "../server/records.ts";
+import { cournotEdge, proxyEdge, summarise, rank, ScoreError, type KolSummary } from "../server/records.ts";
 import {
   isSponsorEvidence,
   explorerEligible,
@@ -34,7 +34,8 @@ describe("claim extraction", () => {
   });
 
   test("refuses a vague opinion — no target, nothing to prove wrong", async () => {
-    assert.equal(await extractClaim({ ...base, text: "this will run soon, trust me" }), null);
+    // The asset must be present or this passes for the wrong reason (no asset, rather than no target).
+    assert.equal(await extractClaim({ ...base, text: "BNB is bullish soon, trust me" }), null);
   });
 
   test("extracts the claimed target, not an earlier entry price", async () => {
@@ -89,9 +90,55 @@ describe("Edge", () => {
   });
 
   test("proxy Edge is labelled and never claims to be Cournot", () => {
-    const s = proxyEdge(1, 0.5);
-    assert.equal(s.kind, "proxy-edge");
-    assert.equal(s.label, "Proxy Edge — not Cournot");
+    const proxy = proxyEdge(1, 0.5);
+    const real = cournotEdge(1, 0.5);
+    assert.equal(proxy.kind, "proxy-edge");
+    assert.equal(proxy.label, "Proxy Edge — not Cournot");
+    // The numbers coincide; only the provenance differs. A summary that dropped `edge` or borrowed the
+    // Cournot shape used to pass this test unchanged.
+    assert.equal(proxy.edge, real.edge, "the value is identical — the label is what separates them");
+    assert.notEqual(proxy.kind, real.kind);
+    assert.ok(!("label" in real), "a Cournot score must not carry the proxy label");
+  });
+
+  test("refuses a present-tense observation — that is not a prediction", async () => {
+    assert.equal(await extractClaim({ ...base, text: "BNB is above $600 right now, great entry" }), null);
+  });
+
+  test("refuses a past-tense observation", async () => {
+    assert.equal(await extractClaim({ ...base, text: "BNB was above $600 yesterday, called it" }), null);
+  });
+
+  test("refuses a stated date it cannot parse rather than inventing a horizon", async () => {
+    // Date.UTC rolls February 31 forward into March 3: without this guard we publish a deadline nobody wrote.
+    assert.equal(await extractClaim({ ...base, text: "BNB above $600 by February 31. Sending it." }), null);
+  });
+
+  test("still accepts a forward-looking call with a defaulted horizon", async () => {
+    const claim = await extractClaim({ ...base, text: "BNB above $600 is coming" });
+    assert.ok(claim, "a forward-looking post must still extract");
+    assert.equal(claim.horizonDefaulted, true);
+    assert.equal(claim.targetUsd, "600");
+  });
+
+  test("rank is total — equal Edge breaks on kolId, never on input order", () => {
+    const summary = (kolId: string): KolSummary => ({
+      kolId,
+      cournotCalls: 1,
+      proxyCalls: 0,
+      unresolved: 0,
+      hitRate: 1,
+      cournotEdge: 0.25,
+      proxyEdge: null,
+      meanReturn: 0.05,
+    });
+    const a = summary("kol-a");
+    const b = summary("kol-b");
+    const c = summary("kol-c");
+    const forward = rank([a, b, c]).map((s) => s.kolId);
+    const reversed = rank([c, b, a]).map((s) => s.kolId);
+    assert.deepEqual(forward, reversed, "identical Edge must not depend on load order");
+    assert.deepEqual(forward, ["kol-a", "kol-b", "kol-c"]);
   });
 });
 

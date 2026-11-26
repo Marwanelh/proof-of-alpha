@@ -1,0 +1,7 @@
+#!/bin/sh
+# Refuse to push a credential. The gate must run BEFORE the push, not after an incident.
+if ! node scripts/check-secrets.mjs; then
+  echo "" >&2
+  echo "pre-push: credential gate failed — push refused." >&2
+  exit 1
+fi

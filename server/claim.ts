@@ -18,6 +18,19 @@ const DEFAULT_HORIZON_DAYS = 7;
 const BULLISH = /\b(long|bullish|pump|moon|send it|break(?:s|ing)? out|rally|ath|buy|undervalued|accumulate|above)\b/i;
 const BEARISH = /\b(short|bearish|dump|crash|rekt|sell|overvalued|below|down|top(?:ped)? is in)\b/i;
 
+/**
+ * A forward-looking marker. Required when the author gave no deadline: without one, a post that merely
+ * observes the present ("BNB is above $600") would be turned into a future prediction by the default
+ * horizon, and we would be scoring a claim nobody made.
+ */
+const FORWARD = /\b(will|going to|gonna|shall|should|by|before|until|next|tomorrow|this (week|month|quarter|year)|soon|coming|target(?:ing)?|reach(?:es)?|hits?|pump|dump|moon|send it|load(?:ing)?)\b/i;
+
+/**
+ * A date the author stated that we could not parse ("by February 31", "before the end of next week").
+ * Substituting a default horizon here would publish a deadline nobody wrote, so these are refused.
+ */
+const DEADLINE_LIKE = /\b(?:by|before|until)\b[^.!?]{0,30}?(?:\d|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)|\b\d{4}-\d{2}-\d{2}\b/i;
+
 export type ExtractInput = {
   text: string;
   authorId: string;
@@ -46,12 +59,19 @@ export async function extractClaim(input: ExtractInput): Promise<Claim | null> {
 
   const explicit = findDeadline(text, postedAt);
   const horizonDefaulted = explicit === null;
+  if (horizonDefaulted) {
+    // A date was named but we could not parse it: refuse rather than substitute a horizon the author
+    // never wrote. Otherwise an observation with no forward-looking grammar is not a prediction at all.
+    if (DEADLINE_LIKE.test(text)) return null;
+    if (!FORWARD.test(text)) return null;
+  }
   const deadline =
     explicit ?? new Date(postedAt.getTime() + DEFAULT_HORIZON_DAYS * 86_400_000);
 
-  // A deadline in the past is not a prediction we can score.
+  // A deadline in the past is not a prediction we can score, and a deadline before the post is nonsense.
   const now = input.now ?? new Date();
   if (deadline.getTime() <= now.getTime()) return null;
+  if (deadline.getTime() <= postedAt.getTime()) return null;
 
   const claim: Claim = {
     source: input.source ?? "paste",
@@ -126,7 +146,11 @@ function findDeadline(text: string, postedAt: Date): Date | null {
     const day = Number(monthDay[2]);
     const year = postedAt.getUTCFullYear() + (month < postedAt.getUTCMonth() ? 1 : 0);
     const d = new Date(Date.UTC(year, month, day, 23, 59, 0));
-    return Number.isNaN(d.getTime()) ? null : d;
+    if (Number.isNaN(d.getTime())) return null;
+    // Date.UTC rolls an impossible date forward (February 31 becomes March 3) instead of refusing it.
+    // Round-trip the parts, or we publish a deadline the author never wrote.
+    if (d.getUTCMonth() !== month || d.getUTCDate() !== day) return null;
+    return d;
   }
 
   const iso = text.match(/\b(\d{4}-\d{2}-\d{2})\b/);
