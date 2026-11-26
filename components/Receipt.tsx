@@ -143,6 +143,13 @@ export function Receipt({ data }: { data: ReceiptData }) {
         <Row label="Basis" quiet>
           <span style={{ fontSize: 13 }}>{data.cournot.evidence}</span>
         </Row>
+        <Row label="Our note" quiet>
+          <span className="hint" style={{ fontSize: 13 }}>
+            The two lines above are Cournot&rsquo;s words, reproduced verbatim: the claim they evaluated and
+            the basis they gave. This sentence is ours. Edge is scored against that probability, so a call
+            the market already expected earns almost nothing even when it turns out to be right.
+          </span>
+        </Row>
 
         <Row label="CMC price" stamp={<CmcStamp cmc={data.cmc} />}>
           <span className="value">${data.cmc.priceUsd}</span>

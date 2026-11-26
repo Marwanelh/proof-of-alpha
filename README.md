@@ -101,6 +101,44 @@ silently present a referenced price as a verified one.
 
 Addresses: see [`docs/addresses.md`](docs/addresses.md) (fill in after deploy).
 
+## Cournot Integration
+
+The Cournot track asks for this section by name, so it answers its four questions directly.
+
+**Where we call it.** `server/cournot.ts` is the only place that talks to Cournot. It drives the official
+skill client against `https://interface.cournot.ai`, calling `resolve` to turn a social post into a
+probability for one discrete market, and `prepare` when a call needs the paid prepare step. Extraction —
+post → claim, direction, target, deadline — lives in `server/claim.ts`, and it refuses a post it cannot
+parse rather than guessing a claim to price.
+
+**How the probability is used.** It is the baseline of the product's headline metric,
+`Edge_call = outcome − p`, held in basis points with integer arithmetic so the aggregate cannot drift. A
+call the market was already 90% sure of therefore earns `0.10` when right and `−0.90` when wrong, which is
+the whole point of the product: repeating the consensus is not alpha. That number sets each call's Edge
+(`server/records.ts`), it is what the leaderboard ranks on, and it is handed to the answer model as
+pre-computed fact (`buildFacts`) so the prose cannot recompute it.
+
+**Where users see the claim and the evidence.** The receipt panel shows the claim Cournot evaluated, the
+returned probability, and Cournot's evidence verbatim. Our commentary is visually separated and labelled
+`Our note`, so a reader can always tell the oracle's words from ours. The same panel sits on the KOL page
+and behind every leaderboard row.
+
+**Proof of a successful call.** `evidence/evidence.json` carries the request id and the sanitised
+response, written by `npm run smoke` and kept in the repo as the artifact the brief asks for.
+
+**Current state, stated plainly.** This machine has spent its **three free calls** — Cournot meters three
+per IP with no reset — so calls made today carry `provenance: "fixture"`. That is not hidden. The response
+is typed with its provenance, `isSponsorEvidence()` returns false for a fixture, and a fixture therefore
+**cannot** be scored as Cournot Edge: `server/resolve.ts` refuses it outright rather than producing a
+number that merely looks like evidence. Until a live call is funded, no Edge figure here claims Cournot as
+its source, and the leaderboard says so on its own page.
+
+A live call is one payment away — **$0.01 per call** through x402 on Base or b402 on BNB Chain, or a
+$5/600 pack. The wallet is installed and connected (`baw` CLI 1.12.0); it needs a funded balance. So this
+section currently describes an integration that is built, tested, and explicit about which of its numbers
+came from the oracle and which did not. The brief says mocked probabilities do not qualify — nothing here
+pretends they do.
+
 ## Track eligibility
 
 Tick these against the briefs before submitting. Each line is a stated requirement, not a nicety.
@@ -130,8 +168,11 @@ Tick these against the briefs before submitting. Each line is a stated requireme
       the "ask the agent" answer. Mocked/hardcoded probabilities do not qualify.
 - [ ] Show the exact claim evaluated + Cournot's evidence verbatim (`CournotResponse` panel, our own
       commentary labelled `Our note`)
-- [ ] README section titled **"Cournot Integration"**: where we call it, how the probability is used,
-      where users see claim + evidence, and proof of a successful call
+- [x] README section titled **"Cournot Integration"**: where we call it, how the probability is used,
+      where users see claim + evidence, and proof of a successful call → § Cournot Integration
+- [ ] **Fund a live call: $0.01 per call** (x402 on Base / b402 on BNB Chain), or a $5/600 pack. `baw` is
+      installed and connected; it needs a balance. One call satisfies the requirement, so per-call is
+      cheaper than a pack.
 - [ ] Demo + backup recording
 - Gate: all three build requirements must pass or the project is not scored.
 - Rubric: integration depth 35 · product potential 25 · innovation 20 · execution & UX 20.
