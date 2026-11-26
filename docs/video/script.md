@@ -11,23 +11,29 @@ Captions only. No voiceover: judges watch muted, sometimes at 1.5×, and every f
 
 ---
 
-## As built — the five scenes in `video/film/`, and the exact numbers on screen
+## As built — the eleven scenes in `video/film/`, and the exact numbers on screen
 
-The beats below are the revision that got rendered. Where they differ from the sections under
-"Beat 1…5", **this table wins**: the product changed under us twice (a public *check* that records
-nothing, and reviewed calls that carry Cournot and the chain), and the film follows the product.
+Cut to the narration rather than the narration to the cut: **each scene's length is its mp3's measured
+duration + 0.40 s**, so the film is 146.23 s and it breathes. `video/build_film.py` generates all
+eleven scenes from one layout function, which is what stops panels drifting between cuts.
 
-| Scene | Time | On screen |
+| Scene | Audio | On screen |
 |---|---|---|
-| S1 | 0:00–0:30 | the check panel + `$553.92` CoinMarketCap keyed · `$553.56` Atlas single feed “bnb/usd” at block **135,924,867** · baseline **64%** `proxy · not Cournot` · `edge +0.96 if right · −0.04 if wrong` |
-| S2 | 0:30–0:52 | the board: **8** calls · **3** KOLs · **1** on-chain receipt, real CMC Community posts, each row labelled `proxy · not Cournot` |
-| S3 | 0:52–1:06 | `edge = outcome − probability` with three **illustrative** cases: p=0.9→+0.1, p=0.2→+0.8, p=0.7 wrong→−0.7, tagged `illustrative inputs` |
-| S4 | 1:06–1:34 | the reviewed call: DemoBear, **29%** Cournot at post, receipt **0x2527…4a80**, `edge — open until 1 Dec`, `Atlas price verified in tx: false · referenced read` |
-| S5 | 1:34–2:00 | works today / still missing (the outcome on 1 Dec, a real probability for the rest) + both links |
+| s01 | 10.63 s | `Every influencer has a following.` / `Almost none has a record.` |
+| s02 | 15.18 s | the check panel + four claim chips: ASSET `BNB` · SIDE `bearish` · TARGET `$500` · BY `1 Dec 2026` |
+| s03 | 11.23 s | **$553.92** · `CoinMarketCap · keyed` · the price when the call was posted |
+| s04 | 13.22 s | **$553.56** · `Atlas · single feed "bnb/usd"` · BSC mainnet · block **135,924,867** |
+| s05 | 13.56 s | **64%** · `proxy · not Cournot` · a volatility model, labelled on the number itself |
+| s06 | 12.62 s | `edge = outcome − probability` + three illustrative cases (p=0.9→+0.1, p=0.2→+0.8, p=0.7 wrong→−0.7) |
+| s07 | 15.83 s | the board: **8** calls · **3** KOLs · **1** on-chain receipt; every proxy row says so |
+| s08 | 15.65 s | DemoBear: **29%** Cournot at post · receipt **0x2527…4a80** · edge open until 1 Dec |
+| s09 | 12.85 s | `cournotBps 2902` · `atlasVerified false` · block `145,045,939`, beside the recordCall card |
+| s10 | 9.51 s | `A launchpad vets a promoter` before it pays for the campaign |
+| s11 | 11.55 s | works today / still missing (the outcome on 1 Dec) + both links |
 
-`npm run check` reports **0 errors**; the remaining warnings are a silent film (no music bed) and small
-mono source labels below the 28 px phone legibility floor — both deliberate, and both noted in
-`plan.md` §7 rather than silently ignored.
+Voiceover: ElevenLabs **Daniel**, Eleven v4, stability ~50, stability is the reason the technical
+claims still land as statements rather than sales copy. Audio lives in `video/vocals/` (renamed
+`s01…s11` in generation order) and is copied into `film/assets/vocals/` for the render.
 
 ### Numbers ledger for the film (supersedes the older table below)
 
