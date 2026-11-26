@@ -1,0 +1,2848 @@
+2026-11-26T13:38:18.524344Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://mcp.notion.com/.well-known/oauth-protected-resource/mcp\", scope=\"default\"" })
+OpenAI Codex v0.154.0
+--------
+workdir: C:\Users\shell\Desktop\BNB\proof-of-alpha
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: none
+session id: 01a21813-e11d-7572-a68c-4c49cd0d74b6
+--------
+user
+# Codex task — UX/UI for Proof of Alpha
+
+You are the design partner on a BNB Chain hackathon project. I am building the front end now and I want a
+second, independent UX/UI proposal to reconcile against mine, the same way we did the architecture round.
+
+## Read first (in the repo, all committed)
+
+- `docs/one-pager.md` — what the product is, one page.
+- `docs/architecture/ARCHITECTURE.md` — the A/B split and the module boundaries.
+- `shared/types.ts` — the data shapes the UI must render. This is the contract; do not invent fields.
+- `server/verify.ts` — the single write path a UI action must call.
+- `server/records.ts` — `summarise()`, `rank()`, `KolSummary`, `ScoreSummary`.
+- `docs/integration-findings.md` — the live provider truth (what is real, what is a fixture, what is blocked).
+
+## What exists
+
+Backend and core are done and verified: 65 tests pass, `tsc` strict is clean, the Atlas read is live and
+keyless, the credential gate runs pre-push. **There is no front end at all yet.** No Next.js app, no
+components, no styles, nothing rendered in a browser.
+
+## What I want from you
+
+A **UX/UI proposal**, not code. Write it to `docs/architecture/UI-PROPOSAL-codex.md`. Be concrete and
+opinionated. Sections:
+
+1. **Screen inventory.** The minimum set of routes/screens that makes a judge understand the product in
+   90 seconds, and what each one must show. Justify every screen you keep and name what you cut.
+2. **The paste → receipt flow, step by step.** The user pastes a KOL post. Trace it through: what they see
+   while the agent extracts, when they learn a claim could not be extracted ("nothing to prove wrong"),
+   what they see when a provider is unavailable or a fixture is in use, and what the final on-chain receipt
+   looks like on screen. This is the money shot; spend your effort here.
+3. **How provenance is shown.** The product's credibility rests on never letting a fixture, a referenced
+   price or a proxy Edge look like verified sponsor evidence. Today that is enforced in the types
+   (`shared/types.ts`). Design the *visible* expression of it: what a judge sees for `atlasVerified: true`
+   vs a referenced read, for a Cournot probability vs a labelled proxy, for a backtested sample row vs a
+   real resolved call. It must be unmistakable, and it must not be a tooltip nobody hovers.
+4. **The leaderboard.** `rank()` sorts by Cournot Edge, then hit rate, then kolId; KOLs with no Cournot
+   Edge sort last by design. Design a table that makes "this KOL only has proxy-scored calls" legible and
+   does not let a high hit rate imply a track record.
+5. **Visual direction.** Propose a direction in words: canvas, type, accent discipline, density, one
+   memorable move. Say what you would refuse. The audience is hackathon judges and crypto-native traders
+   looking at a screen in a bright conference hall, and the product is an evidence ledger, not a
+   trading terminal.
+6. **What you would NOT build in the remaining hours**, and why.
+
+## Constraints
+
+- **Next.js App Router, one runtime.** No second server, no separate backend process. Route handlers are
+  the API. Node 22 with TypeScript type-stripping.
+- **No component library, no Tailwind.** Plain CSS with tokens is the current approach; argue if you think
+  that is wrong, but any dependency you propose must earn its place in one sentence.
+- **Do not invent data.** If a screen needs something the types do not carry, say so as a gap.
+- **Do not fake imagery.** No stock photos, no decorative gradients standing in for a product shot.
+- Judge-facing. Every claim on screen must be checkable against a real artifact.
+
+Output: the proposal **printed to stdout**, wrapped exactly in `===BEGIN UI PROPOSAL===` and
+`===END UI PROPOSAL===`. Your sandbox cannot write files and you must not try: earlier rounds confirmed no
+shell, file-writing or computer-use command runs here. Do not modify any file, do not run migrations, do not
+write app code. Reading the repository is expected; writing it is not.
+
+2026-11-26T13:38:18.927187Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://mcp.notion.com/.well-known/oauth-protected-resource/mcp\", scope=\"default\"" })
+2026-11-26T13:38:19.008844Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://mcp.vercel.com/.well-known/oauth-protected-resource\"" })
+warning: clamping SessionEnd hook timeout to 3s in C:\Users\shell\.codex\plugins\cache\claude-plugins-official\vercel\0.56.0\hooks\hooks.json
+2026-11-26T13:38:19.114107Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=failed to refresh OAuth tokens for server supabase
+2026-11-26T13:38:19.117899Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://cmem.ai/.well-known/oauth-protected-resource/api/mcp\", scope=\"read:memory write:memory\"" })
+2026-11-26T13:38:20.393417Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:8080/mcp)")))
+2026-11-26T13:38:20.731086Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://localhost:8000/mcp)")))
+2026-11-26T13:38:22.721019Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:8080/mcp)")))
+2026-11-26T13:38:23.356559Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://localhost:8000/mcp)")))
+warning: Exceeded skills context budget. All skill descriptions were removed and 169 additional skills were not included in the model-visible skills list.
+2026-11-26T13:38:25.785657Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:8080/mcp)")))
+2026-11-26T13:38:26.720603Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://localhost:8000/mcp)")))
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Failed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Failed
+hook: SessionStart Failed
+hook: SessionStart Failed
+hook: UserPromptSubmit
+hook: UserPromptSubmit
+hook: UserPromptSubmit
+hook: UserPromptSubmit Failed
+hook: UserPromptSubmit Completed
+hook: UserPromptSubmit Completed
+codex
+I’m using the `design-taste-frontend` skill because this is an opinionated UI direction exercise; I’ll use it only to sharpen the proposal, then reconcile every recommendation against the repository contracts. I’ll read the six specified artifacts and make no writes or code changes.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'C:\\Users\\shell\\.codex\\skills\\taste-skill\\SKILL.md'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 9698ms:
+---
+name: design-taste-frontend
+description: Senior UI/UX Engineer. Architect digital interfaces overriding default LLM biases. Enforces metric-based rules, strict component architecture, CSS hardware acceleration, and balanced design engineering.
+---
+
+# High-Agency Frontend Skill
+
+## 1. ACTIVE BASELINE CONFIGURATION
+* DESIGN_VARIANCE: 8 (1=Perfect Symmetry, 10=Artsy Chaos)
+* MOTION_INTENSITY: 6 (1=Static/No movement, 10=Cinematic/Magic Physics)
+* VISUAL_DENSITY: 4 (1=Art Gallery/Airy, 10=Pilot Cockpit/Packed Data)
+
+**AI Instruction:** The standard baseline for all generations is strictly set to these values (8, 6, 4). Do not ask the user to edit this file. Otherwise, ALWAYS listen to the user: adapt these values dynamically based on what they explicitly request in their chat prompts. Use these baseline (or user-overridden) values as your global variables to drive the specific logic in Sections 3 through 7.
+
+## 2. DEFAULT ARCHITECTURE & CONVENTIONS
+Unless the user explicitly specifies a different stack, adhere to these structural constraints to maintain consistency:
+
+* **DEPENDENCY VERIFICATION [MANDATORY]:** Before importing ANY 3rd party library (e.g. `framer-motion`, `lucide-react`, `zustand`), you MUST check `package.json`. If the package is missing, you MUST output the installation command (e.g. `npm install package-name`) before providing the code. **Never** assume a library exists.
+* **Framework & Interactivity:** React or Next.js. Default to Server Components (`RSC`). 
+    * **RSC SAFETY:** Global state works ONLY in Client Components. In Next.js, wrap providers in a `"use client"` component.
+    * **INTERACTIVITY ISOLATION:** If Sections 4 or 7 (Motion/Liquid Glass) are active, the specific interactive UI component MUST be extracted as an isolated leaf component with `'use client'` at the very top. Server Components must exclusively render static layouts.
+* **State Management:** Use local `useState`/`useReducer` for isolated UI. Use global state strictly for deep prop-drilling avoidance.
+* **Styling Policy:** Use Tailwind CSS (v3/v4) for 90% of styling. 
+    * **TAILWIND VERSION LOCK:** Check `package.json` first. Do not use v4 syntax in v3 projects. 
+    * **T4 CONFIG GUARD:** For v4, do NOT use `tailwindcss` plugin in `postcss.config.js`. Use `@tailwindcss/postcss` or the Vite plugin.
+* **ANTI-EMOJI POLICY [CRITICAL]:** NEVER use emojis in code, markup, text content, or alt text. Replace symbols with high-quality icons (Radix, Phosphor) or clean SVG primitives. Emojis are BANNED.
+* **Responsiveness & Spacing:**
+  * Standardize breakpoints (`sm`, `md`, `lg`, `xl`).
+  * Contain page layouts using `max-w-[1400px] mx-auto` or `max-w-7xl`.
+  * **Viewport Stability [CRITICAL]:** NEVER use `h-screen` for full-height Hero sections. ALWAYS use `min-h-[100dvh]` to prevent catastrophic layout jumping on mobile browsers (iOS Safari).
+  * **Grid over Flex-Math:** NEVER use complex flexbox percentage math (`w-[calc(33%-1rem)]`). ALWAYS use CSS Grid (`grid grid-cols-1 md:grid-cols-3 gap-6`) for reliable structures.
+* **Icons:** You MUST use exactly `@phosphor-icons/react` or `@radix-ui/react-icons` as the import paths (check installed version). Standardize `strokeWidth` globally (e.g., exclusively use `1.5` or `2.0`).
+
+
+## 3. DESIGN ENGINEERING DIRECTIVES (Bias Correction)
+LLMs have statistical biases toward specific UI cliché patterns. Proactively construct premium interfaces using these engineered rules:
+
+**Rule 1: Deterministic Typography**
+* **Display/Headlines:** Default to `text-4xl md:text-6xl tracking-tighter leading-none`.
+    * **ANTI-SLOP:** Discourage `Inter` for "Premium" or "Creative" vibes. Force unique character using `Geist`, `Outfit`, `Cabinet Grotesk`, or `Satoshi`.
+    * **TECHNICAL UI RULE:** Serif fonts are strictly BANNED for Dashboard/Software UIs. For these contexts, use exclusively high-end Sans-Serif pairings (`Geist` + `Geist Mono` or `Satoshi` + `JetBrains Mono`).
+* **Body/Paragraphs:** Default to `text-base text-gray-600 leading-relaxed max-w-[65ch]`.
+
+**Rule 2: Color Calibration**
+* **Constraint:** Max 1 Accent Color. Saturation < 80%.
+* **THE LILA BAN:** The "AI Purple/Blue" aesthetic is strictly BANNED. No purple button glows, no neon gradients. Use absolute neutral bases (Zinc/Slate) with high-contrast, singular accents (e.g. Emerald, Electric Blue, or Deep Rose).
+* **COLOR CONSISTENCY:** Stick to one palette for the entire output. Do not fluctuate between warm and cool grays within the same project.
+
+**Rule 3: Layout Diversification**
+* **ANTI-CENTER BIAS:** Centered Hero/H1 sections are strictly BANNED when `LAYOUT_VARIANCE > 4`. Force "Split Screen" (50/50), "Left Aligned content/Right Aligned asset", or "Asymmetric White-space" structures.
+
+**Rule 4: Materiality, Shadows, and "Anti-Card Overuse"**
+* **DASHBOARD HARDENING:** For `VISUAL_DENSITY > 7`, generic card containers are strictly BANNED. Use logic-grouping via `border-t`, `divide-y`, or purely negative space. Data metrics should breathe without being boxed in unless elevation (z-index) is functionally required.
+* **Execution:** Use cards ONLY when elevation communicates hierarchy. When a shadow is used, tint it to the background hue.
+
+**Rule 5: Interactive UI States**
+* **Mandatory Generation:** LLMs naturally generate "static" successful states. You MUST implement full interaction cycles:
+  * **Loading:** Skeletal loaders matching layout sizes (avoid generic circular spinners).
+  * **Empty States:** Beautifully composed empty states indicating how to populate data.
+  * **Error States:** Clear, inline error reporting (e.g., forms).
+  * **Tactile Feedback:** On `:active`, use `-translate-y-[1px]` or `scale-[0.98]` to simulate a physical push indicating success/action.
+
+**Rule 6: Data & Form Patterns**
+* **Forms:** Label MUST sit above input. Helper text is optional but should exist in markup. Error text below input. Use a standard `gap-2` for input blocks.
+
+## 4. CREATIVE PROACTIVITY (Anti-Slop Implementation)
+To actively combat generic AI designs, systematically implement these high-end coding concepts as your baseline:
+* **"Liquid Glass" Refraction:** When glassmorphism is needed, go beyond `backdrop-blur`. Add a 1px inner border (`border-white/10`) and a subtle inner shadow (`shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]`) to simulate physical edge refraction.
+* **Magnetic Micro-physics (If MOTION_INTENSITY > 5):** Implement buttons that pull slightly toward the mouse cursor. **CRITICAL:** NEVER use React `useState` for magnetic hover or continuous animations. Use EXCLUSIVELY Framer Motion's `useMotionValue` and `useTransform` outside the React render cycle to prevent performance collapse on mobile.
+* **Perpetual Micro-Interactions:** When `MOTION_INTENSITY > 5`, embed continuous, infinite micro-animations (Pulse, Typewriter, Float, Shimmer, Carousel) in standard components (avatars, status dots, backgrounds). Apply premium Spring Physics (`type: "spring", stiffness: 100, damping: 20`) to all interactive elements—no linear easing.
+* **Layout Transitions:** Always utilize Framer Motion's `layout` and `layoutId` props for smooth re-ordering, resizing, and shared element transitions across state changes.
+* **Staggered Orchestration:** Do not mount lists or grids instantly. Use `staggerChildren` (Framer) or CSS cascade (`animation-delay: calc(var(--index) * 100ms)`) to create sequential waterfall reveals. **CRITICAL:** For `staggerChildren`, the Parent (`variants`) and Children MUST reside in the identical Client Component tree. If data is fetched asynchronously, pass the data as props into a centralized Parent Motion wrapper.
+
+## 5. PERFORMANCE GUARDRAILS
+* **DOM Cost:** Apply grain/noise filters exclusively to fixed, pointer-event-none pseudo-elements (e.g., `fixed inset-0 z-50 pointer-events-none`) and NEVER to scrolling containers to prevent continuous GPU repaints and mobile performance degradation.
+* **Hardware Acceleration:** Never animate `top`, `left`, `width`, or `height`. Animate exclusively via `transform` and `opacity`.
+* **Z-Index Restraint:** NEVER spam arbitrary `z-50` or `z-10` unprompted. Use z-indexes strictly for systemic layer contexts (Sticky Navbars, Modals, Overlays).
+
+## 6. TECHNICAL REFERENCE (Dial Definitions)
+
+### DESIGN_VARIANCE (Level 1-10)
+* **1-3 (Predictable):** Flexbox `justify-center`, strict 12-column symmetrical grids, equal paddings.
+* **4-7 (Offset):** Use `margin-top: -2rem` overlapping, varied image aspect ratios (e.g., 4:3 next to 16:9), left-aligned headers over center-aligned data.
+* **8-10 (Asymmetric):** Masonry layouts, CSS Grid with fractional units (e.g., `grid-template-columns: 2fr 1fr 1fr`), massive empty zones (`padding-left: 20vw`). 
+* **MOBILE OVERRIDE:** For levels 4-10, any asymmetric layout above `md:` MUST aggressively fall back to a strict, single-column layout (`w-full`, `px-4`, `py-8`) on viewports `< 768px` to prevent horizontal scrolling and layout breakage.
+
+### MOTION_INTENSITY (Level 1-10)
+* **1-3 (Static):** No automatic animations. CSS `:hover` and `:active` states only.
+* **4-7 (Fluid CSS):** Use `transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1)`. Use `animation-delay` cascades for load-ins. Focus strictly on `transform` and `opacity`. Use `will-change: transform` sparingly.
+* **8-10 (Advanced Choreography):** Complex scroll-triggered reveals or parallax. Use Framer Motion hooks. NEVER use `window.addEventListener('scroll')`.
+
+### VISUAL_DENSITY (Level 1-10)
+* **1-3 (Art Gallery Mode):** Lots of white space. Huge section gaps. Everything feels very expensive and clean.
+* **4-7 (Daily App Mode):** Normal spacing for standard web apps.
+* **8-10 (Cockpit Mode):** Tiny paddings. No card boxes; just 1px lines to separate data. Everything is packed. **Mandatory:** Use Monospace (`font-mono`) for all numbers.
+
+## 7. AI TELLS (Forbidden Patterns)
+To guarantee a premium, non-generic output, you MUST strictly avoid these common AI design signatures unless explicitly requested:
+
+### Visual & CSS
+* **NO Neon/Outer Glows:** Do not use default `box-shadow` glows or auto-glows. Use inner borders or subtle tinted shadows.
+* **NO Pure Black:** Never use `#000000`. Use Off-Black, Zinc-950, or Charcoal.
+* **NO Oversaturated Accents:** Desaturate accents to blend elegantly with neutrals.
+* **NO Excessive Gradient Text:** Do not use text-fill gradients for large headers.
+* **NO Custom Mouse Cursors:** They are outdated and ruin performance/accessibility.
+
+### Typography
+* **NO Inter Font:** Banned. Use `Geist`, `Outfit`, `Cabinet Grotesk`, or `Satoshi`.
+* **NO Oversized H1s:** The first heading should not scream. Control hierarchy with weight and color, not just massive scale.
+* **Serif Constraints:** Use Serif fonts ONLY for creative/editorial designs. **NEVER** use Serif on clean Dashboards.
+
+### Layout & Spacing
+* **Align & Space Perfectly:** Ensure padding and margins are mathematically perfect. Avoid floating elements with awkward gaps.
+* **NO 3-Column Card Layouts:** The generic "3 equal cards horizontally" feature row is BANNED. Use a 2-column Zig-Zag, asymmetric grid, or horizontal scrolling approach instead.
+
+### Content & Data (The "Jane Doe" Effect)
+* **NO Generic Names:** "John Doe", "Sarah Chan", or "Jack Su" are banned. Use highly creative, realistic-sounding names.
+* **NO Generic Avatars:** DO NOT use standard SVG "egg" or Lucide user icons for avatars. Use creative, believable photo placeholders or specific styling.
+* **NO Fake Numbers:** Avoid predictable outputs like `99.99%`, `50%`, or basic phone numbers (`1234567`). Use organic, messy data (`47.2%`, `+1 (312) 847-1928`).
+* **NO Startup Slop Names:** "Acme", "Nexus", "SmartFlow". Invent premium, contextual brand names.
+* **NO Filler Words:** Avoid AI copywriting clichés like "Elevate", "Seamless", "Unleash", or "Next-Gen". Use concrete verbs.
+
+### External Resources & Components
+* **NO Broken Unsplash Links:** Do not use Unsplash. Use absolute, reliable placeholders like `https://picsum.photos/seed/{random_string}/800/600` or SVG UI Avatars.
+* **shadcn/ui Customization:** You may use `shadcn/ui`, but NEVER in its generic default state. You MUST customize the radii, colors, and shadows to match the high-end project aesthetic.
+* **Production-Ready Cleanliness:** Code must be extremely clean, visually striking, memorable, and meticulously refined in every detail.
+
+## 8. THE CREATIVE ARSENAL (High-End Inspiration)
+Do not default to generic UI. Pull from this library of advanced concepts to ensure the output is visually striking and memorable. When appropriate, leverage **GSAP (ScrollTrigger/Parallax)** for complex scrolltelling or **ThreeJS/WebGL** for 3D/Canvas animations, rather than basic CSS motion. **CRITICAL:** Never mix GSAP/ThreeJS with Framer Motion in the same component tree. Default to Framer Motion for UI/Bento interactions. Use GSAP/ThreeJS EXCLUSIVELY for isolated full-page scrolltelling or canvas backgrounds, wrapped in strict useEffect cleanup blocks.
+
+### The Standard Hero Paradigm
+* Stop doing centered text over a dark image. Try asymmetric Hero sections: Text cleanly aligned to the left or right. The background should feature a high-quality, relevant image with a subtle stylistic fade (darkening or lightening gracefully into the background color depending on if it is Light or Dark mode).
+
+### Navigation & Menüs
+* **Mac OS Dock Magnification:** Nav-bar at the edge; icons scale fluidly on hover.
+* **Magnetic Button:** Buttons that physically pull toward the cursor.
+* **Gooey Menu:** Sub-items detach from the main button like a viscous liquid.
+* **Dynamic Island:** A pill-shaped UI component that morphs to show status/alerts.
+* **Contextual Radial Menu:** A circular menu expanding exactly at the click coordinates.
+* **Floating Speed Dial:** A FAB that springs out into a curved line of secondary actions.
+* **Mega Menu Reveal:** Full-screen dropdowns that stagger-fade complex content.
+
+### Layout & Grids
+* **Bento Grid:** Asymmetric, tile-based grouping (e.g., Apple Control Center).
+* **Masonry Layout:** Staggered grid without fixed row heights (e.g., Pinterest).
+* **Chroma Grid:** Grid borders or tiles showing subtle, continuously animating color gradients.
+* **Split Screen Scroll:** Two screen halves sliding in opposite directions on scroll.
+* **Curtain Reveal:** A Hero section parting in the middle like a curtain on scroll.
+
+### Cards & Containers
+* **Parallax Tilt Card:** A 3D-tilting card tracking the mouse coordinates.
+* **Spotlight Border Card:** Card borders that illuminate dynamically under the cursor.
+* **Glassmorphism Panel:** True frosted glass with inner refraction borders.
+* **Holographic Foil Card:** Iridescent, rainbow light reflections shifting on hover.
+* **Tinder Swipe Stack:** A physical stack of cards the user can swipe away.
+* **Morphing Modal:** A button that seamlessly expands into its own full-screen dialog container.
+
+### Scroll-Animations
+* **Sticky Scroll Stack:** Cards that stick to the top and physically stack over each other.
+* **Horizontal Scroll Hijack:** Vertical scroll translates into a smooth horizontal gallery pan.
+* **Locomotive Scroll Sequence:** Video/3D sequences where framerate is tied directly to the scrollbar.
+* **Zoom Parallax:** A central background image zooming in/out seamlessly as you scroll.
+* **Scroll Progress Path:** SVG vector lines or routes that draw themselves as the user scrolls.
+* **Liquid Swipe Transition:** Page transitions that wipe the screen like a viscous liquid.
+
+### Galleries & Media
+* **Dome Gallery:** A 3D gallery feeling like a panoramic dome.
+* **Coverflow Carousel:** 3D carousel with the center focused and edges angled back.
+* **Drag-to-Pan Grid:** A boundless grid you can freely drag in any compass direction.
+* **Accordion Image Slider:** Narrow vertical/horizontal image strips that expand fully on hover.
+* **Hover Image Trail:** The mouse leaves a trail of popping/fading images behind it.
+* **Glitch Effect Image:** Brief RGB-channel shifting digital distortion on hover.
+
+### Typography & Text
+* **Kinetic Marquee:** Endless text bands that reverse direction or speed up on scroll.
+* **Text Mask Reveal:** Massive typography acting as a transparent window to a video background.
+* **Text Scramble Effect:** Matrix-style character decoding on load or hover.
+* **Circular Text Path:** Text curved along a spinning circular path.
+* **Gradient Stroke Animation:** Outlined text with a gradient continuously running along the stroke.
+* **Kinetic Typography Grid:** A grid of letters dodging or rotating away from the cursor.
+
+### Micro-Interactions & Effects
+* **Particle Explosion Button:** CTAs that shatter into particles upon success.
+* **Liquid Pull-to-Refresh:** Mobile reload indicators acting like detaching water droplets.
+* **Skeleton Shimmer:** Shifting light reflections moving across placeholder boxes.
+* **Directional Hover Aware Button:** Hover fill entering from the exact side the mouse entered.
+* **Ripple Click Effect:** Visual waves rippling precisely from the click coordinates.
+* **Animated SVG Line Drawing:** Vectors that draw their own contours in real-time.
+* **Mesh Gradient Background:** Organic, lava-lamp-like animated color blobs.
+* **Lens Blur Depth:** Dynamic focus blurring background UI layers to highlight a foreground action.
+
+## 9. THE "MOTION-ENGINE" BENTO PARADIGM
+When generating modern SaaS dashboards or feature sections, you MUST utilize the following "Bento 2.0" architecture and motion philosophy. This goes beyond static cards and enforces a "Vercel-core meets Dribbble-clean" aesthetic heavily reliant on perpetual physics.
+
+### A. Core Design Philosophy
+* **Aesthetic:** High-end, minimal, and functional.
+* **Palette:** Background in `#f9fafb`. Cards are pure white (`#ffffff`) with a 1px border of `border-slate-200/50`.
+* **Surfaces:** Use `rounded-[2.5rem]` for all major containers. Apply a "diffusion shadow" (a very light, wide-spreading shadow, e.g., `shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]`) to create depth without clutter.
+* **Typography:** Strict `Geist`, `Satoshi`, or `Cabinet Grotesk` font stack. Use subtle tracking (`tracking-tight`) for headers.
+* **Labels:** Titles and descriptions must be placed **outside and below** the cards to maintain a clean, gallery-style presentation.
+* **Pixel-Perfection:** Use generous `p-8` or `p-10` padding inside cards.
+
+### B. The Animation Engine Specs (Perpetual Motion)
+All cards must contain **"Perpetual Micro-Interactions."** Use the following Framer Motion principles:
+* **Spring Physics:** No linear easing. Use `type: "spring", stiffness: 100, damping: 20` for a premium, weighty feel.
+* **Layout Transitions:** Heavily utilize the `layout` and `layoutId` props to ensure smooth re-ordering, resizing, and shared element state transitions.
+* **Infinite Loops:** Every card must have an "Active State" that loops infinitely (Pulse, Typewriter, Float, or Carousel) to ensure the dashboard feels "alive".
+* **Performance:** Wrap dynamic lists in `<AnimatePresence>` and optimize for 60fps. **PERFORMANCE CRITICAL:** Any perpetual motion or infinite loop MUST be memoized (React.memo) and completely isolated in its own microscopic Client Component. Never trigger re-renders in the parent layout.
+
+### C. The 5-Card Archetypes (Micro-Animation Specs)
+Implement these specific micro-animations when constructing Bento grids (e.g., Row 1: 3 cols | Row 2: 2 cols split 70/30):
+1. **The Intelligent List:** A vertical stack of items with an infinite auto-sorting loop. Items swap positions using `layoutId`, simulating an AI prioritizing tasks in real-time.
+2. **The Command Input:** A search/AI bar with a multi-step Typewriter Effect. It cycles through complex prompts, including a blinking cursor and a "processing" state with a shimmering loading gradient.
+3. **The Live Status:** A scheduling interface with "breathing" status indicators. Include a pop-up notification badge that emerges with an "Overshoot" spring effect, stays for 3 seconds, and vanishes.
+4. **The Wide Data Stream:** A horizontal "Infinite Carousel" of data cards or metrics. Ensure the loop is seamless (using `x: ["0%", "-100%"]`) with a speed that feels effortless.
+5. **The Contextual UI (Focus Mode):** A document view that animates a staggered highlight of a text block, followed by a "Float-in" of a floating action toolbar with micro-icons.
+
+## 10. FINAL PRE-FLIGHT CHECK
+Evaluate your code against this matrix before outputting. This is the **last** filter you apply to your logic.
+- [ ] Is global state used appropriately to avoid deep prop-drilling rather than arbitrarily?
+- [ ] Is mobile layout collapse (`w-full`, `px-4`, `max-w-7xl mx-auto`) guaranteed for high-variance designs?
+- [ ] Do full-height sections safely use `min-h-[100dvh]` instead of the bugged `h-screen`?
+- [ ] Do `useEffect` animations contain strict cleanup functions?
+- [ ] Are empty, loading, and error states provided?
+- [ ] Are cards omitted in favor of spacing where possible?
+- [ ] Did you strictly isolate CPU-heavy perpetual animations in their own Client Components?
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'server/records.ts'
+Get-Content -Raw 'docs/integration-findings.md'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'docs/one-pager.md'
+Get-Content -Raw 'docs/architecture/ARCHITECTURE.md'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'shared/types.ts'
+Get-Content -Raw 'server/verify.ts'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 4379ms:
+# One-page write-up (required by the CoinMarketCap × Atlas challenge)
+
+**Problem and audience.** Crypto influencers move prices but nobody keeps score. Wrong calls get deleted,
+wins get reposted, and paid promotions are indistinguishable from conviction. CMC already shows whether a
+KOL is bullish or bearish; it does not show whether they were right, or whether being right was worth
+anything. Proof of Alpha is a credit record for KOLs, for the retail traders who decide whom to follow,
+the honest KOLs who want a verifiable track record, and the exchanges, launchpads and data platforms that
+pay creators and need to vet them.
+
+**How it works.** A post from CMC Community is turned into a structured claim (asset, direction, target,
+deadline) by an agent. The claim is priced against the market's own expectation with the Cournot
+Intelligence Oracle, snapshotted against both a CMC price and an Atlas on-chain price, and written to BNB
+Chain before the outcome is known. At its deadline, and at 1/7/30-day checkpoints, the call is resolved
+from the same two sources and scored. The headline number is **Edge** = outcome − Cournot probability at
+posting: a consensus hit earns little, a contrarian hit earns a lot, a confident miss costs a lot. History
+is stored per KOL in a Living Brain memory so the agent can answer "is this person's new call worth
+following?".
+
+**Endpoints and feeds used, and why.**
+
+| Source | Used for | Why this one |
+|---|---|---|
+| CMC `GET /v1/content/posts/latest` (`id`/`slug`/`symbol`, paged with `last_score`) | the calls themselves | 0 credits, 5-minute cache; it is the only public feed of CMC Community posts |
+| CMC quotes + historical + DEX endpoints | the posting snapshot, resolution, proxy-Edge for the backtest, wallet/swap checks | one vendor for post, price and on-chain activity, on BNB Chain |
+| Atlas Oracle push feed — `fetch(bytes4 feedId)` on the MultiFeed, read over a keyless public RPC | the on-chain price in the receipt | Atlas is first-party CMC data, same venue universe; a CMC/Atlas disagreement beyond tolerance flags a low-confidence snapshot |
+| Cournot Intelligence Oracle | probability of the claim at posting | it prices what the market already expected, which is the only way to separate skill from beta |
+| BNB Chain `CallRegistry` | the tamper-proof receipt | the call, its probability and both prices are committed before the outcome is known |
+| Living Brain | per-KOL memory and the coordinated-posting graph | answers about a KOL come from their own accumulated record |
+
+**BNB Chain contract addresses and/or data used.** `CallRegistry` is deployed on BSC — see
+`docs/addresses.md` for the live addresses. We read Atlas **directly from the chain with no key or
+account**: a free public RPC call to the Atlas MultiFeed on BNB Smart Chain, `fetch(bytes4 feedId)`
+returning the price with its own `aggregatedTs`/`onchainTs`. Plan A (default) records that price, the CMC
+price, the claim and the Cournot probability into a **testnet** receipt, storing the mainnet block the
+Atlas price was read at so anyone can re-check it against Atlas's mainnet history — the call is flagged
+`atlasVerified = false`, because the testnet contract cannot read mainnet and we will not present a
+referenced price as a verified one. Plan B (bonus) deploys the registry on **mainnet**, where
+`recordCall()` reads the feed in the same transaction and the stored price is verified on-chain
+(`atlasVerified = true`). Either way the Atlas price freshness bound (`maxAtlasAge`) is enforced, and
+resolution is blocked until the call's deadline passes, so no one can settle a call early. Data used: CMC
+Community posts, CMC quotes (spot + historical), CMC DEX holders/swaps, Atlas free push feeds on BNB Chain.
+
+**Safety.** API keys exist only in the backend environment and never reach the front end or the repo. The
+backend holds no user funds. Every score links to the calls and receipts behind it. Flags state facts
+("wallet sold 41% within 26 minutes of the post"), never accusations, and a KOL needs a minimum number of
+resolved calls before they are ranked.
+
+**What we would build next.** Wallet verification so a KOL links a wallet to their profile; more call
+sources (Telegram public channels, Binance Square when an API exists); a B2B API so launchpads can score a
+promoter list before paying for it; and a copy-follow vault restricted to KOLs above an Edge threshold.
+Revenue: a verified-KOL badge, a trader subscription, and B2B vetting — the record stays free to read.
+
+# Proof of Alpha — agreed architecture
+
+**Status: RATIFIED.** Authored by Codex (`docs/architecture/PROPOSAL-codex.md`), adversarially reviewed by
+Hermes (`docs/architecture/REVIEW-hermes-round1.md`), converged in
+`docs/architecture/codex-round2-response.md`. The decision log is `docs/architecture/DECISIONS.md`.
+
+## Constraints (fixed by the team, not open for redesign)
+
+1. **Single package, plain top-level folders.** No workspace/monorepo tooling. One root `package.json`.
+   Shared types in `shared/`, consumed by both sides through a `tsconfig` alias.
+2. Public MIT repo, owner `Marwanelh`, name `proof-of-alpha`.
+3. **Two builders, split by vertical:** **A** owns the verify path end to end (the money shot);
+   **B** owns leaderboard + backtest + Living Brain memory. Each must be demoable alone.
+4. Money shot = the live verify path (paste post → claim → Cournot → CMC + Atlas → receipt → explorer).
+5. Demo runs on **localhost**; the front end *may* deploy to Vercel; **no hosted database** — local JSON
+   plus a first-class seed script.
+6. Node 22 + TypeScript; Solidity via Foundry; Next.js front end.
+7. Deadline: submissions close **09:00 Fri 27 Nov (UTC+7)**; Demo Night 15:00.
+
+## The one architectural decision that matters
+
+**The Node backend is Next.js route handlers.** There is no second server package or process: `server/`
+and `shared/` compile under the same `tsconfig`, so the front end and the backend share types with no build
+step between them. This is the direct consequence of constraint 1 and it is what makes the type boundary
+below real rather than aspirational.
+
+**Build never waits on a vendor.** The Cournot response is modelled with three-state provenance
+(`live` | `recorded-live` | `fixture`). Phase 2 builds against a committed fixture; a real call replaces it
+through the same adapter. A fixture can never be mistaken for evidence — see the type below.
+
+## Folder skeleton
+
+Every path below exists for a reason. `[exists]` = already committed; `[A]`/`[B]` = owner.
+
+```
+.env.example              [exists→update] every required variable, empty values, never a NEXT_PUBLIC_ provider credential
+.env.local                generated, gitignored; the one secret-bearing env file, loaded by Next and by --env-file
+.gitignore                [exists] excludes .env.local, data/local.json, .next, node_modules, evidence/demo*.mp4
+.gitmodules               pins forge-std as the contract submodule
+LICENSE                   [new] MIT
+package.json              the only JS package: dev, build, test, seed, smoke
+package-lock.json         locks the single root install for both builders and the demo laptop
+tsconfig.json             one config, `@shared/*` → `shared/*`
+app/                      Next UI + route handlers — the only application runtime
+  layout.tsx  providers.tsx (public chain metadata only)  globals.css
+  page.tsx                [A] paste/load post → review claim → Cournot state → prices → record → explorer
+  leaderboard/page.tsx    [B] ranking with sample size, window, Edge; renders `Proxy Edge — not Cournot`
+  kol/[id]/page.tsx       [B] per-KOL evidence table + the pre-warmed memory question
+  api/verify/route.ts     [A] node-runtime boundary for the verification pipeline
+  api/memory/route.ts     [B] backend-only Living Brain remember/retrieve/connect
+shared/
+  types.ts                the A→B boundary: JSON-safe only, no runtime logic
+server/                   node-only modules; never imported by a client component; each starts `import "server-only"`
+  claim.ts                [A] raw text → one concrete, scorable Claim
+  cournot.ts              [A] normalize live / recorded-live / fixture through one adapter
+  cmc.ts                  [A] keyed per-symbol posts + keyless prices
+  atlas.ts                [A] mainnet MultiFeed fetch(bytes4) at a captured block
+  registry.ts             [A] encode + submit recordCallReferenced, wait for confirmation
+  verify.ts               [A] orchestrate the pipeline, emit VerificationRecord
+  records.ts              [B] resolve, score (Cournot Edge vs Proxy Edge), rank
+  memory.ts               [B] map resolved records to remember/retrieve/connect
+data/
+  seed.json               [B] committed BacktestedCallRecord[] — labelled, dated, no Cournot, no receipt
+  cournot-fixture.json    [A] schema-valid FIXTURE response (deliberately NOT under evidence/)
+  local.json              generated, gitignored, reset by `npm run seed`
+tests/
+  core.test.ts            claim validation, provenance, Edge, ranking, A→B round trip
+  verify.test.ts          injected-provider end-to-end: claim → Cournot → snapshots → receipt
+scripts/
+  seed.mjs                seed.json → local.json, prints counts
+  smoke.mjs               [exists→rewrite] PROVIDER PROOF ONLY (see below)
+contracts/                Foundry project
+  foundry.toml  src/CallRegistry.sol  test/CallRegistry.t.sol  script/Deploy.s.sol
+  lib/forge-std/          pinned submodule — fresh clones run `git submodule update --init --recursive`
+docs/                     judging and evidence documents (integration-findings, one-pager, demo-script,
+                          submission-checklist, addresses, architecture/)
+evidence/                 sponsor-verifiable proof ONLY — no synthetic data, ever
+  evidence.json  cournot/  demo.mp4  demo-rough.mp4
+```
+
+## Module boundaries
+
+| Module | Single responsibility | Must never do |
+|---|---|---|
+| `server/claim.ts` | One concrete, reviewable, scorable claim; reject missing asset/target/deadline | Invent a horizon, fetch market data, or submit a transaction |
+| `server/cournot.ts` | Normalize live or recorded-live or fixture through one interface | Use the partner dispute API/key, guess among ambiguous markets, compute Edge, or relabel recorded as live |
+| `server/cmc.ts` | One keyed per-symbol post page; keyless prices | Call without exactly one content selector, assume a `limit`, read `quote.USD`, or expose the key |
+| `server/atlas.ts` | One mainnet MultiFeed snapshot at a captured block | Call `latestRoundData`, derive the feedId from catalogue number 1164, or claim testnet verifies mainnet |
+| `server/registry.ts` | One completed verification → the contract call → confirmed receipt | Choose probabilities, hold funds, or mark referenced Atlas data as verified |
+| `server/verify.ts` | Execute A's sequence, emit the handoff record | Parse provider envelopes itself, or hide partial/failing steps |
+| `server/records.ts` | Resolve, score, aggregate rows | Invoke extraction/Cournot/Atlas/chain; assign Cournot Edge without a Cournot probability |
+| `server/memory.ts` | Resolved records → Living Brain remember/retrieve/connect | Poll captures on stage, expose secrets, or fabricate compiled memories |
+
+## Shared types — the A→B contract
+
+```ts
+export type CournotProvenance = "live" | "recorded-live" | "fixture";
+
+type CournotResult = { probability: number; evaluatedClaim: string; evidence: string };
+
+export type ProvenCournotResponse = CournotResult & {
+  provenance: "live" | "recorded-live"; requestId: string; fixtureId?: never;
+};
+export type FixtureCournotResponse = CournotResult & {
+  provenance: "fixture"; fixtureId: string; requestId?: never;
+};
+export type CournotResponse = ProvenCournotResponse | FixtureCournotResponse;
+
+export type Resolution = { outcome: 0 | 1; resolvedAt: string; cmcPriceUsd: string };
+export type CournotScore = { kind: "cournot-edge"; probability: number; edge: number };
+export type ProxyBaseline = { probability: number; label: "Proxy baseline — not Cournot"; methodology: string };
+export type ProxyScore = { kind: "proxy-edge"; label: "Proxy Edge — not Cournot"; probability: number; edge: number };
+
+export type VerificationRecord = {
+  kind: "verified"; id: string; claim: Claim;
+  cournot: CournotResponse; cmc: CmcSnapshot; atlas: AtlasSnapshot; receipt: OnChainReceipt;
+  resolution: null | { result: Resolution; score: CournotScore };
+};
+
+export type BacktestedCallRecord = {
+  kind: "backtested"; id: string; claim: Claim; cmcAtPost: CmcSnapshot;
+  proxyBaseline: ProxyBaseline;
+  resolution: { result: Resolution; score: ProxyScore };
+  cournot?: never; receipt?: never;          // fabricated evidence becomes a compile-time error
+};
+
+export type CallRecord = VerificationRecord | BacktestedCallRecord;
+```
+
+`Claim`, `CmcSnapshot`, `AtlasSnapshot` and `OnChainReceipt` are defined in `PROPOSAL-codex.md` §B.
+
+**Runtime checks that the types cannot express:**
+
+- Every probability is finite and within `[0, 1]`; `edge === outcome - probability`.
+- `fixture` renders its warning and is **never** counted as sponsor evidence.
+- Only `kind: "verified"` may render an explorer link.
+- Only `live` and `recorded-live` may be exported as Cournot proof.
+- `data/seed.json` parses as `BacktestedCallRecord[]`, never as `VerificationRecord[]`.
+
+**At the contract boundary** (`server/registry.ts`), before encoding: reject asset symbols over four bytes,
+parse decimal price strings without float multiplication, range-check Atlas values against their Solidity
+widths, round the probability to `uint16` bps, range-check the deadline against `uint64`, require a
+confirmed receipt before returning, and preserve `atlasVerified = false` for referenced mode.
+
+## Environment and secrets
+
+One mechanism, no `dotenv`. Next route handlers load `.env.local` natively; root scripts and tests use
+Node 22's `--env-file=.env.local`:
+
+```json
+"test":  "node --env-file=.env.local --experimental-strip-types --test tests/core.test.ts tests/verify.test.ts",
+"smoke": "node --env-file=.env.local scripts/smoke.mjs"
+```
+
+Every module in `server/` begins with `import "server-only"`. `NEXT_PUBLIC_` is **forbidden** for any
+provider credential; `.env.example` documents that rule.
+
+## What `scripts/smoke.mjs` is, and is not
+
+It is the **provider-proof runner**: CMC keyless price, CMC keyed Content, Atlas MultiFeed, the saved
+successful Cournot proof, Living Brain capture. It writes request IDs and tx hashes to
+`evidence/evidence.json` — the artifact a sponsor asks for. It **never** imports application modules,
+requires the Next app to be running, or tests verify orchestration. `5/5 checks pass` means five provider
+proofs. Application behaviour is tested in `tests/`, reported separately.
+
+
+ succeeded in 4647ms:
+/**
+ * Resolution, scoring and ranking.
+ *
+ * The one rule this module exists to enforce: a call that has no Cournot probability gets PROXY Edge,
+ * which is labelled as such and is never mixed into a Cournot Edge aggregate. Averaging a proxy
+ * probability with a real one would produce a number that means nothing while looking authoritative.
+ */
+
+import type {
+  CallRecord,
+  CournotScore,
+  ProxyScore,
+  Resolution,
+} from "../shared/types.ts";
+
+export class ScoreError extends Error {}
+
+/**
+ * Edge is computed in basis points, not by raw float subtraction.
+ * `1 - 0.9` is 0.09999999999999998 in IEEE-754, and Edge is both shown to users and used to rank KOLs,
+ * so the arithmetic has to land on exact values. Basis points also match the contract's `uint16` bps,
+ * which is what actually gets recorded on chain.
+ */
+const BPS = 10_000;
+
+function toBps(p: number): number {
+  assertProbability(p);
+  return Math.round(p * BPS);
+}
+
+/** Edge = outcome - probability. A consensus hit earns little; a contrarian hit earns a lot. */
+export function cournotEdge(outcome: 0 | 1, probability: number): CournotScore {
+  const bps = toBps(probability);
+  return { kind: "cournot-edge", probability: bps / BPS, edge: (outcome * BPS - bps) / BPS };
+}
+
+export function proxyEdge(outcome: 0 | 1, probability: number): ProxyScore {
+  const bps = toBps(probability);
+  return {
+    kind: "proxy-edge",
+    label: "Proxy Edge — not Cournot",
+    probability: bps / BPS,
+    edge: (outcome * BPS - bps) / BPS,
+  };
+}
+
+function assertProbability(p: number): void {
+  if (!Number.isFinite(p) || p < 0 || p > 1) {
+    throw new ScoreError(`probability must be a finite number in [0, 1], got ${String(p)}`);
+  }
+}
+
+/** The score already attached to a resolved record, whichever kind it is. */
+export function scoreOf(record: CallRecord): CournotScore | ProxyScore | null {
+  return record.resolution === null ? null : record.resolution.score;
+}
+
+export type KolSummary = {
+  kolId: string;
+  /** Calls that carry a real Cournot baseline. */
+  cournotCalls: number;
+  /** Calls scored with the labelled proxy baseline — reported separately, always. */
+  proxyCalls: number;
+  unresolved: number;
+  hitRate: number | null;
+  /** Mean Edge. null when there is no resolved Cournot call, by design. */
+  cournotEdge: number | null;
+  proxyEdge: number | null;
+  meanReturn: number | null;
+};
+
+/**
+ * Aggregate one KOL's calls. `priceAtResolution` is looked up by the caller (CMC for the demo,
+ * a fixture for tests) so this stays a pure function.
+ */
+export function summarise(
+  kolId: string,
+  records: readonly CallRecord[],
+  priceAtResolution: (record: CallRecord) => number | null,
+): KolSummary {
+  let cournotCalls = 0;
+  let proxyCalls = 0;
+  let unresolved = 0;
+  let hits = 0;
+  let resolved = 0;
+  let cournotEdgeSum = 0;
+  let proxyEdgeSum = 0;
+  let returnSum = 0;
+  let returnCount = 0;
+
+  for (const r of records) {
+    if (r.claim.authorId !== kolId) continue;
+    const score = scoreOf(r);
+    if (r.resolution === null || score === null) {
+      unresolved += 1;
+      continue;
+    }
+    resolved += 1;
+    if (r.resolution.result.outcome === 1) hits += 1;
+    if (score.kind === "cournot-edge") {
+      cournotCalls += 1;
+      cournotEdgeSum += score.edge;
+    } else {
+      proxyCalls += 1;
+      proxyEdgeSum += score.edge;
+    }
+
+    const at = priceAtResolution(r);
+    if (at !== null) {
+      const entry = Number("cmcAtPost" in r ? r.cmcAtPost.priceUsd : r.cmc.priceUsd);
+      if (Number.isFinite(entry) && entry > 0) {
+        const change = (at - entry) / entry;
+        returnSum += r.claim.direction === "bullish" ? change : -change;
+        returnCount += 1;
+      }
+    }
+  }
+
+  return {
+    kolId,
+    cournotCalls,
+    proxyCalls,
+    unresolved,
+    hitRate: resolved === 0 ? null : hits / resolved,
+    cournotEdge: cournotCalls === 0 ? null : cournotEdgeSum / cournotCalls,
+    proxyEdge: proxyCalls === 0 ? null : proxyEdgeSum / proxyCalls,
+    meanReturn: returnCount === 0 ? null : returnSum / returnCount,
+  };
+}
+
+/**
+ * Leaderboard order. KOLs with no Cournot Edge sort last regardless of hit rate — that is the whole
+ * point of the metric: a high hit rate built on consensus calls is not a track record.
+ *
+ * Total and deterministic: ties break on kolId, so the order does not depend on the order the records
+ * were loaded in. Without that, two copies of the same data can render two different leaderboards.
+ */
+export function rank(summaries: readonly KolSummary[]): KolSummary[] {
+  return [...summaries].sort((a, b) => {
+    if (a.cournotEdge !== b.cournotEdge) {
+      if (a.cournotEdge === null) return 1;
+      if (b.cournotEdge === null) return -1;
+      if (b.cournotEdge !== a.cournotEdge) return b.cournotEdge - a.cournotEdge;
+    }
+    if (a.hitRate !== b.hitRate) {
+      if (a.hitRate === null) return 1;
+      if (b.hitRate === null) return -1;
+      if (b.hitRate !== a.hitRate) return b.hitRate - a.hitRate;
+    }
+    return a.kolId.localeCompare(b.kolId);
+  });
+}
+
+export type { Resolution };
+
+# Integration findings — verified 2026-11-26 16:29–16:35 (UTC+7)
+
+Every claim below is from a live probe or the vendor's own doc, not from memory. Raw responses are quoted.
+Probe host: this machine, plain `curl`, no API keys.
+
+## 1. CoinMarketCap — two different bases, and the content endpoints are NOT keyless
+
+CMC now runs a **Keyless Public API** on the same host, prefix `/public-api`:
+
+```
+OK   HTTP 200  GET https://pro-api.coinmarketcap.com/public-api/v2/simple/price?symbol=BNB,CAKE&convert=USD
+{"data":[{"id":1839,"name":"BNB","symbol":"BNB","slug":"bnb",
+  "quotes":[{"symbol":"USD","price":552.6301590837155}]},
+ {"id":7186,"name":"Pancake","symbol":"CAKE","slug":"pancakeswap",
+  "quotes":[{"symbol":"USD","price":1.5722643083908194}]}], ...}
+```
+
+Two gotchas visible in that response:
+
+- **`quotes` is an array**, not the `quote.USD.price` object of the classic Pro envelope. If your backend
+  was written against the old shape it will silently read `undefined`.
+- Keyless = IP-shared rate pool, so a 429 is normal; back off (the official SDK does it for you).
+  A free key raises limits and returns "the same response shape".
+
+**Content endpoints reject keyless calls.** All four of these are 403 without a key:
+
+```
+HTTP 403  /public-api/v1/content/posts/latest?symbol=BNB
+  {"status":{"error_code":1005,"error_message":"An API Key is required for this call."}}
+HTTP 403  /public-api/v1/content/posts/latest?slug=binancecoin
+HTTP 403  /public-api/v1/content/posts/top?symbol=BNB
+HTTP 403  /public-api/v1/content/latest?limit=1
+```
+
+and the endpoint is stricter than its own docs:
+
+```
+HTTP 400  /public-api/v1/content/posts/latest
+  {"status":{"error_code":400,
+   "error_message":"Exactly one of `id`, `slug`, or `symbol` is required for this endpoint"}}
+```
+
+Doc says `id` / `slug` / `symbol` are all `required: false`. The API says **exactly one is required**.
+
+### What this changes for Proof of Alpha
+
+| Brief assumed | Reality |
+|---|---|
+| "Free Basic key returns `/v1/content/posts/latest`" | Needs **a key** (1005 on keyless). Whether the free plan includes the Content endpoints is still unconfirmed — but they cost **0 credits** per the doc, so a free key should carry them. **Confirm with a key before you build on it.** |
+| "Filter by symbol; page back with `last_score`" | Correct. Those are the only useful params: `id \| slug \| symbol` (exactly one) and `last_score`. **There is no `limit` param** and no "all posts" call. |
+| Backtest "historical CMC posts" | You can only ask **per-symbol**, walking `last_score` backwards. So the backtest needs a **watchlist of symbols** (e.g. BNB, CAKE, and the BNB-Chain majors) rather than "all KOL calls". Say so on the leaderboard. |
+| `GET /v1/content/latest` | Also keyed, and also not global. |
+
+`plan credit use: 0 credit`, cache/update frequency: five minutes.
+
+## 1b. Three bases, not two — and which one has the Content endpoints
+
+CMC serves the same host under three prefixes. Probed 2026-11-26:
+
+```
+HTTP 200  /public-api/v2/simple/price?symbol=BNB&convert=USD          keyless
+HTTP 200  /trial-pro-api/v3/cryptocurrency/listings/latest            keyless (Trial Pro API)
+HTTP 200  /trial-pro-api/v2/simple/price?symbol=BNB&convert=USD       keyless
+HTTP 403  /trial-pro-api/v1/content/posts/latest?symbol=BNB
+          {"error_code":1005,"error_message":"An API Key is required for this call."}
+```
+
+| Base | Auth | Covers |
+|---|---|---|
+| `/public-api` | none | keyless subset; IP-shared quota, so 429 is normal |
+| `/trial-pro-api` | none | a **fixed** subset: 19 Standard + 17 DEX endpoints (listings, quotes, global metrics, Fear & Greed, CMC indices, Altcoin Season, map/info, DEX token/pools/pairs, holders, k-line, token search). Aggressively rate-limited, subset cannot be extended |
+| `/v1`, `/v2`, `/v3` | `X-CMC_PRO_API_KEY` | everything, including **Content** |
+
+**Bottom line for this build:** the whole price side — posting snapshot, resolution, proxy-Edge, DEX
+swaps/holders for sell-while-shilling — runs today with **no account at all**, on `/trial-pro-api` or
+`/public-api`. Only the **call source** (`/v1/content/posts/latest`) needs a key, and it is not in either
+keyless set. So the critical path is exactly one signup, and it blocks only ingest.
+
+Free Basic plan (pro.coinmarketcap.com/signup, no credit card): **15,000 monthly credits, 50 req/min,
+30+ endpoints, historical data, commercial use** — the key appears on the dashboard immediately. Some
+third-party docs still say 10,000 credits; CMC's own pricing page says 15,000 as of this probe.
+
+Unknown until a real key is tried: whether the free Basic plan includes the Content endpoints. The endpoint
+is 0 credits, so it should — but it is not the keyless set, so confirm with the key before building ingest
+on it. Fallback if not: the brief's verify-by-paste path, plus ask the CMC team at the venue.
+
+## 1c. CLOSED: the free Basic plan does NOT include the Content endpoints
+
+Probed 2026-11-26 with a real free Basic key (32-hex, no quotes, no whitespace — a correct key):
+
+```
+A) GET /v1/cryptocurrency/listings/latest?symbol=…   -> error_code 0, data rows 1, credit_count 1
+B) GET /v1/content/posts/latest?symbol=BNB           -> error_code 1006
+   "Your API Key subscription plan doesn't support this endpoint."   credit_count 0
+C) GET /public-api/v1/content/posts/latest?symbol=BNB -> HTTP 403 (keyless path also closed)
+```
+
+**This is a plan limit, not a defect and not a bad key** — 1006 means "your subscription doesn't support
+this endpoint", while 1005 means "no key reached the API" and 1001 means "invalid key". The key is valid and
+a keyed Pro API call works.
+
+**Consequences, and none of them end the entry:**
+
+| Requirement | Status |
+|---|---|
+| CMC × Atlas: "at least one live Pro API call in a core feature" | **Satisfied** by the keyed quotes call — so the verify flow must use it, and it does (`snapshotPrice` prefers keyed, falls back to keyless) |
+| Atlas: "read an on-chain feed" | Satisfied, keyless |
+| Ingest from CMC Community posts | **Blocked on the free plan.** Ask the CMC team for access, and use verify-by-paste, which is what `docs/demo-script.md` already specifies for the money shot |
+| Backtest over real post history | **Blocked.** The labelled `data/seed.json` is the leaderboard, exactly as anticipated |
+
+**Envelope divergence, verified side by side on the same pair:** the KEYED endpoint returns the classic
+object envelope `data.BNB.quote.USD.price`, while the KEYLESS endpoint returns an array
+`data[0].quotes[0].price`. Same price, two shapes on the same host. A parser written from one will fail
+silently on the other — `server/cmc.ts` handles both, and a test asserts the array shape is reported as a
+shape error rather than read as `undefined`.
+
+A keyed call for two symbols cost **1 credit**, so the keyed price is cheap enough to sit inside the verify
+flow rather than being a one-off screenshot.
+
+## 2. Atlas Oracle — free feeds exist, but they are on BSC **mainnet**, and check the read policy
+
+- Free push feeds are real and public: e.g. feed **#1164 BNBChain EWTB/USD**, tags `Crypto` + `Free`,
+  Push Mode, **Network: BNB Smart Chain (BEP20)**, deviation 2.00%, heartbeat 60s, push status Active.
+  Its update transactions link out to **bscscan.com/tx/...** → these are **mainnet** writes.
+- Pricing page confirms it: **Free Plan $0/mo — "Try Push Mode with limited feeds on BNB Smart Chain"**.
+  Paid tiers ($465/mo Starter, 5 paid feeds) are only for custom/private feeds.
+- Read surface: `SingleFeed` is **fully Chainlink `AggregatorV2V3`-compatible** (so `latestRoundData()`,
+  `latestAnswer()`, `decimals()` work as you'd expect); `MultiFeed` is a registry keyed by a 4-byte
+  `feedId` with `fetch` / `fetchBatch` / `fetchCompact`. Interfaces are MIT at
+  `github.com/oracle-atlas/push-oracle-interfaces`.
+- **Read policy is the trap.** Every read function is `onlyReadAccess`, and each feed instance is either
+  **whitelist** (only authorised callers, plus plain EOAs not delegated via ERC-7702) or **open-read**
+  (anyone). Query `isOpenRead()` on the feed proxy before assuming a contract can read it.
+
+### The architecture bug in your brief
+
+> "The registry contract reads the Atlas feed itself when recording, so a stored price can be checked
+> on-chain rather than taken on our word." — "Mainnet reads are free; this earns the challenge's
+> mainnet bonus without spending real funds."
+
+A `CallRegistry` deployed on **BSC testnet (chain 97) cannot read a mainnet feed**. Cross-chain reads do
+not exist without a bridge or an oracle callback. Two ways out, both cheap:
+
+1. **Deploy the registry on BSC mainnet (56)** where the free Atlas push feeds live. `recordCall` reads
+   `latestRoundData()` in the same transaction, so the stored Atlas price is trustlessly verified and the
+   `roundId` + `updatedAt` prove freshness. Writes cost a few cents of real BNB — this is the version that
+   earns the mainnet bonus, and it is the only version where your differentiator is actually true.
+2. Keep a **testnet registry for the gas-free demo** and record the Atlas `feed`, `roundId` and `updatedAt`
+   **as supplied**, labelled as backend-supplied. Do not claim on-chain verification on testnet.
+
+Two registries, one interface, is the honest and boring answer. Decision needed by T-14h.
+
+**10-minute check to run before coding (no keys needed):**
+```bash
+cast call <feedProxyFrom_atlasoracle.io/feeds/NNNN> "isOpenRead()(bool)" --rpc-url https://bsc-dataseed.binance.org
+cast call <feedProxy> "latestRoundData()(uint80,int256,uint256,uint256,uint80)" --rpc-url https://bsc-dataseed.binance.org
+cast call <feedProxy> "description()(string)" --rpc-url https://bsc-dataseed.binance.org
+```
+If `isOpenRead` is `false`, the read reverts for a contract caller → either pick a different free feed, or
+ask the Atlas team at the venue to whitelist your registry address, or fall back to path 2.
+
+## 2b. Atlas — what the live contract actually answered (verified on BSC mainnet)
+
+### CORRECTION (found by Codex round 3, verified live): the calldata, not the feedId, was wrong
+
+This section originally concluded that "the catalogue number is not the on-chain feedId". **That was wrong.**
+The real cause was malformed ABI calldata: a `bytes4` argument must be sent as a **right-padded 32-byte word**,
+and the bare four bytes revert with an empty reason. Probed against
+`0xeace519ebb14fb8404fa6ddd23c3b34abade44aa`:
+
+```
+decimals()                              -> 0x…12  (18)
+selector + 4 bare bytes                 -> execution reverted: 0x        <-- what we shipped
+selector + bytes4 padded to 32 bytes    -> a real snapshot               <-- correct
+  price       = 85940244616217042600  (= $85.94 at 18dp)
+  timestamps  = 1795699130            (2026-11-26T13:18:50Z, 4 seconds old at read time)
+```
+
+So **the catalogue number IS the on-chain feed id**: catalogue `#1164` is feedId `0x0000048c`, and it reads
+live and keyless today. The supplier gate for a working feed is **closed** — only a *different asset's* id
+(BNB, CAKE) still needs asking for.
+
+Second defect, same file: the snapshot was read at `latest` and `eth_blockNumber` fetched separately, so the
+recorded reference block could be a block the price did not come from. Every read is now pinned to one block.
+
+The lesson worth keeping: an empty revert is not evidence about *which* argument was wrong. I inferred a
+false fact about the provider from a revert that my own encoder caused, and wrote it into the docs as verified.
+
+### What the interface actually is
+
+Read with `eth_call` against the free feed proxy shown on `atlasoracle.io/feeds/1164`
+(`0xeace519ebb14fb8404fa6ddd23c3b34abade44aa`), 2026-11-26:
+
+```
+isOpenRead()   -> 1                 (open-read: a contract MAY read it)
+decimals()     -> 18
+description()  -> "MultiFeed"
+contractType() -> 2                 (2 == MultiFeed)
+version()      -> 2
+latestRoundData()                -> execution reverted      <-- it is NOT a SingleFeed
+```
+
+**Consequences:**
+
+1. **The proxy is a MultiFeed, not a SingleFeed.** A Chainlink-style `latestRoundData()` reverts on it,
+   so the brief's Chainlink mental model does not apply to the free feeds. Use
+   `fetch(bytes4 feedId)` → `PriceSnapshot { uint80 price; uint48 aggregatedTs; uint48 onchainTs; }`,
+   or the cheaper `fetchCompact(bytes4)` packed as
+   `[Reserved 80][OnchainTs 48][AggTs 48][Price 80]` (decode with the MIT `FeedCodec` library).
+2. **The catalogue number is not the on-chain feedId.** Both `0x0000048c` (1164 as a uint32) and
+   `0x00001164` revert. Get the real 4-byte id from the Atlas team — they are at the venue.
+   Until then the registry cannot read the feed, and neither can your smoke test.
+3. **Reads are open** (`isOpenRead() == true`) on this feed, so `CallRegistry` can read it directly —
+   the contract enforces this at deploy time and reverts with `FeedNotOpenRead()` otherwise.
+
+Selectors, for when you probe by hand: `isOpenRead()` `0xba94e9ff` · `fetch(bytes4)` `0x7ffc4b97` ·
+`fetchCompact(bytes4)` `0x1fa1065f` · `decimals()` `0x313ce567` · `contractType()` `0xcb2ef6f7` ·
+`description()` `0x7284e416` · `latestRoundData()` `0xfeaf968c`.
+
+The contract in this repo is written against that interface — in both the verified and referenced modes —
+and compiles clean (`npx solc@0.8.24 --bin --optimize src/CallRegistry.sol`).
+
+### You cannot discover a feedId from the contract — only Atlas can give it
+
+Probed the live MultiFeed for an enumeration surface:
+
+```
+feedCount()  feedIds()  getFeedIds()  feeds()  getFeed(bytes4)  config(bytes4)
+feedConfig(bytes4)  isFeedActive(bytes4)  getLatestPrice(bytes4)  latestAnswer(bytes4)  aggregate(bytes4)
+   -> all execution reverted: 0x
+```
+
+`IMultiFeed` (the MIT interface) has **no** enumeration and no metadata-per-feed: its whole surface is
+`fetch`, `fetchBatch`, `fetchCompact`, `fetchCompactBatch`, `decimals`, `description`, `version`,
+`contractType`, `isAuthorizedCaller`, `isOpenRead`. Governance and price-reporting functions are omitted
+deliberately. So the `feedId` per asset has to come from Atlas — the team at the venue, or their dashboard.
+
+Diagnostic to remember: an **unknown `feedId` reverts with an empty reason** (`execution reverted: 0x`),
+while a **known but never-updated feed returns a zero-initialised snapshot**. A revert means "wrong id",
+not "oracle down".
+
+## 3. Cournot — the probability needs NO API key; the key in their docs is for something else
+
+Probed live 2026-11-26 against `https://interface.cournot.ai` (no credentials of any kind):
+
+```
+GET  /cournot/markets/public                          -> 200 {"code":4100,"msg":"slug is required"}
+GET  /cournot/markets/public?slug=…&source=test        -> 200 {"code":4100,"msg":"invalid source: test"}
+POST /cournot/markets/dispute/submit                   -> 200 {"code":4100,"msg":"api_key is required"}
+```
+
+**Three separate things, and only one of them is a key:**
+
+| Surface | Auth | What it is |
+|---|---|---|
+| **Intelligence Oracle** (`skill.cournot.ai`) — *what this project needs* | **none to start** | An agent skill that returns the probability for a claim. **Three free calls per IP, in total, shared with divergence, no reset** — the marketing page says "per account", the skill's own billing contract says **per IP**. Then paid per call via x402 (Base) / b402 (BNB Chain). No key, no wallet to start |
+| `GET /cournot/markets/public` | no key | Public settlement records. Note it wants a recognised partner `source` — `source=test` is rejected |
+| `POST /cournot/markets/dispute/submit` | **`x-api-key`** | The only thing the partner key is for: **filing a dispute on behalf of an end user**. A write action. Rules: the partner's own `source` (derived from the key) must match the market's source; only `resolved` markets; one dispute per market |
+
+So: **do not go looking for a Cournot partner key.** The `x-api-key` in the partner docs is a
+prediction-market operator credential for filing disputes — irrelevant to reading a probability, and not
+what the challenge asks for. The challenge asks for **one successful live call to the Intelligence Oracle
+skill**, which the free tier covers exactly.
+
+**Architectural consequence — read this before wiring the backend.** The published REST surface has **no
+endpoint that returns a probability for an arbitrary claim**. Probabilities only come out of the skill,
+whose client is bundled (`npx cournot-skills add Cournot-AI/cournot-skills/skills/cournot`, Node ≥ 22.20,
+"all calls use the bundled client"). So "one live Cournot call per new call" cannot be a plain
+`fetch()` — the backend has to drive the skill. Keep the call behind one small module so the demo path can
+fall back to **recorded responses**, and spend the three free calls on: one shape-check now, one rehearsal,
+one on stage.
+
+Verified on their own site: "First release covers crypto events · **three free calls per account**", and
+"the skill runs only on an explicit request — one instruction produces at most one paid call". A request
+that cannot be resolved to a specific claim **stops and asks rather than guessing**, so the extractor must
+emit a claim naming an asset and a threshold or a date.
+
+- The challenge needs: one successful live call, the probability **driving a real decision**, claim +
+  evidence shown verbatim, a `Cournot Integration` README section, and reproducible proof (request ID or
+  sanitised log). **Develop against recorded responses; spend the real calls on the demo + the proof.**
+Verified live 2026-11-26 with the bundled client (no key, no wallet, no signup):
+
+```bash
+git clone --depth 1 https://github.com/Cournot-AI/cournot-skills
+node <skill-root>/scripts/cournot-client.mjs balance     # free  -> {"state":"credential_missing", "Anonymous queries remain available"}
+node <skill-root>/scripts/cournot-client.mjs resolve --request-base64 <b64>   # free, no charge
+node <skill-root>/scripts/cournot-client.mjs prepare --request-base64 <b64>   # the CHARGED probability call
+```
+
+`resolve` is **free** and returned real candidates in about a second, e.g. for
+"BNB price above $600 before December 31, 2026":
+
+| id | market | match confidence |
+|---|---|---|
+| 113195 | BNB price above $600.00 at any time before 2026-12-01 05:00 UTC | 0.823 |
+| 1571 | BNB price above $1,000 at any time before 2027-01-01 05:00 UTC | 0.820 |
+| 1570 | BNB price above $1,100 … before 2027-01-01 05:00 UTC | 0.818 |
+
+**The constraint that shapes the extractor: Cournot markets are discrete strike × deadline pairs.** There is
+no market for "$600 before December 31" — the nearest are *$600 before December 1 2026* and *$1,000 before
+January 1 2027*. So a KOL claim can only be priced when it maps onto an existing market; otherwise the skill
+stops and asks rather than guessing. Two consequences: (a) the extractor should normalise a claim onto the
+nearest available strike/date, and (b) the leaderboard's Edge only exists for calls that landed on a market —
+say so in the UI rather than hiding it.
+
+Auto-proceed rule from the skill's flow reference, worth knowing for the demo path: with several candidates
+you may only continue without asking a human when the leader's confidence is **≥ 0.85 and at least 0.15
+ahead** of the next. The run above does not qualify, which is exactly the case a demo script must handle.
+
+Raw client output is saved in `evidence/cournot/`.
+
+### Outcome of the one paid attempt: `payment_choice_required` — no probability obtained
+
+The `prepare` call for market 113195 returned:
+
+```json
+{"state":"payment_choice_required","choices":["topup","import","per_call"]}
+```
+
+Per the skill's own flow reference, that state means **the free allowance ran out** (as opposed to
+`pack_exhausted`, which means prepaid calls ran out). `resolve` and `balance` are free and had already
+succeeded minutes earlier, and no probability call had ever been made from this machine — so the **lifetime
+per-IP free allowance was already consumed before we started**, almost certainly by another user of this
+egress IP (NAT / proxy / shared connection). That is the practical consequence of "three free calls per IP"
+rather than per account:
+
+**On any shared network — a hackathon venue's wifi above all — you cannot count on the free tier. Assume
+zero and plan for it.** The three routes, all equally valid:
+
+1. **`/cournot topup`** — buy a pack. **Starter: $5 for 600 calls**, which removes this entire risk class for
+   less than a coffee, and packs stack, never expire and are non-refundable. Requires a wallet that can sign
+   x402 (Base) or b402 (BNB Chain) payments.
+2. **Pay per query** — $0.01 for a single query, reviewed and confirmed before anything is charged. Same
+   wallet requirement.
+3. **`/cournot import <key>`** — use a prepaid account purchased elsewhere or on another device.
+
+Plus the free route that actually fits this event: the challenge text says selected eligible projects
+receive Cournot access, and the Cournot team is at the venue. **Ask them for hackathon credits** — it is the
+cheapest option and it puts you in front of the people judging the bounty.
+
+What remains free and verified: `resolve` (market disambiguation — real candidates, ids and
+`matching_confidence` in about a second), `balance`, divergence **page turns** (re-reading a saved snapshot),
+and an empty divergence ranking. Those are enough to develop and to rehearse the whole demo path against
+recorded fixture data — only the probability number itself is metered.
+
+## 4. Living Brain — early access, key + subject id
+
+- Docs are at `docs.livingbrain.com`; append `.md` to any page for clean markdown (agent-friendly).
+- Auth needs an **API key (`lbk_...`) and a `subject id`** — brains are owned by subjects. Both come from
+  the org dashboard; "Now in early access".
+- SDKs: `@living-brain/sdk` (TS) or `livingbrain-sdk` (Python); also a hosted **MCP server** at
+  `https://livingbrain.fernmcp.dev/livingbrain` (`x-api-key`, `x-subject-id`), and a `livingbrain` CLI.
+  **Hermes is a listed MCP client** — if you want the memory layer set up fast, that path is one snippet.
+- Captures are **asynchronous**: `captures.capture` returns an ingest source with `status: pending`, and
+  Living Brain compiles it into pages in the background — register a **webhook** rather than polling.
+  Your demo must not show a spinner because a capture had not compiled yet. Pre-warm the memories.
+- Free-tier limits are **not published** anywhere public. Ask at the booth; your brief already flags this.
+
+## 5. Free-tier claims worth re-checking
+
+- "Etherscan's API no longer has a free tier for BNB Chain" — Etherscan now runs one unified v2 API across
+  chains; verify at the booth before you route around it. Public RPC + `eth_getLogs` is the safe default anyway.
+- CMC Pro key, Atlas feed access and Living Brain keys are all **approval-gated**. In a 17-hour window the
+  approval is the critical path, not the code.
+
+## Sources
+- `coinmarketcap.com/api/documentation/pro-api-reference/keyless-public-api.md`
+- `coinmarketcap.com/api/documentation/pro-api-reference/content/content-latest-posts.md`
+- `docs.atlasoracle.io/developers/atlas-oracle/integrate-the-push-mode`, `.../api-reference/single-feed-contract`, `.../multi-feed-contract`
+- `atlasoracle.io/pricing`, `atlasoracle.io/feeds`, `atlasoracle.io/feeds/1164`
+- `docs.livingbrain.com/llms.txt`, `docs.livingbrain.com/docs/quickstart`
+- `cournot.ai/`, `github.com/Cournot-AI/cournot-skills`
+
+
+ succeeded in 4188ms:
+/**
+ * The Builder A -> Builder B contract.
+ *
+ * Everything here is JSON-safe: no Date, no BigInt, no class instance crosses the boundary.
+ * A owns the left of the arrow (VerificationRecord), B owns the right (CallRecord[]) and can
+ * run entirely from data/seed.json without importing any of A's modules or credentials.
+ *
+ * The `never` fields below are deliberate: they make a fabricated probability or a made-up
+ * transaction hash a COMPILE-TIME error rather than a code-review convention.
+ */
+
+/* ------------------------------------------------------------------ inputs */
+
+export type ClaimSource = "paste" | "cmc";
+
+export type Claim = {
+  source: ClaimSource;
+  sourcePostId?: string;
+  authorId: string;
+  originalText: string;
+  postedAt: string; // ISO-8601
+  asset: string; // uppercase ticker, <= 4 bytes before contract encoding
+  direction: "bullish" | "bearish";
+  targetUsd: string; // decimal string; scaled only at the contract boundary
+  deadline: string; // ISO-8601, strictly after postedAt
+  /** True when the post gave no explicit date and we applied the documented default horizon. */
+  horizonDefaulted: boolean;
+};
+
+export type CmcSnapshot = {
+  priceUsd: string;
+  observedAt: string;
+  requestId?: string;
+  /**
+   * Which CMC base produced this price. "keyed" is a live Pro API call against the account's key and is
+   * what the CMC × Atlas entry asks for; "keyless" is the public base and costs nothing. Recorded so the
+   * receipt can show which one it was instead of asserting it.
+   */
+  source?: "keyed" | "keyless";
+};
+
+export type AtlasSnapshot = {
+  feedAddress: `0x${string}`;
+  feedId: `0x${string}`;
+  price: string; // raw uint80 as a decimal string
+  decimals: number;
+  aggregatedTs: number;
+  onchainTs: number;
+  mainnetBlock: string; // bigint encoded for JSON
+};
+
+export type OnChainReceipt = {
+  chainId: 56 | 97;
+  registry: `0x${string}`;
+  txHash: `0x${string}`;
+  callId: string;
+  atlasVerified: boolean;
+};
+
+/* ------------------------------------------------------- Cournot provenance */
+
+export type CournotProvenance = "live" | "recorded-live" | "fixture";
+
+type CournotResult = {
+  probability: number; // finite, in [0, 1]
+  evaluatedClaim: string; // shown verbatim
+  evidence: string; // shown verbatim
+};
+
+/** A real call through the official client. The only kind that may be exported as sponsor proof. */
+export type ProvenCournotResponse = CournotResult & {
+  provenance: "live" | "recorded-live";
+  requestId: string;
+  fixtureId?: never;
+};
+
+/** Synthetic. Powers development and rehearsal; never sponsor evidence, never on stage as evidence. */
+export type FixtureCournotResponse = CournotResult & {
+  provenance: "fixture";
+  fixtureId: string;
+  requestId?: never;
+};
+
+export type CournotResponse = ProvenCournotResponse | FixtureCournotResponse;
+
+/* ---------------------------------------------------------------- outcomes  */
+
+export type Resolution = {
+  outcome: 0 | 1;
+  resolvedAt: string;
+  cmcPriceUsd: string;
+};
+
+export type CournotScore = {
+  kind: "cournot-edge";
+  probability: number;
+  edge: number;
+};
+
+export type ProxyBaseline = {
+  probability: number;
+  label: "Proxy baseline — not Cournot";
+  methodology: string;
+};
+
+export type ProxyScore = {
+  kind: "proxy-edge";
+  label: "Proxy Edge — not Cournot";
+  probability: number;
+  edge: number;
+};
+
+/* ------------------------------------------------------------- the records  */
+
+export type VerificationRecord = {
+  kind: "verified";
+  id: string;
+  claim: Claim;
+  cournot: CournotResponse;
+  cmc: CmcSnapshot;
+  atlas: AtlasSnapshot;
+  receipt: OnChainReceipt;
+  resolution: null | { result: Resolution; score: CournotScore };
+};
+
+export type BacktestedCallRecord = {
+  kind: "backtested";
+  id: string;
+  claim: Claim;
+  cmcAtPost: CmcSnapshot;
+  proxyBaseline: ProxyBaseline;
+  resolution: { result: Resolution; score: ProxyScore };
+  cournot?: never;
+  receipt?: never;
+};
+
+export type CallRecord = VerificationRecord | BacktestedCallRecord;
+
+/* -------------------------------------------------------------------- guards */
+
+/** The single place that decides whether a Cournot result may be presented as evidence. */
+export function isSponsorEvidence(
+  c: CournotResponse,
+): c is ProvenCournotResponse {
+  return c.provenance === "live" || c.provenance === "recorded-live";
+}
+
+export function isVerifiedRecord(r: CallRecord): r is VerificationRecord {
+  return r.kind === "verified";
+}
+
+/** Only a verified record has a real transaction to link to. */
+export function explorerEligible(r: CallRecord): boolean {
+  return r.kind === "verified";
+}
+
+/**
+ * The verify pipeline: post text -> claim -> Cournot -> snapshots -> on-chain receipt.
+ *
+ * Every provider is injected. That is what makes the whole money shot testable with no network, no
+ * credentials and no chain, and it is why a failing provider fails the test rather than disappearing
+ * into a fallback. Failures propagate with context; nothing here invents a value to keep going.
+ *
+ * The ordering rule that matters: the receipt is written last and must be confirmed. A record is only
+ * returned once a real transaction backs it.
+ *
+ * NOTE: add `import "server-only"` here once the Next app lands.
+ */
+
+import type {
+  AtlasSnapshot,
+  Claim,
+  CmcSnapshot,
+  CournotResponse,
+  OnChainReceipt,
+  VerificationRecord,
+} from "../shared/types.ts";
+import { isSponsorEvidence } from "../shared/types.ts";
+import type { CournotMode } from "./cournot.ts";
+
+export class VerifyError extends Error {}
+
+export type ExtractInput = {
+  text: string;
+  authorId: string;
+  postedAt: string;
+  source?: "paste" | "cmc";
+  sourcePostId?: string;
+};
+
+export type VerifyDeps = {
+  extract: (input: ExtractInput) => Promise<Claim | null>;
+  readCournot: (claim: Claim, mode: CournotMode) => CournotResponse;
+  readPrice: (symbol: string) => Promise<CmcSnapshot>;
+  readAtlas: () => Promise<AtlasSnapshot>;
+  record: (call: RecordCallInput) => Promise<OnChainReceipt>;
+};
+
+export type RecordCallInput = {
+  claim: Claim;
+  cournot: CournotResponse;
+  cmc: CmcSnapshot;
+  atlas: AtlasSnapshot;
+};
+
+export type VerifyOptions = {
+  cournotMode: CournotMode;
+  /** When false the pipeline stops before the chain and returns the assembled record minus a receipt. */
+  record: boolean;
+};
+
+export type VerifyResult = {
+  record: Omit<VerificationRecord, "receipt"> & { receipt: OnChainReceipt | null };
+  /** True when the Cournot number in this record may be cited as sponsor evidence. */
+  evidenceEligible: boolean;
+};
+
+export async function verify(
+  input: ExtractInput,
+  deps: VerifyDeps,
+  options: VerifyOptions,
+): Promise<VerifyResult> {
+  const claim = await deps.extract(input);
+  if (claim === null) {
+    throw new VerifyError(
+      "no scorable claim in this post: it needs one asset, a direction, a price target and a future deadline",
+    );
+  }
+
+  const cournot = deps.readCournot(claim, options.cournotMode);
+  const cmc = await deps.readPrice(claim.asset);
+  const atlas = await deps.readAtlas();
+
+  if (!options.record) {
+    return {
+      record: { kind: "verified", id: `draft-${claim.asset}`, claim, cournot, cmc, atlas, receipt: null, resolution: null },
+      evidenceEligible: isSponsorEvidence(cournot),
+    };
+  }
+
+  const receipt = await deps.record({ claim, cournot, cmc, atlas });
+  if (!receipt.txHash || !receipt.registry) {
+    throw new VerifyError("the recorder returned without a confirmed transaction; refusing to emit a record");
+  }
+  if (receipt.atlasVerified !== false && receipt.chainId === 97) {
+    throw new VerifyError("a testnet receipt must not claim a verified Atlas read — referenced mode is atlasVerified=false");
+  }
+
+  return {
+    record: {
+      kind: "verified",
+      id: `call-${receipt.callId}`,
+      claim,
+      cournot,
+      cmc,
+      atlas,
+      receipt,
+      resolution: null,
+    },
+    evidenceEligible: isSponsorEvidence(cournot),
+  };
+}
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+codex
+The contracts already force a useful design constraint: the UI must distinguish “recorded on-chain” from “verified by Atlas in the transaction,” and “Cournot-shaped” from actual Cournot evidence. I’m now checking the pipeline’s real failure boundaries and the exact leaderboard summaries so the screens don’t imply states the backend cannot produce.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'server/verify.ts'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 2246ms:
+/**
+ * The verify pipeline: post text -> claim -> Cournot -> snapshots -> on-chain receipt.
+ *
+ * Every provider is injected. That is what makes the whole money shot testable with no network, no
+ * credentials and no chain, and it is why a failing provider fails the test rather than disappearing
+ * into a fallback. Failures propagate with context; nothing here invents a value to keep going.
+ *
+ * The ordering rule that matters: the receipt is written last and must be confirmed. A record is only
+ * returned once a real transaction backs it.
+ *
+ * NOTE: add `import "server-only"` here once the Next app lands.
+ */
+
+import type {
+  AtlasSnapshot,
+  Claim,
+  CmcSnapshot,
+  CournotResponse,
+  OnChainReceipt,
+  VerificationRecord,
+} from "../shared/types.ts";
+import { isSponsorEvidence } from "../shared/types.ts";
+import type { CournotMode } from "./cournot.ts";
+
+export class VerifyError extends Error {}
+
+export type ExtractInput = {
+  text: string;
+  authorId: string;
+  postedAt: string;
+  source?: "paste" | "cmc";
+  sourcePostId?: string;
+};
+
+export type VerifyDeps = {
+  extract: (input: ExtractInput) => Promise<Claim | null>;
+  readCournot: (claim: Claim, mode: CournotMode) => CournotResponse;
+  readPrice: (symbol: string) => Promise<CmcSnapshot>;
+  readAtlas: () => Promise<AtlasSnapshot>;
+  record: (call: RecordCallInput) => Promise<OnChainReceipt>;
+};
+
+export type RecordCallInput = {
+  claim: Claim;
+  cournot: CournotResponse;
+  cmc: CmcSnapshot;
+  atlas: AtlasSnapshot;
+};
+
+export type VerifyOptions = {
+  cournotMode: CournotMode;
+  /** When false the pipeline stops before the chain and returns the assembled record minus a receipt. */
+  record: boolean;
+};
+
+export type VerifyResult = {
+  record: Omit<VerificationRecord, "receipt"> & { receipt: OnChainReceipt | null };
+  /** True when the Cournot number in this record may be cited as sponsor evidence. */
+  evidenceEligible: boolean;
+};
+
+export async function verify(
+  input: ExtractInput,
+  deps: VerifyDeps,
+  options: VerifyOptions,
+): Promise<VerifyResult> {
+  const claim = await deps.extract(input);
+  if (claim === null) {
+    throw new VerifyError(
+      "no scorable claim in this post: it needs one asset, a direction, a price target and a future deadline",
+    );
+  }
+
+  const cournot = deps.readCournot(claim, options.cournotMode);
+  const cmc = await deps.readPrice(claim.asset);
+  const atlas = await deps.readAtlas();
+
+  if (!options.record) {
+    return {
+      record: { kind: "verified", id: `draft-${claim.asset}`, claim, cournot, cmc, atlas, receipt: null, resolution: null },
+      evidenceEligible: isSponsorEvidence(cournot),
+    };
+  }
+
+  const receipt = await deps.record({ claim, cournot, cmc, atlas });
+  if (!receipt.txHash || !receipt.registry) {
+    throw new VerifyError("the recorder returned without a confirmed transaction; refusing to emit a record");
+  }
+  if (receipt.atlasVerified !== false && receipt.chainId === 97) {
+    throw new VerifyError("a testnet receipt must not claim a verified Atlas read — referenced mode is atlasVerified=false");
+  }
+
+  return {
+    record: {
+      kind: "verified",
+      id: `call-${receipt.callId}`,
+      claim,
+      cournot,
+      cmc,
+      atlas,
+      receipt,
+      resolution: null,
+    },
+    evidenceEligible: isSponsorEvidence(cournot),
+  };
+}
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'server/records.ts'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 1635ms:
+/**
+ * Resolution, scoring and ranking.
+ *
+ * The one rule this module exists to enforce: a call that has no Cournot probability gets PROXY Edge,
+ * which is labelled as such and is never mixed into a Cournot Edge aggregate. Averaging a proxy
+ * probability with a real one would produce a number that means nothing while looking authoritative.
+ */
+
+import type {
+  CallRecord,
+  CournotScore,
+  ProxyScore,
+  Resolution,
+} from "../shared/types.ts";
+
+export class ScoreError extends Error {}
+
+/**
+ * Edge is computed in basis points, not by raw float subtraction.
+ * `1 - 0.9` is 0.09999999999999998 in IEEE-754, and Edge is both shown to users and used to rank KOLs,
+ * so the arithmetic has to land on exact values. Basis points also match the contract's `uint16` bps,
+ * which is what actually gets recorded on chain.
+ */
+const BPS = 10_000;
+
+function toBps(p: number): number {
+  assertProbability(p);
+  return Math.round(p * BPS);
+}
+
+/** Edge = outcome - probability. A consensus hit earns little; a contrarian hit earns a lot. */
+export function cournotEdge(outcome: 0 | 1, probability: number): CournotScore {
+  const bps = toBps(probability);
+  return { kind: "cournot-edge", probability: bps / BPS, edge: (outcome * BPS - bps) / BPS };
+}
+
+export function proxyEdge(outcome: 0 | 1, probability: number): ProxyScore {
+  const bps = toBps(probability);
+  return {
+    kind: "proxy-edge",
+    label: "Proxy Edge — not Cournot",
+    probability: bps / BPS,
+    edge: (outcome * BPS - bps) / BPS,
+  };
+}
+
+function assertProbability(p: number): void {
+  if (!Number.isFinite(p) || p < 0 || p > 1) {
+    throw new ScoreError(`probability must be a finite number in [0, 1], got ${String(p)}`);
+  }
+}
+
+/** The score already attached to a resolved record, whichever kind it is. */
+export function scoreOf(record: CallRecord): CournotScore | ProxyScore | null {
+  return record.resolution === null ? null : record.resolution.score;
+}
+
+export type KolSummary = {
+  kolId: string;
+  /** Calls that carry a real Cournot baseline. */
+  cournotCalls: number;
+  /** Calls scored with the labelled proxy baseline — reported separately, always. */
+  proxyCalls: number;
+  unresolved: number;
+  hitRate: number | null;
+  /** Mean Edge. null when there is no resolved Cournot call, by design. */
+  cournotEdge: number | null;
+  proxyEdge: number | null;
+  meanReturn: number | null;
+};
+
+/**
+ * Aggregate one KOL's calls. `priceAtResolution` is looked up by the caller (CMC for the demo,
+ * a fixture for tests) so this stays a pure function.
+ */
+export function summarise(
+  kolId: string,
+  records: readonly CallRecord[],
+  priceAtResolution: (record: CallRecord) => number | null,
+): KolSummary {
+  let cournotCalls = 0;
+  let proxyCalls = 0;
+  let unresolved = 0;
+  let hits = 0;
+  let resolved = 0;
+  let cournotEdgeSum = 0;
+  let proxyEdgeSum = 0;
+  let returnSum = 0;
+  let returnCount = 0;
+
+  for (const r of records) {
+    if (r.claim.authorId !== kolId) continue;
+    const score = scoreOf(r);
+    if (r.resolution === null || score === null) {
+      unresolved += 1;
+      continue;
+    }
+    resolved += 1;
+    if (r.resolution.result.outcome === 1) hits += 1;
+    if (score.kind === "cournot-edge") {
+      cournotCalls += 1;
+      cournotEdgeSum += score.edge;
+    } else {
+      proxyCalls += 1;
+      proxyEdgeSum += score.edge;
+    }
+
+    const at = priceAtResolution(r);
+    if (at !== null) {
+      const entry = Number("cmcAtPost" in r ? r.cmcAtPost.priceUsd : r.cmc.priceUsd);
+      if (Number.isFinite(entry) && entry > 0) {
+        const change = (at - entry) / entry;
+        returnSum += r.claim.direction === "bullish" ? change : -change;
+        returnCount += 1;
+      }
+    }
+  }
+
+  return {
+    kolId,
+    cournotCalls,
+    proxyCalls,
+    unresolved,
+    hitRate: resolved === 0 ? null : hits / resolved,
+    cournotEdge: cournotCalls === 0 ? null : cournotEdgeSum / cournotCalls,
+    proxyEdge: proxyCalls === 0 ? null : proxyEdgeSum / proxyCalls,
+    meanReturn: returnCount === 0 ? null : returnSum / returnCount,
+  };
+}
+
+/**
+ * Leaderboard order. KOLs with no Cournot Edge sort last regardless of hit rate — that is the whole
+ * point of the metric: a high hit rate built on consensus calls is not a track record.
+ *
+ * Total and deterministic: ties break on kolId, so the order does not depend on the order the records
+ * were loaded in. Without that, two copies of the same data can render two different leaderboards.
+ */
+export function rank(summaries: readonly KolSummary[]): KolSummary[] {
+  return [...summaries].sort((a, b) => {
+    if (a.cournotEdge !== b.cournotEdge) {
+      if (a.cournotEdge === null) return 1;
+      if (b.cournotEdge === null) return -1;
+      if (b.cournotEdge !== a.cournotEdge) return b.cournotEdge - a.cournotEdge;
+    }
+    if (a.hitRate !== b.hitRate) {
+      if (a.hitRate === null) return 1;
+      if (b.hitRate === null) return -1;
+      if (b.hitRate !== a.hitRate) return b.hitRate - a.hitRate;
+    }
+    return a.kolId.localeCompare(b.kolId);
+  });
+}
+
+export type { Resolution };
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'docs/integration-findings.md'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 1550ms:
+# Integration findings — verified 2026-11-26 16:29–16:35 (UTC+7)
+
+Every claim below is from a live probe or the vendor's own doc, not from memory. Raw responses are quoted.
+Probe host: this machine, plain `curl`, no API keys.
+
+## 1. CoinMarketCap — two different bases, and the content endpoints are NOT keyless
+
+CMC now runs a **Keyless Public API** on the same host, prefix `/public-api`:
+
+```
+OK   HTTP 200  GET https://pro-api.coinmarketcap.com/public-api/v2/simple/price?symbol=BNB,CAKE&convert=USD
+{"data":[{"id":1839,"name":"BNB","symbol":"BNB","slug":"bnb",
+  "quotes":[{"symbol":"USD","price":552.6301590837155}]},
+ {"id":7186,"name":"Pancake","symbol":"CAKE","slug":"pancakeswap",
+  "quotes":[{"symbol":"USD","price":1.5722643083908194}]}], ...}
+```
+
+Two gotchas visible in that response:
+
+- **`quotes` is an array**, not the `quote.USD.price` object of the classic Pro envelope. If your backend
+  was written against the old shape it will silently read `undefined`.
+- Keyless = IP-shared rate pool, so a 429 is normal; back off (the official SDK does it for you).
+  A free key raises limits and returns "the same response shape".
+
+**Content endpoints reject keyless calls.** All four of these are 403 without a key:
+
+```
+HTTP 403  /public-api/v1/content/posts/latest?symbol=BNB
+  {"status":{"error_code":1005,"error_message":"An API Key is required for this call."}}
+HTTP 403  /public-api/v1/content/posts/latest?slug=binancecoin
+HTTP 403  /public-api/v1/content/posts/top?symbol=BNB
+HTTP 403  /public-api/v1/content/latest?limit=1
+```
+
+and the endpoint is stricter than its own docs:
+
+```
+HTTP 400  /public-api/v1/content/posts/latest
+  {"status":{"error_code":400,
+   "error_message":"Exactly one of `id`, `slug`, or `symbol` is required for this endpoint"}}
+```
+
+Doc says `id` / `slug` / `symbol` are all `required: false`. The API says **exactly one is required**.
+
+### What this changes for Proof of Alpha
+
+| Brief assumed | Reality |
+|---|---|
+| "Free Basic key returns `/v1/content/posts/latest`" | Needs **a key** (1005 on keyless). Whether the free plan includes the Content endpoints is still unconfirmed — but they cost **0 credits** per the doc, so a free key should carry them. **Confirm with a key before you build on it.** |
+| "Filter by symbol; page back with `last_score`" | Correct. Those are the only useful params: `id \| slug \| symbol` (exactly one) and `last_score`. **There is no `limit` param** and no "all posts" call. |
+| Backtest "historical CMC posts" | You can only ask **per-symbol**, walking `last_score` backwards. So the backtest needs a **watchlist of symbols** (e.g. BNB, CAKE, and the BNB-Chain majors) rather than "all KOL calls". Say so on the leaderboard. |
+| `GET /v1/content/latest` | Also keyed, and also not global. |
+
+`plan credit use: 0 credit`, cache/update frequency: five minutes.
+
+## 1b. Three bases, not two — and which one has the Content endpoints
+
+CMC serves the same host under three prefixes. Probed 2026-11-26:
+
+```
+HTTP 200  /public-api/v2/simple/price?symbol=BNB&convert=USD          keyless
+HTTP 200  /trial-pro-api/v3/cryptocurrency/listings/latest            keyless (Trial Pro API)
+HTTP 200  /trial-pro-api/v2/simple/price?symbol=BNB&convert=USD       keyless
+HTTP 403  /trial-pro-api/v1/content/posts/latest?symbol=BNB
+          {"error_code":1005,"error_message":"An API Key is required for this call."}
+```
+
+| Base | Auth | Covers |
+|---|---|---|
+| `/public-api` | none | keyless subset; IP-shared quota, so 429 is normal |
+| `/trial-pro-api` | none | a **fixed** subset: 19 Standard + 17 DEX endpoints (listings, quotes, global metrics, Fear & Greed, CMC indices, Altcoin Season, map/info, DEX token/pools/pairs, holders, k-line, token search). Aggressively rate-limited, subset cannot be extended |
+| `/v1`, `/v2`, `/v3` | `X-CMC_PRO_API_KEY` | everything, including **Content** |
+
+**Bottom line for this build:** the whole price side — posting snapshot, resolution, proxy-Edge, DEX
+swaps/holders for sell-while-shilling — runs today with **no account at all**, on `/trial-pro-api` or
+`/public-api`. Only the **call source** (`/v1/content/posts/latest`) needs a key, and it is not in either
+keyless set. So the critical path is exactly one signup, and it blocks only ingest.
+
+Free Basic plan (pro.coinmarketcap.com/signup, no credit card): **15,000 monthly credits, 50 req/min,
+30+ endpoints, historical data, commercial use** — the key appears on the dashboard immediately. Some
+third-party docs still say 10,000 credits; CMC's own pricing page says 15,000 as of this probe.
+
+Unknown until a real key is tried: whether the free Basic plan includes the Content endpoints. The endpoint
+is 0 credits, so it should — but it is not the keyless set, so confirm with the key before building ingest
+on it. Fallback if not: the brief's verify-by-paste path, plus ask the CMC team at the venue.
+
+## 1c. CLOSED: the free Basic plan does NOT include the Content endpoints
+
+Probed 2026-11-26 with a real free Basic key (32-hex, no quotes, no whitespace — a correct key):
+
+```
+A) GET /v1/cryptocurrency/listings/latest?symbol=…   -> error_code 0, data rows 1, credit_count 1
+B) GET /v1/content/posts/latest?symbol=BNB           -> error_code 1006
+   "Your API Key subscription plan doesn't support this endpoint."   credit_count 0
+C) GET /public-api/v1/content/posts/latest?symbol=BNB -> HTTP 403 (keyless path also closed)
+```
+
+**This is a plan limit, not a defect and not a bad key** — 1006 means "your subscription doesn't support
+this endpoint", while 1005 means "no key reached the API" and 1001 means "invalid key". The key is valid and
+a keyed Pro API call works.
+
+**Consequences, and none of them end the entry:**
+
+| Requirement | Status |
+|---|---|
+| CMC × Atlas: "at least one live Pro API call in a core feature" | **Satisfied** by the keyed quotes call — so the verify flow must use it, and it does (`snapshotPrice` prefers keyed, falls back to keyless) |
+| Atlas: "read an on-chain feed" | Satisfied, keyless |
+| Ingest from CMC Community posts | **Blocked on the free plan.** Ask the CMC team for access, and use verify-by-paste, which is what `docs/demo-script.md` already specifies for the money shot |
+| Backtest over real post history | **Blocked.** The labelled `data/seed.json` is the leaderboard, exactly as anticipated |
+
+**Envelope divergence, verified side by side on the same pair:** the KEYED endpoint returns the classic
+object envelope `data.BNB.quote.USD.price`, while the KEYLESS endpoint returns an array
+`data[0].quotes[0].price`. Same price, two shapes on the same host. A parser written from one will fail
+silently on the other — `server/cmc.ts` handles both, and a test asserts the array shape is reported as a
+shape error rather than read as `undefined`.
+
+A keyed call for two symbols cost **1 credit**, so the keyed price is cheap enough to sit inside the verify
+flow rather than being a one-off screenshot.
+
+## 2. Atlas Oracle — free feeds exist, but they are on BSC **mainnet**, and check the read policy
+
+- Free push feeds are real and public: e.g. feed **#1164 BNBChain EWTB/USD**, tags `Crypto` + `Free`,
+  Push Mode, **Network: BNB Smart Chain (BEP20)**, deviation 2.00%, heartbeat 60s, push status Active.
+  Its update transactions link out to **bscscan.com/tx/...** → these are **mainnet** writes.
+- Pricing page confirms it: **Free Plan $0/mo — "Try Push Mode with limited feeds on BNB Smart Chain"**.
+  Paid tiers ($465/mo Starter, 5 paid feeds) are only for custom/private feeds.
+- Read surface: `SingleFeed` is **fully Chainlink `AggregatorV2V3`-compatible** (so `latestRoundData()`,
+  `latestAnswer()`, `decimals()` work as you'd expect); `MultiFeed` is a registry keyed by a 4-byte
+  `feedId` with `fetch` / `fetchBatch` / `fetchCompact`. Interfaces are MIT at
+  `github.com/oracle-atlas/push-oracle-interfaces`.
+- **Read policy is the trap.** Every read function is `onlyReadAccess`, and each feed instance is either
+  **whitelist** (only authorised callers, plus plain EOAs not delegated via ERC-7702) or **open-read**
+  (anyone). Query `isOpenRead()` on the feed proxy before assuming a contract can read it.
+
+### The architecture bug in your brief
+
+> "The registry contract reads the Atlas feed itself when recording, so a stored price can be checked
+> on-chain rather than taken on our word." — "Mainnet reads are free; this earns the challenge's
+> mainnet bonus without spending real funds."
+
+A `CallRegistry` deployed on **BSC testnet (chain 97) cannot read a mainnet feed**. Cross-chain reads do
+not exist without a bridge or an oracle callback. Two ways out, both cheap:
+
+1. **Deploy the registry on BSC mainnet (56)** where the free Atlas push feeds live. `recordCall` reads
+   `latestRoundData()` in the same transaction, so the stored Atlas price is trustlessly verified and the
+   `roundId` + `updatedAt` prove freshness. Writes cost a few cents of real BNB — this is the version that
+   earns the mainnet bonus, and it is the only version where your differentiator is actually true.
+2. Keep a **testnet registry for the gas-free demo** and record the Atlas `feed`, `roundId` and `updatedAt`
+   **as supplied**, labelled as backend-supplied. Do not claim on-chain verification on testnet.
+
+Two registries, one interface, is the honest and boring answer. Decision needed by T-14h.
+
+**10-minute check to run before coding (no keys needed):**
+```bash
+cast call <feedProxyFrom_atlasoracle.io/feeds/NNNN> "isOpenRead()(bool)" --rpc-url https://bsc-dataseed.binance.org
+cast call <feedProxy> "latestRoundData()(uint80,int256,uint256,uint256,uint80)" --rpc-url https://bsc-dataseed.binance.org
+cast call <feedProxy> "description()(string)" --rpc-url https://bsc-dataseed.binance.org
+```
+If `isOpenRead` is `false`, the read reverts for a contract caller → either pick a different free feed, or
+ask the Atlas team at the venue to whitelist your registry address, or fall back to path 2.
+
+## 2b. Atlas — what the live contract actually answered (verified on BSC mainnet)
+
+### CORRECTION (found by Codex round 3, verified live): the calldata, not the feedId, was wrong
+
+This section originally concluded that "the catalogue number is not the on-chain feedId". **That was wrong.**
+The real cause was malformed ABI calldata: a `bytes4` argument must be sent as a **right-padded 32-byte word**,
+and the bare four bytes revert with an empty reason. Probed against
+`0xeace519ebb14fb8404fa6ddd23c3b34abade44aa`:
+
+```
+decimals()                              -> 0x…12  (18)
+selector + 4 bare bytes                 -> execution reverted: 0x        <-- what we shipped
+selector + bytes4 padded to 32 bytes    -> a real snapshot               <-- correct
+  price       = 85940244616217042600  (= $85.94 at 18dp)
+  timestamps  = 1795699130            (2026-11-26T13:18:50Z, 4 seconds old at read time)
+```
+
+So **the catalogue number IS the on-chain feed id**: catalogue `#1164` is feedId `0x0000048c`, and it reads
+live and keyless today. The supplier gate for a working feed is **closed** — only a *different asset's* id
+(BNB, CAKE) still needs asking for.
+
+Second defect, same file: the snapshot was read at `latest` and `eth_blockNumber` fetched separately, so the
+recorded reference block could be a block the price did not come from. Every read is now pinned to one block.
+
+The lesson worth keeping: an empty revert is not evidence about *which* argument was wrong. I inferred a
+false fact about the provider from a revert that my own encoder caused, and wrote it into the docs as verified.
+
+### What the interface actually is
+
+Read with `eth_call` against the free feed proxy shown on `atlasoracle.io/feeds/1164`
+(`0xeace519ebb14fb8404fa6ddd23c3b34abade44aa`), 2026-11-26:
+
+```
+isOpenRead()   -> 1                 (open-read: a contract MAY read it)
+decimals()     -> 18
+description()  -> "MultiFeed"
+contractType() -> 2                 (2 == MultiFeed)
+version()      -> 2
+latestRoundData()                -> execution reverted      <-- it is NOT a SingleFeed
+```
+
+**Consequences:**
+
+1. **The proxy is a MultiFeed, not a SingleFeed.** A Chainlink-style `latestRoundData()` reverts on it,
+   so the brief's Chainlink mental model does not apply to the free feeds. Use
+   `fetch(bytes4 feedId)` → `PriceSnapshot { uint80 price; uint48 aggregatedTs; uint48 onchainTs; }`,
+   or the cheaper `fetchCompact(bytes4)` packed as
+   `[Reserved 80][OnchainTs 48][AggTs 48][Price 80]` (decode with the MIT `FeedCodec` library).
+2. **The catalogue number is not the on-chain feedId.** Both `0x0000048c` (1164 as a uint32) and
+   `0x00001164` revert. Get the real 4-byte id from the Atlas team — they are at the venue.
+   Until then the registry cannot read the feed, and neither can your smoke test.
+3. **Reads are open** (`isOpenRead() == true`) on this feed, so `CallRegistry` can read it directly —
+   the contract enforces this at deploy time and reverts with `FeedNotOpenRead()` otherwise.
+
+Selectors, for when you probe by hand: `isOpenRead()` `0xba94e9ff` · `fetch(bytes4)` `0x7ffc4b97` ·
+`fetchCompact(bytes4)` `0x1fa1065f` · `decimals()` `0x313ce567` · `contractType()` `0xcb2ef6f7` ·
+`description()` `0x7284e416` · `latestRoundData()` `0xfeaf968c`.
+
+The contract in this repo is written against that interface — in both the verified and referenced modes —
+and compiles clean (`npx solc@0.8.24 --bin --optimize src/CallRegistry.sol`).
+
+### You cannot discover a feedId from the contract — only Atlas can give it
+
+Probed the live MultiFeed for an enumeration surface:
+
+```
+feedCount()  feedIds()  getFeedIds()  feeds()  getFeed(bytes4)  config(bytes4)
+feedConfig(bytes4)  isFeedActive(bytes4)  getLatestPrice(bytes4)  latestAnswer(bytes4)  aggregate(bytes4)
+   -> all execution reverted: 0x
+```
+
+`IMultiFeed` (the MIT interface) has **no** enumeration and no metadata-per-feed: its whole surface is
+`fetch`, `fetchBatch`, `fetchCompact`, `fetchCompactBatch`, `decimals`, `description`, `version`,
+`contractType`, `isAuthorizedCaller`, `isOpenRead`. Governance and price-reporting functions are omitted
+deliberately. So the `feedId` per asset has to come from Atlas — the team at the venue, or their dashboard.
+
+Diagnostic to remember: an **unknown `feedId` reverts with an empty reason** (`execution reverted: 0x`),
+while a **known but never-updated feed returns a zero-initialised snapshot**. A revert means "wrong id",
+not "oracle down".
+
+## 3. Cournot — the probability needs NO API key; the key in their docs is for something else
+
+Probed live 2026-11-26 against `https://interface.cournot.ai` (no credentials of any kind):
+
+```
+GET  /cournot/markets/public                          -> 200 {"code":4100,"msg":"slug is required"}
+GET  /cournot/markets/public?slug=…&source=test        -> 200 {"code":4100,"msg":"invalid source: test"}
+POST /cournot/markets/dispute/submit                   -> 200 {"code":4100,"msg":"api_key is required"}
+```
+
+**Three separate things, and only one of them is a key:**
+
+| Surface | Auth | What it is |
+|---|---|---|
+| **Intelligence Oracle** (`skill.cournot.ai`) — *what this project needs* | **none to start** | An agent skill that returns the probability for a claim. **Three free calls per IP, in total, shared with divergence, no reset** — the marketing page says "per account", the skill's own billing contract says **per IP**. Then paid per call via x402 (Base) / b402 (BNB Chain). No key, no wallet to start |
+| `GET /cournot/markets/public` | no key | Public settlement records. Note it wants a recognised partner `source` — `source=test` is rejected |
+| `POST /cournot/markets/dispute/submit` | **`x-api-key`** | The only thing the partner key is for: **filing a dispute on behalf of an end user**. A write action. Rules: the partner's own `source` (derived from the key) must match the market's source; only `resolved` markets; one dispute per market |
+
+So: **do not go looking for a Cournot partner key.** The `x-api-key` in the partner docs is a
+prediction-market operator credential for filing disputes — irrelevant to reading a probability, and not
+what the challenge asks for. The challenge asks for **one successful live call to the Intelligence Oracle
+skill**, which the free tier covers exactly.
+
+**Architectural consequence — read this before wiring the backend.** The published REST surface has **no
+endpoint that returns a probability for an arbitrary claim**. Probabilities only come out of the skill,
+whose client is bundled (`npx cournot-skills add Cournot-AI/cournot-skills/skills/cournot`, Node ≥ 22.20,
+"all calls use the bundled client"). So "one live Cournot call per new call" cannot be a plain
+`fetch()` — the backend has to drive the skill. Keep the call behind one small module so the demo path can
+fall back to **recorded responses**, and spend the three free calls on: one shape-check now, one rehearsal,
+one on stage.
+
+Verified on their own site: "First release covers crypto events · **three free calls per account**", and
+"the skill runs only on an explicit request — one instruction produces at most one paid call". A request
+that cannot be resolved to a specific claim **stops and asks rather than guessing**, so the extractor must
+emit a claim naming an asset and a threshold or a date.
+
+- The challenge needs: one successful live call, the probability **driving a real decision**, claim +
+  evidence shown verbatim, a `Cournot Integration` README section, and reproducible proof (request ID or
+  sanitised log). **Develop against recorded responses; spend the real calls on the demo + the proof.**
+Verified live 2026-11-26 with the bundled client (no key, no wallet, no signup):
+
+```bash
+git clone --depth 1 https://github.com/Cournot-AI/cournot-skills
+node <skill-root>/scripts/cournot-client.mjs balance     # free  -> {"state":"credential_missing", "Anonymous queries remain available"}
+node <skill-root>/scripts/cournot-client.mjs resolve --request-base64 <b64>   # free, no charge
+node <skill-root>/scripts/cournot-client.mjs prepare --request-base64 <b64>   # the CHARGED probability call
+```
+
+`resolve` is **free** and returned real candidates in about a second, e.g. for
+"BNB price above $600 before December 31, 2026":
+
+| id | market | match confidence |
+|---|---|---|
+| 113195 | BNB price above $600.00 at any time before 2026-12-01 05:00 UTC | 0.823 |
+| 1571 | BNB price above $1,000 at any time before 2027-01-01 05:00 UTC | 0.820 |
+| 1570 | BNB price above $1,100 … before 2027-01-01 05:00 UTC | 0.818 |
+
+**The constraint that shapes the extractor: Cournot markets are discrete strike × deadline pairs.** There is
+no market for "$600 before December 31" — the nearest are *$600 before December 1 2026* and *$1,000 before
+January 1 2027*. So a KOL claim can only be priced when it maps onto an existing market; otherwise the skill
+stops and asks rather than guessing. Two consequences: (a) the extractor should normalise a claim onto the
+nearest available strike/date, and (b) the leaderboard's Edge only exists for calls that landed on a market —
+say so in the UI rather than hiding it.
+
+Auto-proceed rule from the skill's flow reference, worth knowing for the demo path: with several candidates
+you may only continue without asking a human when the leader's confidence is **≥ 0.85 and at least 0.15
+ahead** of the next. The run above does not qualify, which is exactly the case a demo script must handle.
+
+Raw client output is saved in `evidence/cournot/`.
+
+### Outcome of the one paid attempt: `payment_choice_required` — no probability obtained
+
+The `prepare` call for market 113195 returned:
+
+```json
+{"state":"payment_choice_required","choices":["topup","import","per_call"]}
+```
+
+Per the skill's own flow reference, that state means **the free allowance ran out** (as opposed to
+`pack_exhausted`, which means prepaid calls ran out). `resolve` and `balance` are free and had already
+succeeded minutes earlier, and no probability call had ever been made from this machine — so the **lifetime
+per-IP free allowance was already consumed before we started**, almost certainly by another user of this
+egress IP (NAT / proxy / shared connection). That is the practical consequence of "three free calls per IP"
+rather than per account:
+
+**On any shared network — a hackathon venue's wifi above all — you cannot count on the free tier. Assume
+zero and plan for it.** The three routes, all equally valid:
+
+1. **`/cournot topup`** — buy a pack. **Starter: $5 for 600 calls**, which removes this entire risk class for
+   less than a coffee, and packs stack, never expire and are non-refundable. Requires a wallet that can sign
+   x402 (Base) or b402 (BNB Chain) payments.
+2. **Pay per query** — $0.01 for a single query, reviewed and confirmed before anything is charged. Same
+   wallet requirement.
+3. **`/cournot import <key>`** — use a prepaid account purchased elsewhere or on another device.
+
+Plus the free route that actually fits this event: the challenge text says selected eligible projects
+receive Cournot access, and the Cournot team is at the venue. **Ask them for hackathon credits** — it is the
+cheapest option and it puts you in front of the people judging the bounty.
+
+What remains free and verified: `resolve` (market disambiguation — real candidates, ids and
+`matching_confidence` in about a second), `balance`, divergence **page turns** (re-reading a saved snapshot),
+and an empty divergence ranking. Those are enough to develop and to rehearse the whole demo path against
+recorded fixture data — only the probability number itself is metered.
+
+## 4. Living Brain — early access, key + subject id
+
+- Docs are at `docs.livingbrain.com`; append `.md` to any page for clean markdown (agent-friendly).
+- Auth needs an **API key (`lbk_...`) and a `subject id`** — brains are owned by subjects. Both come from
+  the org dashboard; "Now in early access".
+- SDKs: `@living-brain/sdk` (TS) or `livingbrain-sdk` (Python); also a hosted **MCP server** at
+  `https://livingbrain.fernmcp.dev/livingbrain` (`x-api-key`, `x-subject-id`), and a `livingbrain` CLI.
+  **Hermes is a listed MCP client** — if you want the memory layer set up fast, that path is one snippet.
+- Captures are **asynchronous**: `captures.capture` returns an ingest source with `status: pending`, and
+  Living Brain compiles it into pages in the background — register a **webhook** rather than polling.
+  Your demo must not show a spinner because a capture had not compiled yet. Pre-warm the memories.
+- Free-tier limits are **not published** anywhere public. Ask at the booth; your brief already flags this.
+
+## 5. Free-tier claims worth re-checking
+
+- "Etherscan's API no longer has a free tier for BNB Chain" — Etherscan now runs one unified v2 API across
+  chains; verify at the booth before you route around it. Public RPC + `eth_getLogs` is the safe default anyway.
+- CMC Pro key, Atlas feed access and Living Brain keys are all **approval-gated**. In a 17-hour window the
+  approval is the critical path, not the code.
+
+## Sources
+- `coinmarketcap.com/api/documentation/pro-api-reference/keyless-public-api.md`
+- `coinmarketcap.com/api/documentation/pro-api-reference/content/content-latest-posts.md`
+- `docs.atlasoracle.io/developers/atlas-oracle/integrate-the-push-mode`, `.../api-reference/single-feed-contract`, `.../multi-feed-contract`
+- `atlasoracle.io/pricing`, `atlasoracle.io/feeds`, `atlasoracle.io/feeds/1164`
+- `docs.livingbrain.com/llms.txt`, `docs.livingbrain.com/docs/quickstart`
+- `cournot.ai/`, `github.com/Cournot-AI/cournot-skills`
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'server/cournot.ts'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 2283ms:
+/**
+ * Cournot adapter — one interface over three provenances.
+ *
+ * A fixture, a recorded real response and a live call all normalise to CournotResponse, so the demo
+ * path never depends on a metered vendor being available. The distinction is preserved in the returned
+ * `provenance` discriminant and is not cosmetic: only "live" and "recorded-live" may be presented as
+ * sponsor evidence, and the shared type makes a fixture unable to carry a requestId.
+ *
+ * Adding a real call replaces data/cournot-fixture.json through this same function. Nothing downstream
+ * changes.
+ *
+ * NOTE: add `import "server-only"` here once the Next app lands (that package arrives with Next).
+ */
+
+import { readFileSync, existsSync } from "node:fs";
+
+import type { Claim, CournotResponse, FixtureCournotResponse, ProvenCournotResponse } from "../shared/types.ts";
+
+export type CournotMode = "live" | "recorded-live" | "fixture";
+
+export const FIXTURE_PATH = "data/cournot-fixture.json";
+export const RECORDED_PATH = "evidence/cournot/success.json";
+
+export class CournotError extends Error {}
+
+/** The exact client invocation, from docs/integration-findings.md §3. Printed verbatim, never guessed at. */
+export function liveCommandHint(claim: Claim): string {
+  const message = `${claim.asset} price ${claim.direction === "bullish" ? "above" : "below"} $${claim.targetUsd} before ${claim.deadline.slice(0, 10)}`;
+  return [
+    "node <cournot-skill>/scripts/cournot-client.mjs resolve  --request-base64 <b64 of {\"message\":\"…\",\"limit\":5}>",
+    `node <cournot-skill>/scripts/cournot-client.mjs prepare --request-base64 <b64 of {"message":"${message}","market_ids":["<id>"]}>`,
+  ].join("\n");
+}
+
+export function readCournot(mode: CournotMode, skillDir?: string, claim?: Claim): CournotResponse {
+  switch (mode) {
+    case "fixture":
+      return readFixture(FIXTURE_PATH);
+    case "recorded-live":
+      return readRecorded(RECORDED_PATH);
+    case "live":
+      throw new CournotError(
+        [
+          "live mode is driven through the bundled Cournot client, not a fetch()",
+          `set COURNOT_SKILL_DIR and run, for claim: ${claim ? claim.asset : "<claim>"}`,
+          liveCommandHint(
+            claim ?? {
+              source: "paste",
+              authorId: "",
+              originalText: "",
+              postedAt: "",
+              asset: "BNB",
+              direction: "bullish",
+              targetUsd: "0",
+              deadline: "",
+              horizonDefaulted: false,
+            },
+          ),
+          skillDir ? `skill dir configured: yes` : "skill dir configured: no",
+        ].join("\n"),
+      );
+  }
+}
+
+export function readFixture(path: string = FIXTURE_PATH): FixtureCournotResponse {
+  const raw = readJson(path);
+  const p = requireProbability(raw["probability"], path);
+  const evaluatedClaim = requireText(raw["evaluatedClaim"], "evaluatedClaim", path);
+  const evidence = requireText(raw["evidence"], "evidence", path);
+  const fixtureId = requireText(raw["fixtureId"], "fixtureId", path);
+  if ("requestId" in raw && raw["requestId"] !== null && raw["requestId"] !== undefined) {
+    // A fixture carrying a request id is how a synthetic number gets presented as a real call.
+    throw new CournotError(`${path}: a fixture must not carry a requestId`);
+  }
+  return { provenance: "fixture", fixtureId, probability: p, evaluatedClaim, evidence };
+}
+
+export function readRecorded(path: string = RECORDED_PATH): ProvenCournotResponse {
+  if (!existsSync(path)) {
+    throw new CournotError(
+      `${path} does not exist yet — the official client has not returned a successful response.\n${liveCommandHint({
+        source: "paste",
+        authorId: "",
+        originalText: "",
+        postedAt: "",
+        asset: "BNB",
+        direction: "bullish",
+        targetUsd: "0",
+        deadline: "",
+        horizonDefaulted: false,
+      })}`,
+    );
+  }
+  const raw = readJson(path);
+  const probability = requireProbability(raw["probability"], path);
+  const evaluatedClaim = requireText(raw["evaluatedClaim"], "evaluatedClaim", path);
+  const evidence = requireText(raw["evidence"], "evidence", path);
+  const requestId = requireText(raw["requestId"], "requestId", path);
+  return { provenance: "recorded-live", requestId, probability, evaluatedClaim, evidence };
+}
+
+function readJson(path: string): Record<string, unknown> {
+  if (!existsSync(path)) throw new CournotError(`${path} is missing`);
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(path, "utf8"));
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      throw new CournotError(`${path} must contain a JSON object`);
+    }
+    return parsed as Record<string, unknown>;
+  } catch (e) {
+    if (e instanceof CournotError) throw e;
+    throw new CournotError(`${path} is not valid JSON: ${String(e)}`);
+  }
+}
+
+function requireProbability(v: unknown, path: string): number {
+  if (typeof v !== "number" || !Number.isFinite(v) || v < 0 || v > 1) {
+    throw new CournotError(`${path}: probability must be a finite number in [0, 1], got ${String(v)}`);
+  }
+  return v;
+}
+
+function requireText(v: unknown, field: string, path: string): string {
+  if (typeof v !== "string" || v.trim() === "") {
+    throw new CournotError(`${path}: ${field} must be a non-empty string`);
+  }
+  return v;
+}
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+codex
+===BEGIN UI PROPOSAL===
+
+# Proof of Alpha — UX/UI proposal
+
+The interface should make one promise: every strong-looking number carries its evidence class beside it. The product is not a performance dashboard; it is an audit trail that happens to rank people.
+
+## 1. Screen inventory
+
+### `/` — Verify a call
+
+This is the demo and the default route. It must contain:
+
+- Paste field for the original post.
+- Required `authorId` and `postedAt` inputs. These are required by `ExtractInput`; the UI cannot silently invent them.
+- One dominant action: **Check this call**.
+- A claim review showing original text, asset, direction, target, deadline, and whether the horizon was defaulted.
+- Cournot probability with its provenance attached directly to the number.
+- CMC and Atlas snapshots with their distinct evidence status.
+- A separate **Record on BNB Chain** action.
+- The confirmed receipt and explorer link.
+
+Why keep it: this is the entire hackathon story in one screen and should consume roughly the first 60 seconds of the judge walkthrough.
+
+### `/leaderboard` — Evidence-aware ranking
+
+A compact table showing ranked Cournot evidence first and proxy-only KOLs in a visibly separate lower cohort.
+
+Why keep it: one receipt proves the mechanism; the leaderboard explains the product value.
+
+### `/kol/[id]` — KOL evidence ledger
+
+A KOL summary followed by the individual calls behind it. Every row must expose whether it is an on-chain call, an unresolved call, or a backtested proxy sample. Expanding a row reveals the claim, snapshots, baseline, resolution, and receipt where one exists.
+
+Why keep it: this makes the leaderboard auditable instead of asking judges to trust an aggregate.
+
+Use `kolId` as the visible identity. The current types carry no display name, handle, avatar, or verified profile.
+
+### The 90-second path
+
+1. Paste and submit on `/`.
+2. Review the extracted claim and evidence provenance.
+3. Record it and open the explorer receipt.
+4. Open `/leaderboard` and point out the proxy-only lower cohort.
+5. Open one KOL ledger and show the records behind its score.
+
+### Cut
+
+Do not build a marketing home page, onboarding, authentication, wallet connection, settings, notifications, a dedicated receipt route, a CMC post browser, or a separate “How it works” page. The verifier itself is the explanation.
+
+The CMC Community browser is specifically inappropriate for the demo because the Content endpoint is blocked on the available free plan. Paste is the honest primary flow.
+
+## 2. The paste → receipt flow
+
+### Step 1 — Capture the source
+
+The opening screen is left-aligned and direct:
+
+> Turn a public call into evidence before the outcome is known.
+
+The textarea label is **Original KOL post**, not “Prompt.” Beneath it are `authorId` and `postedAt`. A small static label says **Source: pasted post**.
+
+Do not offer a CMC-source toggle until live CMC Content access exists. Do not fabricate a source URL from `sourcePostId`; the contract does not carry one.
+
+### Step 2 — Check the claim
+
+**Check this call** invokes `verify(..., { record: false })`.
+
+While it runs, show one indeterminate evidence rail:
+
+1. Checking for a scorable claim
+2. Reading market evidence
+3. Preparing a draft
+
+`verify()` does not emit progress events or partial results, so future stages remain muted rather than receiving fictional checkmarks. Use a skeleton shaped like the eventual claim and evidence rows, not a spinner over an empty page.
+
+The persistent caption is:
+
+> Draft check only. Nothing has been written on-chain.
+
+### Step 3 — “Nothing to prove wrong”
+
+If extraction returns `null`, replace the pending rail with a neutral empty state—not a red system error:
+
+> **Nothing to prove wrong yet**  
+> This post does not contain one scorable call with an asset, direction, price target, and future deadline.
+
+Keep the pasted text in place. Offer **Edit post** and **Try again**. Do not suggest a target or deadline; `server/verify.ts` explicitly refuses to invent them.
+
+If `horizonDefaulted` is true on a valid claim, show an amber inline statement beside the deadline:
+
+> Default horizon applied—the post did not provide an explicit date.
+
+This must not be hidden in details.
+
+### Step 4 — Review the draft
+
+Render the extracted claim as a sentence first:
+
+> **BNB bullish to $… by …**
+
+Then show the exact fields beneath it: author ID, source, posted time, target, deadline, and original text. Direction may use an arrow, but it must also say **Bullish** or **Bearish**.
+
+Below the claim, show two evidence bands:
+
+- **Market expectation:** Cournot probability, evaluated claim, evidence text, and provenance.
+- **Posting snapshot:** CMC price and Atlas feed read, each with source and timestamps.
+
+The draft status remains prominent: **Not on-chain**.
+
+### Step 5 — Provider failure
+
+A provider failure stops the flow before a receipt. The page should preserve the source input and show:
+
+> **Verification stopped—no transaction was sent.**
+
+Then name the unavailable stage only when the route handler can safely identify it: Cournot, CoinMarketCap price, Atlas read, or BNB Chain confirmation. Offer **Retry**.
+
+Never silently replace an unavailable live provider with a fixture or recorded result. Switching evidence modes must be explicit before the run.
+
+There is a contract gap here: the shared types define successful records but no structured, client-safe error or progress envelope. Until that exists, the UI can reliably show only a coarse failure state. It must not parse arbitrary exception text into authoritative stage labels.
+
+### Step 6 — Fixture and recorded-live modes
+
+If Cournot provenance is `fixture`, place a full-width amber band above the probability:
+
+> **SIMULATION — COURNOT FIXTURE**  
+> This probability is synthetic and is not sponsor evidence. Fixture ID: …
+
+Repeat **Fixture** beside the probability and beside the record action. The action becomes **Record demo receipt**, with the permanent warning:
+
+> The transaction will be real; its Cournot input will not be real evidence.
+
+If provenance is `recorded-live`, say:
+
+> **Recorded live Cournot response**  
+> A previously captured real response, request ID …
+
+Do not call it a current live read. It is sponsor-eligible according to the type guard, but the schema has no capture timestamp, so the UI cannot claim when it was captured.
+
+If provenance is `live`, show **Live Cournot evidence** and its request ID directly beside the probability.
+
+### Step 7 — Record
+
+The primary write action is **Record on BNB Chain**. While pending:
+
+> Re-checking sources and waiting for transaction confirmation.
+
+Do not say “receipt created” until `verify()` returns a confirmed transaction. Do not show confetti or a success state for a submitted-but-unconfirmed hash.
+
+The current preview/write contract has an important limitation: `record: true` reruns extraction and all reads rather than accepting the previously reviewed draft. The final returned record is therefore canonical, and the UI should compare its claim fields with the preview and disclose if they changed. A truly frozen review-before-write flow would need a backend draft identifier or hash; that field does not exist today.
+
+### Step 8 — The receipt money shot
+
+On confirmation, the evidence rail should visually lock into a receipt occupying most of the viewport.
+
+Header:
+
+- **Receipt confirmed**
+- **BNB Smart Chain Mainnet** for chain 56 or **BNB Smart Chain Testnet** for chain 97
+- Call ID
+- Explorer action derived from `chainId` and `txHash`
+
+Receipt body:
+
+1. **Claim committed**
+   - Original text
+   - Author ID
+   - Asset, direction, target, deadline
+   - Posted time and default-horizon status
+
+2. **Cournot baseline**
+   - Probability as a percentage
+   - Provenance label
+   - Evaluated claim verbatim
+   - Evidence verbatim
+   - Request ID or fixture ID, never both
+
+3. **CMC snapshot**
+   - Decimal price string
+   - Observed time
+   - `keyed` or `keyless` when present
+   - Request ID when present
+
+4. **Atlas snapshot**
+   - Feed address and feed ID
+   - Price formatted using `price` and `decimals`, with the raw value available inline
+   - Aggregated and on-chain timestamps
+   - Mainnet block
+
+5. **Chain receipt**
+   - Registry address
+   - Transaction hash
+   - Call ID
+   - Atlas verification status
+
+6. **Outcome**
+   - **Awaiting deadline** because newly verified records have `resolution: null`
+
+For `atlasVerified: true`, use:
+
+> **ATLAS READ VERIFIED IN THIS TRANSACTION**
+
+For `atlasVerified: false`, use:
+
+> **REFERENCED ATLAS READ — NOT VERIFIED BY THIS TRANSACTION**  
+> Read from Atlas mainnet at block …
+
+The second message must remain directly above the explorer button so the existence of a real transaction cannot visually launder a referenced read into verified Atlas evidence.
+
+Do not label the Atlas price as the claim asset’s price or compare it numerically with CMC yet. `AtlasSnapshot` carries a feed ID and address but no asset pair or description, and `readAtlas()` does not receive the claim symbol. That is a data-contract gap.
+
+## 3. How provenance is shown
+
+Provenance is a first-class line of content, never a tooltip, hover state, tiny icon, or color alone.
+
+| State | Visible treatment | Forbidden implication |
+|---|---|---|
+| Atlas `atlasVerified: true` | Solid status strip: **Verified in transaction**, followed by feed ID and chain | “Live” without saying what was verified |
+| Atlas `atlasVerified: false` | Hatched amber strip: **Referenced mainnet read—not transaction-verified** | Green checkmark beside “Atlas” |
+| Cournot `live` | **Live Cournot evidence**, request ID beside probability | Hiding the request ID in details |
+| Cournot `recorded-live` | **Recorded live response**, request ID beside probability | Calling it live now |
+| Cournot `fixture` | Full-width **Simulation / fixture** band, fixture ID repeated beside probability and action | Sponsor logo treatment or evidence checkmark |
+| Verified, unresolved call | **On-chain call · awaiting deadline**, explorer link | Showing an Edge value |
+| Verified, resolved call | **On-chain call · resolved**, Cournot Edge and receipt | Calling it verified sponsor evidence if its Cournot input was a fixture |
+| Backtested record | **Backtest sample · proxy baseline**, methodology visible | Explorer action or “verified call” copy |
+
+A backtest row should literally say **No receipt—sample row** in the receipt column. Empty space is too ambiguous.
+
+The provenance spine uses text, border pattern, and status color together. Green means verified, amber means referenced or synthetic, and gray means unresolved. Red is reserved for a stopped operation, not a bad investment outcome.
+
+## 4. The leaderboard
+
+The table should use these columns:
+
+| Column | Treatment |
+|---|---|
+| Rank | Ordinal only when `cournotEdge` is non-null; otherwise **Proxy-only** |
+| KOL | `kolId`; no invented display identity |
+| Cournot Edge | Largest numeric column and primary sort signal |
+| Evidence mix | `N Cournot / N proxy / N open` |
+| Hit rate | Labelled **All resolved calls** because the summary combines both score kinds |
+| Proxy Edge | Secondary, always labelled **Proxy Edge—not Cournot** |
+| Mean return | Neutral secondary metric; never part of rank |
+
+Above the table, state the algorithm in one sentence:
+
+> Ranked by mean Cournot Edge, then hit rate, then KOL ID. KOLs without Cournot Edge appear after the ranked cohort.
+
+Rows with `cournotCalls === 0` receive a persistent band:
+
+> **Proxy-only history—no Cournot-ranked calls**
+
+Their Cournot Edge cell reads **Not ranked**, never `0`, and their high hit rate uses neutral ink rather than success green. This prevents an impressive percentage from masquerading as an evidence-backed track record.
+
+The evidence-mix column is more important than a generic “sample size” column because ten proxy calls and ten Cournot calls are not equivalent.
+
+Do not claim a minimum eligibility threshold or scoring window. `rank()` does not enforce a minimum, and `KolSummary` carries no window. Those are currently product assertions without a UI data contract.
+
+On `/kol/[id]`, use the same labels in the underlying call ledger. Default order should be newest `postedAt` first, while leaderboard rank remains exclusively controlled by `rank()`.
+
+## 5. Visual direction
+
+### Direction: public evidence ledger
+
+Use a bright, paper-like canvas with dark ink:
+
+- Canvas: warm off-white, approximately `#F4F1E8`
+- Ink: charcoal, approximately `#171713`
+- Muted text: neutral gray
+- Rules: visible mid-gray, not faint hairlines
+- Primary accent: BNB yellow, reserved for actions and the receipt’s chain seam
+- Semantic green, amber, and red only for evidence state, always paired with words
+
+Use the system sans-serif stack for prose and `ui-monospace` for prices, probabilities, timestamps, IDs, addresses, and hashes. No font dependency earns its place this late.
+
+Density should be medium: generous spacing around the paste flow, then compact ledger rows once evidence exists. Prefer ruled sections and whitespace over a dashboard full of floating cards.
+
+The memorable move is a vertical **evidence spine** running from original post to claim, market expectation, price snapshots, and chain receipt. On confirmation, the spine terminates in the transaction hash. It makes the causal sequence visible without diagrams or decorative imagery.
+
+Motion should be limited to short status transitions and the receipt locking into place. Respect reduced-motion settings. No perpetual animation is appropriate for an evidence product.
+
+Plain CSS with tokens is the right choice. There is no need for Tailwind, a component library, an icon package, or an animation dependency. Native controls, text labels, borders, and a few inline SVG primitives are sufficient.
+
+The design-taste pass influenced the asymmetric evidence spine, single-accent discipline, restrained card use, and explicit loading, empty, error, and confirmed states.
+
+### Refuse
+
+I would refuse:
+
+- Neon terminal styling, glass panels, glows, or decorative gradients.
+- Candlestick charts or fake live price tickers.
+- Stock crypto imagery, coins floating in space, mascots, and sponsor-logo wallpaper.
+- Confetti after a transaction.
+- Green/red as the only carrier of meaning.
+- Provenance hidden in tooltips.
+- Metric cards that elevate hit rate above evidence quality.
+- A wallet-connect button when the product neither holds funds nor needs the judge’s wallet.
+- “AI verified” language; the agent extracts, while evidence sources and the chain establish the record.
+
+## 6. What I would not build in the remaining hours
+
+- **CMC post discovery:** blocked on the available plan; paste is real and sufficient.
+- **Living Brain chat or relationship graph:** asynchronous, approval-gated, and absent from the shared UI contract. A fake or stale demo would weaken credibility.
+- **Charts:** the small and mixed-provenance sample would look more authoritative than it is.
+- **Editable extracted claims:** this creates authorship and receipt-integrity questions without an agreed backend contract.
+- **Streaming provider progress:** `verify()` does not expose stage events. Honest indeterminate progress is enough.
+- **A separate receipt-detail route:** the receipt belongs at the climax of `/` and in expandable KOL rows.
+- **Search, pagination, saved filters, exports, social sharing, PDF receipts, themes, or notification systems:** none helps a judge verify the core claim in 90 seconds.
+- **Custom avatars or KOL profiles:** the data carries only `kolId`.
+- **A source-post link:** there is no reliable source URL in the contract.
+- **A CMC-versus-Atlas divergence score:** the Atlas schema lacks the feed’s asset pair, so such a comparison could be false.
+
+Keep basic responsive behavior, keyboard access, visible focus, semantic tables, sufficient contrast, and non-color status labels; accessibility is part of the minimum, not a later feature.
+
+Scope note: I did not design implementation components or add fields beyond the committed contracts.
+
+Risk: structured client-safe errors, a frozen preview-to-write handoff, Atlas feed identity, ranking window, and minimum-call eligibility remain backend/data-contract gaps.
+===END UI PROPOSAL===
+hook: Stop
+hook: Stop
+hook: Stop Failed
+hook: Stop Failed
+tokens used
+39,427
+===BEGIN UI PROPOSAL===
+
+# Proof of Alpha — UX/UI proposal
+
+The interface should make one promise: every strong-looking number carries its evidence class beside it. The product is not a performance dashboard; it is an audit trail that happens to rank people.
+
+## 1. Screen inventory
+
+### `/` — Verify a call
+
+This is the demo and the default route. It must contain:
+
+- Paste field for the original post.
+- Required `authorId` and `postedAt` inputs. These are required by `ExtractInput`; the UI cannot silently invent them.
+- One dominant action: **Check this call**.
+- A claim review showing original text, asset, direction, target, deadline, and whether the horizon was defaulted.
+- Cournot probability with its provenance attached directly to the number.
+- CMC and Atlas snapshots with their distinct evidence status.
+- A separate **Record on BNB Chain** action.
+- The confirmed receipt and explorer link.
+
+Why keep it: this is the entire hackathon story in one screen and should consume roughly the first 60 seconds of the judge walkthrough.
+
+### `/leaderboard` — Evidence-aware ranking
+
+A compact table showing ranked Cournot evidence first and proxy-only KOLs in a visibly separate lower cohort.
+
+Why keep it: one receipt proves the mechanism; the leaderboard explains the product value.
+
+### `/kol/[id]` — KOL evidence ledger
+
+A KOL summary followed by the individual calls behind it. Every row must expose whether it is an on-chain call, an unresolved call, or a backtested proxy sample. Expanding a row reveals the claim, snapshots, baseline, resolution, and receipt where one exists.
+
+Why keep it: this makes the leaderboard auditable instead of asking judges to trust an aggregate.
+
+Use `kolId` as the visible identity. The current types carry no display name, handle, avatar, or verified profile.
+
+### The 90-second path
+
+1. Paste and submit on `/`.
+2. Review the extracted claim and evidence provenance.
+3. Record it and open the explorer receipt.
+4. Open `/leaderboard` and point out the proxy-only lower cohort.
+5. Open one KOL ledger and show the records behind its score.
+
+### Cut
+
+Do not build a marketing home page, onboarding, authentication, wallet connection, settings, notifications, a dedicated receipt route, a CMC post browser, or a separate “How it works” page. The verifier itself is the explanation.
+
+The CMC Community browser is specifically inappropriate for the demo because the Content endpoint is blocked on the available free plan. Paste is the honest primary flow.
+
+## 2. The paste → receipt flow
+
+### Step 1 — Capture the source
+
+The opening screen is left-aligned and direct:
+
+> Turn a public call into evidence before the outcome is known.
+
+The textarea label is **Original KOL post**, not “Prompt.” Beneath it are `authorId` and `postedAt`. A small static label says **Source: pasted post**.
+
+Do not offer a CMC-source toggle until live CMC Content access exists. Do not fabricate a source URL from `sourcePostId`; the contract does not carry one.
+
+### Step 2 — Check the claim
+
+**Check this call** invokes `verify(..., { record: false })`.
+
+While it runs, show one indeterminate evidence rail:
+
+1. Checking for a scorable claim
+2. Reading market evidence
+3. Preparing a draft
+
+`verify()` does not emit progress events or partial results, so future stages remain muted rather than receiving fictional checkmarks. Use a skeleton shaped like the eventual claim and evidence rows, not a spinner over an empty page.
+
+The persistent caption is:
+
+> Draft check only. Nothing has been written on-chain.
+
+### Step 3 — “Nothing to prove wrong”
+
+If extraction returns `null`, replace the pending rail with a neutral empty state—not a red system error:
+
+> **Nothing to prove wrong yet**  
+> This post does not contain one scorable call with an asset, direction, price target, and future deadline.
+
+Keep the pasted text in place. Offer **Edit post** and **Try again**. Do not suggest a target or deadline; `server/verify.ts` explicitly refuses to invent them.
+
+If `horizonDefaulted` is true on a valid claim, show an amber inline statement beside the deadline:
+
+> Default horizon applied—the post did not provide an explicit date.
+
+This must not be hidden in details.
+
+### Step 4 — Review the draft
+
+Render the extracted claim as a sentence first:
+
+> **BNB bullish to $… by …**
+
+Then show the exact fields beneath it: author ID, source, posted time, target, deadline, and original text. Direction may use an arrow, but it must also say **Bullish** or **Bearish**.
+
+Below the claim, show two evidence bands:
+
+- **Market expectation:** Cournot probability, evaluated claim, evidence text, and provenance.
+- **Posting snapshot:** CMC price and Atlas feed read, each with source and timestamps.
+
+The draft status remains prominent: **Not on-chain**.
+
+### Step 5 — Provider failure
+
+A provider failure stops the flow before a receipt. The page should preserve the source input and show:
+
+> **Verification stopped—no transaction was sent.**
+
+Then name the unavailable stage only when the route handler can safely identify it: Cournot, CoinMarketCap price, Atlas read, or BNB Chain confirmation. Offer **Retry**.
+
+Never silently replace an unavailable live provider with a fixture or recorded result. Switching evidence modes must be explicit before the run.
+
+There is a contract gap here: the shared types define successful records but no structured, client-safe error or progress envelope. Until that exists, the UI can reliably show only a coarse failure state. It must not parse arbitrary exception text into authoritative stage labels.
+
+### Step 6 — Fixture and recorded-live modes
+
+If Cournot provenance is `fixture`, place a full-width amber band above the probability:
+
+> **SIMULATION — COURNOT FIXTURE**  
+> This probability is synthetic and is not sponsor evidence. Fixture ID: …
+
+Repeat **Fixture** beside the probability and beside the record action. The action becomes **Record demo receipt**, with the permanent warning:
+
+> The transaction will be real; its Cournot input will not be real evidence.
+
+If provenance is `recorded-live`, say:
+
+> **Recorded live Cournot response**  
+> A previously captured real response, request ID …
+
+Do not call it a current live read. It is sponsor-eligible according to the type guard, but the schema has no capture timestamp, so the UI cannot claim when it was captured.
+
+If provenance is `live`, show **Live Cournot evidence** and its request ID directly beside the probability.
+
+### Step 7 — Record
+
+The primary write action is **Record on BNB Chain**. While pending:
+
+> Re-checking sources and waiting for transaction confirmation.
+
+Do not say “receipt created” until `verify()` returns a confirmed transaction. Do not show confetti or a success state for a submitted-but-unconfirmed hash.
+
+The current preview/write contract has an important limitation: `record: true` reruns extraction and all reads rather than accepting the previously reviewed draft. The final returned record is therefore canonical, and the UI should compare its claim fields with the preview and disclose if they changed. A truly frozen review-before-write flow would need a backend draft identifier or hash; that field does not exist today.
+
+### Step 8 — The receipt money shot
+
+On confirmation, the evidence rail should visually lock into a receipt occupying most of the viewport.
+
+Header:
+
+- **Receipt confirmed**
+- **BNB Smart Chain Mainnet** for chain 56 or **BNB Smart Chain Testnet** for chain 97
+- Call ID
+- Explorer action derived from `chainId` and `txHash`
+
+Receipt body:
+
+1. **Claim committed**
+   - Original text
+   - Author ID
+   - Asset, direction, target, deadline
+   - Posted time and default-horizon status
+
+2. **Cournot baseline**
+   - Probability as a percentage
+   - Provenance label
+   - Evaluated claim verbatim
+   - Evidence verbatim
+   - Request ID or fixture ID, never both
+
+3. **CMC snapshot**
+   - Decimal price string
+   - Observed time
+   - `keyed` or `keyless` when present
+   - Request ID when present
+
+4. **Atlas snapshot**
+   - Feed address and feed ID
+   - Price formatted using `price` and `decimals`, with the raw value available inline
+   - Aggregated and on-chain timestamps
+   - Mainnet block
+
+5. **Chain receipt**
+   - Registry address
+   - Transaction hash
+   - Call ID
+   - Atlas verification status
+
+6. **Outcome**
+   - **Awaiting deadline** because newly verified records have `resolution: null`
+
+For `atlasVerified: true`, use:
+
+> **ATLAS READ VERIFIED IN THIS TRANSACTION**
+
+For `atlasVerified: false`, use:
+
+> **REFERENCED ATLAS READ — NOT VERIFIED BY THIS TRANSACTION**  
+> Read from Atlas mainnet at block …
+
+The second message must remain directly above the explorer button so the existence of a real transaction cannot visually launder a referenced read into verified Atlas evidence.
+
+Do not label the Atlas price as the claim asset’s price or compare it numerically with CMC yet. `AtlasSnapshot` carries a feed ID and address but no asset pair or description, and `readAtlas()` does not receive the claim symbol. That is a data-contract gap.
+
+## 3. How provenance is shown
+
+Provenance is a first-class line of content, never a tooltip, hover state, tiny icon, or color alone.
+
+| State | Visible treatment | Forbidden implication |
+|---|---|---|
+| Atlas `atlasVerified: true` | Solid status strip: **Verified in transaction**, followed by feed ID and chain | “Live” without saying what was verified |
+| Atlas `atlasVerified: false` | Hatched amber strip: **Referenced mainnet read—not transaction-verified** | Green checkmark beside “Atlas” |
+| Cournot `live` | **Live Cournot evidence**, request ID beside probability | Hiding the request ID in details |
+| Cournot `recorded-live` | **Recorded live response**, request ID beside probability | Calling it live now |
+| Cournot `fixture` | Full-width **Simulation / fixture** band, fixture ID repeated beside probability and action | Sponsor logo treatment or evidence checkmark |
+| Verified, unresolved call | **On-chain call · awaiting deadline**, explorer link | Showing an Edge value |
+| Verified, resolved call | **On-chain call · resolved**, Cournot Edge and receipt | Calling it verified sponsor evidence if its Cournot input was a fixture |
+| Backtested record | **Backtest sample · proxy baseline**, methodology visible | Explorer action or “verified call” copy |
+
+A backtest row should literally say **No receipt—sample row** in the receipt column. Empty space is too ambiguous.
+
+The provenance spine uses text, border pattern, and status color together. Green means verified, amber means referenced or synthetic, and gray means unresolved. Red is reserved for a stopped operation, not a bad investment outcome.
+
+## 4. The leaderboard
+
+The table should use these columns:
+
+| Column | Treatment |
+|---|---|
+| Rank | Ordinal only when `cournotEdge` is non-null; otherwise **Proxy-only** |
+| KOL | `kolId`; no invented display identity |
+| Cournot Edge | Largest numeric column and primary sort signal |
+| Evidence mix | `N Cournot / N proxy / N open` |
+| Hit rate | Labelled **All resolved calls** because the summary combines both score kinds |
+| Proxy Edge | Secondary, always labelled **Proxy Edge—not Cournot** |
+| Mean return | Neutral secondary metric; never part of rank |
+
+Above the table, state the algorithm in one sentence:
+
+> Ranked by mean Cournot Edge, then hit rate, then KOL ID. KOLs without Cournot Edge appear after the ranked cohort.
+
+Rows with `cournotCalls === 0` receive a persistent band:
+
+> **Proxy-only history—no Cournot-ranked calls**
+
+Their Cournot Edge cell reads **Not ranked**, never `0`, and their high hit rate uses neutral ink rather than success green. This prevents an impressive percentage from masquerading as an evidence-backed track record.
+
+The evidence-mix column is more important than a generic “sample size” column because ten proxy calls and ten Cournot calls are not equivalent.
+
+Do not claim a minimum eligibility threshold or scoring window. `rank()` does not enforce a minimum, and `KolSummary` carries no window. Those are currently product assertions without a UI data contract.
+
+On `/kol/[id]`, use the same labels in the underlying call ledger. Default order should be newest `postedAt` first, while leaderboard rank remains exclusively controlled by `rank()`.
+
+## 5. Visual direction
+
+### Direction: public evidence ledger
+
+Use a bright, paper-like canvas with dark ink:
+
+- Canvas: warm off-white, approximately `#F4F1E8`
+- Ink: charcoal, approximately `#171713`
+- Muted text: neutral gray
+- Rules: visible mid-gray, not faint hairlines
+- Primary accent: BNB yellow, reserved for actions and the receipt’s chain seam
+- Semantic green, amber, and red only for evidence state, always paired with words
+
+Use the system sans-serif stack for prose and `ui-monospace` for prices, probabilities, timestamps, IDs, addresses, and hashes. No font dependency earns its place this late.
+
+Density should be medium: generous spacing around the paste flow, then compact ledger rows once evidence exists. Prefer ruled sections and whitespace over a dashboard full of floating cards.
+
+The memorable move is a vertical **evidence spine** running from original post to claim, market expectation, price snapshots, and chain receipt. On confirmation, the spine terminates in the transaction hash. It makes the causal sequence visible without diagrams or decorative imagery.
+
+Motion should be limited to short status transitions and the receipt locking into place. Respect reduced-motion settings. No perpetual animation is appropriate for an evidence product.
+
+Plain CSS with tokens is the right choice. There is no need for Tailwind, a component library, an icon package, or an animation dependency. Native controls, text labels, borders, and a few inline SVG primitives are sufficient.
+
+The design-taste pass influenced the asymmetric evidence spine, single-accent discipline, restrained card use, and explicit loading, empty, error, and confirmed states.
+
+### Refuse
+
+I would refuse:
+
+- Neon terminal styling, glass panels, glows, or decorative gradients.
+- Candlestick charts or fake live price tickers.
+- Stock crypto imagery, coins floating in space, mascots, and sponsor-logo wallpaper.
+- Confetti after a transaction.
+- Green/red as the only carrier of meaning.
+- Provenance hidden in tooltips.
+- Metric cards that elevate hit rate above evidence quality.
+- A wallet-connect button when the product neither holds funds nor needs the judge’s wallet.
+- “AI verified” language; the agent extracts, while evidence sources and the chain establish the record.
+
+## 6. What I would not build in the remaining hours
+
+- **CMC post discovery:** blocked on the available plan; paste is real and sufficient.
+- **Living Brain chat or relationship graph:** asynchronous, approval-gated, and absent from the shared UI contract. A fake or stale demo would weaken credibility.
+- **Charts:** the small and mixed-provenance sample would look more authoritative than it is.
+- **Editable extracted claims:** this creates authorship and receipt-integrity questions without an agreed backend contract.
+- **Streaming provider progress:** `verify()` does not expose stage events. Honest indeterminate progress is enough.
+- **A separate receipt-detail route:** the receipt belongs at the climax of `/` and in expandable KOL rows.
+- **Search, pagination, saved filters, exports, social sharing, PDF receipts, themes, or notification systems:** none helps a judge verify the core claim in 90 seconds.
+- **Custom avatars or KOL profiles:** the data carries only `kolId`.
+- **A source-post link:** there is no reliable source URL in the contract.
+- **A CMC-versus-Atlas divergence score:** the Atlas schema lacks the feed’s asset pair, so such a comparison could be false.
+
+Keep basic responsive behavior, keyboard access, visible focus, semantic tables, sufficient contrast, and non-color status labels; accessibility is part of the minimum, not a later feature.
+
+Scope note: I did not design implementation components or add fields beyond the committed contracts.
+
+Risk: structured client-safe errors, a frozen preview-to-write handoff, Atlas feed identity, ranking window, and minimum-call eligibility remain backend/data-contract gaps.
+===END UI PROPOSAL===

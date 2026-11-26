@@ -2,6 +2,7 @@
 .env.local
 node_modules/
 .next/
+next-env.d.ts
 data/local.json
 contracts/out/
 contracts/cache/

@@ -1,0 +1,540 @@
+/* Proof of Alpha — design tokens and base.
+ *
+ * Direction: a notarised public record, not a trading terminal. Light canvas because the scene
+ * (a judge, bright hall, dim laptop screen) forces it: dark hides the values being judged.
+ *
+ * The one rule: a state colour asserts provenance and is never used for emphasis or decoration.
+ * See DESIGN.md for the reference lock and the decision ledger.
+ */
+
+:root {
+  /* Neutrals tinted toward slate (hue 250), never pure black or white. */
+  --paper: oklch(0.984 0.004 250);
+  --paper-2: oklch(0.962 0.006 250);
+  --paper-3: oklch(0.94 0.008 250);
+  --ink: oklch(0.21 0.015 250);
+  --ink-2: oklch(0.45 0.012 250);
+  --ink-3: oklch(0.62 0.01 250);
+  --rule: oklch(0.905 0.008 250);
+  --rule-2: oklch(0.85 0.01 250);
+  --focus: oklch(0.55 0.16 250);
+
+  /* Provenance states. One job each. */
+  --verified: oklch(0.52 0.12 158);
+  --referenced: oklch(0.6 0.13 72);
+  --refused: oklch(0.54 0.17 28);
+
+  /* Tinted surfaces for the states, derived from the same hues. */
+  --verified-wash: oklch(0.965 0.03 158);
+  --referenced-wash: oklch(0.965 0.035 72);
+  --refused-wash: oklch(0.965 0.03 28);
+
+  --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --radius: 6px;
+  --radius-lg: 8px;
+  --shadow-border: 0 0 0 1px rgb(0 0 0 / 0.08);
+  --shadow-whisper: 0 1px 1px rgb(97 104 117 / 0.05), 0 2px 2px rgb(97 104 117 / 0.05);
+  --shadow-lift: 0 0 0 1px rgb(0 0 0 / 0.07), 0 1px 2px rgb(97 104 117 / 0.06), 0 8px 16px -8px rgb(97 104 117 / 0.12);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --measure: 68ch;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.6;
+  font-feature-settings: "kern";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Layout is fluid and flush left, per the shell it renders in. */
+.shell {
+  max-width: 1120px;
+  padding: 0 24px 96px;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* ---------------------------------------------------------------- masthead */
+
+.masthead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px 0 18px;
+  border-bottom: 1px solid var(--ink);
+  margin-bottom: 40px;
+}
+
+.wordmark {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.masthead nav {
+  display: flex;
+  gap: 22px;
+}
+
+.masthead nav a {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  color: var(--ink-2);
+  text-decoration: none;
+  padding-bottom: 2px;
+  border-bottom: 1px solid transparent;
+  transition: color 140ms var(--ease), border-color 140ms var(--ease);
+}
+
+.masthead nav a:hover,
+.masthead nav a[aria-current="page"] {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+
+/* ------------------------------------------------------------------ type */
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(28px, 3.4vw, 40px);
+  line-height: 1.12;
+  letter-spacing: -0.022em;
+  font-weight: 600;
+  margin: 10px 0 14px;
+  max-width: 22ch;
+  text-wrap: balance;
+}
+
+h2 {
+  font-size: 19px;
+  line-height: 1.25;
+  letter-spacing: -0.012em;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.lede {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: var(--measure);
+  margin: 0 0 8px;
+  text-wrap: pretty;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+.thesis {
+  padding: 0 0 34px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 34px;
+}
+
+.formula {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-2);
+  background: var(--paper-2);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  display: inline-block;
+  margin-top: 10px;
+}
+
+/* --------------------------------------------------------------- workbench */
+
+.workbench {
+  display: grid;
+  grid-template-columns: minmax(340px, 1fr) minmax(420px, 1.25fr);
+  gap: 28px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .workbench {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel {
+  background: var(--paper);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-border);
+  padding: 20px;
+}
+
+.field {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.field > .label {
+  display: block;
+  margin-bottom: 6px;
+}
+
+input[type="text"],
+textarea {
+  width: 100%;
+  font-family: var(--font-ui);
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+  border: 0;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-border);
+  padding: 10px 12px;
+  resize: vertical;
+  transition: box-shadow 140ms var(--ease);
+}
+
+input[type="text"]:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--focus), 0 0 0 4px color-mix(in oklch, var(--focus) 18%, transparent);
+}
+
+textarea {
+  min-height: 148px;
+}
+
+.hint {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+button {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--paper);
+  background: var(--ink);
+  border: 0;
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: transform 140ms var(--ease), opacity 140ms var(--ease);
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: progress;
+}
+
+button.ghost {
+  color: var(--ink-2);
+  background: transparent;
+  box-shadow: var(--shadow-border);
+}
+
+/* --------------------------------------------------------------- the stamp */
+
+.stamp {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 3px 6px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.stamp[data-state="verified"] {
+  color: var(--verified);
+  background: var(--verified-wash);
+}
+
+.stamp[data-state="referenced"] {
+  color: var(--referenced);
+  background: var(--referenced-wash);
+}
+
+.stamp[data-state="refused"] {
+  color: var(--refused);
+  background: var(--refused-wash);
+}
+
+/* ------------------------------------------------------------------ receipt */
+
+.receipt {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lift);
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.receipt-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--rule-2);
+}
+
+.receipt-index {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}
+
+.receipt-body {
+  padding: 4px 0;
+}
+
+/* Each row is a ledger line: label, value, and the stamp that qualifies it, aligned in a notary margin. */
+.row {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: baseline;
+  padding: 11px 20px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.row > dt {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.row > dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* A number must never break mid-digit: "$85.9432838362509 / 8567" reads as two numbers. Prose may wrap
+   anywhere; values may not. */
+.row .value {
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+.row[data-tone="quiet"] > dd {
+  color: var(--ink-2);
+}
+
+.receipt-foot {
+  padding: 14px 20px 18px;
+  border-top: 1px solid var(--rule-2);
+  background: var(--paper-2);
+}
+
+@media (max-width: 620px) {
+  .row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .row > dd:last-child {
+    justify-self: start;
+  }
+}
+
+/* ----------------------------------------------------------------- refusal */
+
+.refusal {
+  border-radius: var(--radius-lg);
+  background: var(--refused-wash);
+  box-shadow: var(--shadow-border);
+  padding: 18px 20px;
+}
+
+.refusal h2 {
+  color: var(--refused);
+}
+
+.refusal p {
+  margin: 0 0 8px;
+  color: var(--ink-2);
+  max-width: var(--measure);
+}
+
+.refusal ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: var(--ink-2);
+  font-size: 13.5px;
+}
+
+/* ------------------------------------------------------------------ register */
+
+.register {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.register caption {
+  text-align: left;
+  padding-bottom: 12px;
+  color: var(--ink-2);
+  font-size: 13.5px;
+  max-width: var(--measure);
+}
+
+.register th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding: 0 12px 8px 0;
+  border-bottom: 1px solid var(--ink);
+  white-space: nowrap;
+}
+
+.register td {
+  padding: 13px 12px 13px 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: baseline;
+}
+
+.register th.num,
+.register td.num {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  padding-right: 20px;
+}
+
+.register td.num {
+  color: var(--ink);
+}
+
+.register tbody tr:hover {
+  background: var(--paper-2);
+}
+
+.register td.rank {
+  font-family: var(--font-mono);
+  color: var(--ink-3);
+  width: 34px;
+}
+
+.kol {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.absent {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.notes {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.notes h2 {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.notes p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+  max-width: 46ch;
+}
+
+.empty {
+  padding: 40px 20px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-border);
+  background: var(--paper-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
