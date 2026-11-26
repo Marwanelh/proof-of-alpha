@@ -85,6 +85,33 @@ which is an account action; recreating the repository is the only immediate way 
 2. **Never `git add -A` in a repository that holds an env file.** Stage paths explicitly, and run the
    credential gate before the first push, not after an incident.
 
+## Round 3 — Codex reviewed the built code (28 findings)
+
+Codex read the repository through its GitHub app because its own runners are broken here, and produced 28
+findings. Each load-bearing claim was verified before acceptance rather than relayed.
+
+| Axis | Verified outcome |
+|---|---|
+| **2.4 Atlas calldata** (blocker) | **ACCEPTED — confirmed live.** A `bytes4` argument must be a right-padded 32-byte word; the bare form reverts. Probed both forms against the deployed contract: bare reverts, padded returns a snapshot. This also **invalidated my own earlier conclusion** that the catalogue number was not the feedId — see the correction in `docs/integration-findings.md` §2b. |
+| **5.1 / 5.3 credential gate** (blocker) | **ACCEPTED — confirmed by injection.** The gate reported `PASS 51 tracked files, 0 findings` on a file containing a bare 32-hex CMC key, a bare 64-hex signer and a `github_pat_` token. It now catches all three, plus `export`/indented/lowercase `.env.example` lines and URLs carrying userinfo. |
+| **2.5 reference block** (major) | **ACCEPTED.** The snapshot was read at `latest` and `eth_blockNumber` fetched separately, so the recorded block was not necessarily the one the price came from. All reads are now pinned to a single block. |
+| **2.1 claim extraction** (major) | **PARTLY ACCEPTED.** The past-observation false positive is real (`"BNB was above $600"` became a future claim). Its "`reach` is unsupported" example was already fixed by an earlier patch of mine; the `>` operator case stands. |
+| **2.2 calendar validation** (major) | **ACCEPTED.** `Date.UTC` rolls `February 31` into March, and a deadline was only checked against `now`, not against `postedAt`. |
+| **2.3 ranking is not total** (major) | **ACCEPTED.** Equal Edges compare as `0`, so order depends on input order. Needs a `kolId` tie-break. |
+| **3.1–3.3 weak tests** (major) | **ACCEPTED.** Named tests that can pass with the behaviour broken, each with the one-line fix. |
+| **4.1 `import "server-only"`** (major) | **REJECTED, with reason.** The finding is correct about the ratified rule; the fix cannot land yet. The `server-only` package throws outside a React Server Component context, so adding it now breaks the CLI scripts and the whole test suite. It lands with the Next UI, which the plan sequences last. |
+| **6.2 contract invariants** (major) | **ACCEPTED.** A public registry should not accept `direction=2`, `cournotBps=65535`, an empty asset or an expired deadline from any caller. Server validation protects this app, not the contract. |
+| **7.1 / 7.2 duplication** (major/minor) | **ACCEPTED.** `smoke.mjs` had re-implemented the Atlas gateway and both copies carried the same calldata defect. Smoke now imports the gateways; the plan's "no app imports" rule is amended to "no *orchestration* imports", which was its intent. |
+| **8.x remaining phases** | **ACCEPTED as guidance**, consistent with `PHASES.md`. |
+
+**Codex's stated disagreement** — that server-side validation is insufficient for a public registry — is
+accepted. It goes to `contracts/src/CallRegistry.sol` as `require` invariants, which also strengthens the
+tamper-proof claim the whole product rests on.
+
+**What this round proves about the loop:** the single most valuable finding of the project came from Codex and
+was only *confirmed* by me. A reviewer who never finds anything you missed is not being read; a verifier who
+never checks is not reviewing. Both happened as intended.
+
 ## Environment note (not a project decision)
 
 Codex's own runners fail in this host's service context — `[windows] sandbox = "elevated"` triggers
