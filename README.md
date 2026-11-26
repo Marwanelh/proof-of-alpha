@@ -136,6 +136,13 @@ npm run resolve:write           # score calls whose deadline has passed, on chai
 3. Live Cournot pricing at posting time, and touch-based resolution to match "at any time before" markets.
 4. Wallet checks: flag a KOL's linked wallet selling while the call is live.
 
+## Team
+
+| | Role |
+|---|---|
+| **Marwane Elhour** ([@Marwanelh](https://github.com/Marwanelh)) | Architecture and smart contract; CMC, Atlas, Cournot and Living Brain integrations; scoring and resolution; submission video |
+| **Kyle Yao** | Product and UI; LLM call extraction and the public Verify flow; CMC Community backtest; on-chain receipts and Cournot-matched calls |
+
 ---
 
 MIT License · Built at BNB Bangkok 2026
