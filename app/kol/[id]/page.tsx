@@ -1,9 +1,13 @@
-import { BacktestedReceipt } from "../../../components/Receipt.tsx";
+import Link from "next/link";
+
+import { CallHistory } from "../../../components/CallHistory.tsx";
 import { MemoryPanel } from "../../../components/MemoryPanel.tsx";
-import { Stamp } from "../../../components/Stamp.tsx";
-import { rank, summarise, type KolSummary } from "../../../server/records.ts";
+import { MIN_RESOLVED_FOR_HIT_RATE, signedEdge } from "../../../components/Register.tsx";
+import { callView, kolMemory } from "../../../server/insights.ts";
+import { summarise } from "../../../server/records.ts";
 import { loadRecords } from "../../../server/store.ts";
-import type { BacktestedCallRecord, CallRecord } from "../../../shared/types.ts";
+import { initials } from "../../../shared/explorer.ts";
+import type { CallRecord } from "../../../shared/types.ts";
 
 export const dynamic = "force-dynamic";
 
@@ -13,9 +17,7 @@ function priceAtResolution(record: CallRecord): number | null {
   return Number.isFinite(price) ? price : null;
 }
 
-function pct(value: number | null): string {
-  return value === null ? "—" : `${(value * 100).toFixed(1)}%`;
-}
+const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 
 export default async function KolPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -26,96 +28,111 @@ export default async function KolPage({ params }: { params: Promise<{ id: string
   if (mine.length === 0) {
     return (
       <main>
-        <section className="thesis">
-          <p className="label">KOL</p>
+        <Link href="/leaderboard" className="back">← Leaderboard</Link>
+        <section className="page-head">
           <h1>No calls recorded for {kolId}.</h1>
-          <p className="lede">
-            We print an empty page rather than a plausible-looking one. Score a call and this record starts.
-          </p>
+          <p>We print an empty page rather than a plausible-looking one. Verify a call and this record starts.</p>
         </section>
       </main>
     );
   }
 
-  const summary: KolSummary = summarise(kolId, records, priceAtResolution);
-  // rank() is applied to a single row only to keep the ordering rule in one place; the value here is the
-  // summary, not the position.
-  const [ranked] = rank([summary]);
-
-  const hedged = ranked?.cournotEdge === null;
+  const s = summarise(kolId, records, priceAtResolution);
+  const resolved = s.cournotCalls + s.proxyCalls;
+  const memory = kolMemory(kolId, records);
+  const views = mine.map(callView).sort((a, b) => b.postedAt.localeCompare(a.postedAt));
+  const first = views[views.length - 1]!;
+  const sources = new Set(mine.map((r) => r.claim.source));
+  const edge = s.cournotEdge ?? s.proxyEdge;
 
   return (
     <main>
-      <section className="thesis">
-        <p className="label">KOL record</p>
-        <h1 className="kol" style={{ fontSize: "clamp(22px,2.6vw,30px)" }}>{kolId}</h1>
+      <Link href="/leaderboard" className="back">← Leaderboard</Link>
 
-        <div className="notes" style={{ borderTop: 0, paddingTop: 0, marginTop: 4 }}>
+      <section className="card profile-head">
+        <div className="profile-id">
+          <span className="avatar lg" aria-hidden="true">{initials(kolId)}</span>
           <div>
-            <p className="label">Cournot edge</p>
-            <p className="value" style={{ fontSize: 22 }}>
-              {ranked?.cournotEdge === null || ranked === undefined
-                ? "no baseline"
-                : ranked.cournotEdge.toFixed(3)}
-            </p>
-          </div>
-          <div>
-            <p className="label">Hit rate</p>
-            <p className="value" style={{ fontSize: 22 }}>{pct(ranked?.hitRate ?? null)}</p>
-          </div>
-          <div>
-            <p className="label">Calls</p>
-            <p className="value" style={{ fontSize: 22 }}>
-              {summary.cournotCalls + summary.proxyCalls}
-              <span className="absent"> resolved · {summary.unresolved} unresolved</span>
-            </p>
-          </div>
-          <div>
-            <p className="label">Baseline</p>
+            <h1>{kolId}</h1>
             <p>
-              {summary.cournotCalls > 0 ? (
-                <Stamp state="verified">Cournot × {summary.cournotCalls}</Stamp>
-              ) : summary.proxyCalls > 0 ? (
-                <Stamp state="referenced">Proxy only × {summary.proxyCalls}</Stamp>
-              ) : (
-                <Stamp state="refused">No baseline</Stamp>
-              )}
+              {sources.has("cmc") ? "CMC Community" : "Pasted posts"} · tracked since {day(first.postedAt)}
+              {mine.some((r) => r.kind === "backtested") ? " · includes backtested samples" : ""}
             </p>
           </div>
         </div>
-
-        {hedged ? (
-          <p className="lede" style={{ marginTop: 18 }}>
-            <strong>Read this before the numbers.</strong> None of this KOL&rsquo;s calls carry a real Cournot
-            probability, so there is no Edge figure to show. The hit rate above is measured against a labelled
-            proxy baseline and is not a track record.
-          </p>
-        ) : null}
+        <div className="profile-stats">
+          <div>
+            <div className="stat-label">Calls</div>
+            <div className="stat-value">{mine.length}</div>
+          </div>
+          <div>
+            <div className="stat-label">Hit rate</div>
+            <div className="stat-value">
+              {s.hitRate !== null && resolved >= MIN_RESOLVED_FOR_HIT_RATE ? `${Math.round(s.hitRate * 100)}%` : "—"}
+            </div>
+            {resolved < MIN_RESOLVED_FOR_HIT_RATE ? <div className="stat-note hint">needs {MIN_RESOLVED_FOR_HIT_RATE} resolved</div> : null}
+          </div>
+          <div>
+            <div className="stat-label">{s.cournotEdge !== null ? "Edge" : "Proxy edge"}</div>
+            <div className={`stat-value ${edge === null ? "" : edge >= 0 ? "tone-pos" : "tone-neg"}`}>
+              {edge === null ? "—" : signedEdge(edge)}
+            </div>
+          </div>
+          <div>
+            <div className="stat-label">Open</div>
+            <div className="stat-value">{s.unresolved}</div>
+          </div>
+        </div>
       </section>
 
-      <MemoryPanel kolId={kolId} calls={mine.length} />
+      <div className="two-col">
+        <CallHistory calls={views} />
 
-      <div style={{ display: "grid", gap: 22, marginTop: 28 }}>
-        {mine.map((r) =>
-          r.kind === "backtested" ? (
-            <BacktestedReceipt key={r.id} record={r as BacktestedCallRecord} />
-          ) : (
-            <article key={r.id} className="receipt">
-              <div className="receipt-head">
+        <aside className="side">
+          <div className="card card-pad">
+            <p className="card-title" data-tone="lime">Living Brain · what we remember</p>
+            <dl className="kv" style={{ margin: 0 }}>
+              <div>
+                <dt>Strongest on</dt>
+                <dd>
+                  {memory.strongest
+                    ? `${memory.strongest.asset} — ${memory.strongest.hits} of ${memory.strongest.resolved} right`
+                    : "Nothing resolved yet"}
+                </dd>
+              </div>
+              {memory.weakest ? (
                 <div>
-                  <p className="label">Locked call</p>
-                  <h2 className="kol">{r.claim.asset} · {r.claim.direction}</h2>
+                  <dt>Weakest on</dt>
+                  <dd>{memory.weakest.asset} — {memory.weakest.hits} of {memory.weakest.resolved} right</dd>
                 </div>
-                <span className="receipt-index">{r.id}</span>
+              ) : null}
+              <div>
+                <dt>Stance change</dt>
+                <dd>
+                  {memory.stanceChanges.length > 0
+                    ? memory.stanceChanges
+                        .slice(-2)
+                        .map((c) => `Turned ${c.to} on ${c.asset} on ${day(c.at)}`)
+                        .join("; ")
+                    : "None — every call on an asset points the same way"}
+                </dd>
               </div>
-              <div className="receipt-body">
-                <p className="hint" style={{ padding: "14px 20px", margin: 0 }}>
-                  A verified record. Open the transaction on the block explorer to check it.
-                </p>
+              <div>
+                <dt>Connected to</dt>
+                <dd>
+                  {memory.connected.length > 0
+                    ? memory.connected
+                        .slice(0, 2)
+                        .map((c) => `${c.a === kolId ? c.b : c.a} — same token within 24h, ${c.times}×`)
+                        .join("; ")
+                    : "No co-posting found"}
+                </dd>
               </div>
-            </article>
-          ),
-        )}
+            </dl>
+          </div>
+
+          <MemoryPanel kolId={kolId} calls={mine.length} />
+        </aside>
       </div>
     </main>
   );

@@ -29,6 +29,14 @@ const RULES = [
   },
 ];
 
+const SPONSORS = [
+  { h: "BNB Chain", p: "CallRegistry on BSC testnet stores each receipt: post hash, hashed KOL id, claim, probability, both prices. It refuses to resolve before the deadline, and resolves once." },
+  { h: "CoinMarketCap", p: "A keyed Pro API quote is the price at posting and at resolution. Calls are copied from CMC Community posts." },
+  { h: "Atlas Oracle", p: "The BNB/USD feed is read on BSC mainnet with no key, pinned to a block, and that block is written into the receipt so anyone can re-read it." },
+  { h: "Cournot", p: "The Intelligence Oracle returns the market's probability for the exact claim. It is the baseline Edge is scored against." },
+  { h: "Living Brain", p: "Per-KOL memory: resolved calls are remembered, retrieved when you ask about a KOL, and connected across KOLs who call the same token." },
+];
+
 export default function MethodPage() {
   return (
     <main>
@@ -41,7 +49,24 @@ export default function MethodPage() {
         </p>
       </section>
 
-      <section className="notes method-rules" style={{ borderTop: 0, paddingTop: 0, marginTop: 0 }}>
+      <section style={{ marginBottom: 32 }}>
+        <h2 style={{ fontSize: 22, marginBottom: 4 }}>How it works</h2>
+        <p className="lede" style={{ margin: 0 }}>
+          Paste a post → extract a claim → read the market&rsquo;s probability → snapshot two prices → write the
+          receipt on BNB Chain → at the deadline, compare price to claim and score Edge = outcome − probability.
+        </p>
+        <div className="sponsors">
+          {SPONSORS.map((s) => (
+            <div key={s.h} className="card card-pad">
+              <h3>{s.h}</h3>
+              <p>{s.p}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <h2 style={{ fontSize: 22, marginBottom: 14 }}>The rules</h2>
+      <section className="notes method-rules">
         {RULES.map((r) => (
           <div key={r.h}>
             <h2>{r.h}</h2>

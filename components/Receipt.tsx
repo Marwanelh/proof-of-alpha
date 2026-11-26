@@ -9,6 +9,7 @@ import type {
   OnChainReceipt,
 } from "../shared/types.ts";
 import { isSponsorEvidence } from "../shared/types.ts";
+import { addressUrl, shortHex, txUrl } from "../shared/explorer.ts";
 import { AtlasStamp, CmcStamp, CournotStamp, ReceiptStamp, Stamp } from "./Stamp.tsx";
 
 /**
@@ -177,7 +178,15 @@ export function Receipt({ data }: { data: ReceiptData }) {
 
         <Row label="Transaction" stamp={<ReceiptStamp receipt={data.receipt} sample={data.sample} />}>
           {data.receipt ? (
-            <span className="value">{data.receipt.txHash}</span>
+            <>
+              <a className="value" href={txUrl(data.receipt.chainId, data.receipt.txHash)} target="_blank" rel="noreferrer">
+                {shortHex(data.receipt.txHash, 10, 8)}
+              </a>
+              <span className="hint">
+                {" "}· call #{data.receipt.callId} ·{" "}
+                <a href={txUrl(data.receipt.chainId, data.receipt.txHash)} target="_blank" rel="noreferrer">View on BscScan ↗</a>
+              </span>
+            </>
           ) : (
             <span className="hint">
               {data.sample
@@ -201,7 +210,15 @@ export function Receipt({ data }: { data: ReceiptData }) {
       <div className="receipt-foot">
         <p className="hint" style={{ margin: 0 }}>
           {data.receipt
-            ? `Locked before the outcome was known, at registry ${data.receipt.registry}. Anyone can re-read the Atlas price at block ${atlas?.mainnetBlock ?? "—"} and check the transaction.`
+            ? (
+                <>
+                  Locked before the outcome was known, at registry{" "}
+                  <a href={addressUrl(data.receipt.chainId, data.receipt.registry)} target="_blank" rel="noreferrer" style={{ color: "var(--lime)" }}>
+                    {shortHex(data.receipt.registry)}
+                  </a>
+                  . Anyone can re-read the Atlas price at block {atlas?.mainnetBlock ?? "—"} and check the transaction.
+                </>
+              )
             : data.sample
               ? "Sample row. Nothing here was locked on chain, and nothing here should be cited as evidence."
               : "Locked means a confirmed transaction. Until then this is a draft and we say so."}
