@@ -1,0 +1,1775 @@
+OpenAI Codex v0.154.0
+--------
+workdir: C:\Users\shell\Desktop\BNB\proof-of-alpha
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: none
+session id: 01a217b7-2b2c-7b70-bc45-4cfed4d28b94
+--------
+user
+# Brief for Codex — Proof of Alpha: repo structure and phased build plan
+
+You are the **author** of the structure and the build plan. Another agent (Hermes) will adversarially
+review your output against the repository's own evidence and the sponsor rubrics, then converge with you on
+one agreed plan. Write to be attacked: every claim must be checkable against a file in this repo.
+
+## Read these first, in this order
+
+1. `docs/integration-findings.md` — **ground truth.** Every fact in it was verified by a live probe
+   (HTTP status codes, `eth_call` results, raw JSON). Do not contradict it and do not re-derive it.
+2. `README.md` — track eligibility, what is already built, what is unproven.
+3. `contracts/src/CallRegistry.sol` — exists, compiles under solc 0.8.24, two modes (verified / referenced).
+4. `docs/one-pager.md`, `docs/submission-checklist.md`, `docs/demo-script.md` — the judging artifacts.
+5. `scripts/smoke.mjs` — the integration smoke test; currently 1/5 checks pass (keys absent).
+
+Treat `docs/integration-findings.md` as the boundary of what is known. Anything outside it is a
+**hypothesis**, and you must label it `UNVERIFIED` with the command that would verify it.
+
+## What the project is
+
+A credit record for crypto KOLs. A CMC Community post becomes a structured claim (asset, direction, target,
+deadline); the claim is priced against the market's expectation with the Cournot Intelligence Oracle;
+CMC and Atlas prices are snapshotted; all of it is committed to BNB Chain before the outcome is known; at
+the deadline the call is resolved and scored. Headline metric is **Edge = outcome − Cournot probability at
+posting**. Memory layer is ChatAndBuild Living Brain. Full detail in `docs/one-pager.md`.
+
+## Hard constraints — team decisions, not up for redesign
+
+State any objection to these in an `Objections` section, but design **within** them.
+
+1. **Single package, plain top-level folders.** No pnpm/npm workspace, no monorepo tooling, no turbo/nx.
+   One root `package.json`. Shared types live in one plain folder (e.g. `shared/`) consumed by both the
+   backend and the front end via a `tsconfig` path alias.
+2. **Repo**: public, MIT licence, owner `Marwanelh`, name `proof-of-alpha`.
+3. **Two builders, split by vertical, not by layer:**
+   - **Builder A** owns the **verify path end to end** — paste post → extract claim → Cournot probability →
+     CMC + Atlas prices → on-chain receipt → explorer. This is the money shot and the bounty's proof.
+   - **Builder B** owns **leaderboard + backtest + Living Brain memory**.
+   Each builder must be able to demo their own slice working without the other.
+4. **Money shot (the one thing that must work on stage): the live verify path.**
+5. **Runtime for the demo**: localhost on the presenter's laptop. Front end *optionally* deployed to Vercel.
+   **No hosted database** — a local SQLite or JSON fixture, with a first-class `seed` script.
+6. **Stack**: Node 22 + TypeScript backend; Solidity contracts via Foundry (**not yet installed**);
+   Next.js front end with wagmi/viem. Node 22.23.1 is present.
+7. **Deadline**: HackQuest submissions close **09:00 Fri 27 Nov (UTC+7)**; Demo Night is 15:00 the same day.
+   Assume roughly 14 working hours from now and two people.
+8. **Cournot is metered and its free tier is already exhausted from this machine** (per-IP free calls, no
+   reset — see findings §3). So: the demo must remain demonstrable **without** a live Cournot call, while at
+   least one **real** live call must exist as the bounty's proof artifact. Design the boundary so a recorded
+   response and a live response are interchangeable behind one interface, and the UI can honestly label
+   which one the audience is seeing.
+
+## Deliverable
+
+Write your proposal to **`docs/architecture/PROPOSAL-codex.md`**. Touch no other file. Include exactly:
+
+**A. Folder skeleton.** Every path, one line of purpose per path. No directory without a reason to exist.
+
+**B. Module boundaries.** Name the 5–8 modules. For each: its single responsibility, what it takes in,
+what it returns, and what it must never do. Then give the **shared types** (the claim shape, the Cournot
+response shape, the Edge computation inputs) as TypeScript, in the folder from constraint 1. The boundary
+between Builder A's slice and Builder B's slice must be explicit and must be a type, not a convention.
+
+**C. Phases.** Each phase gets: entry criteria (what must already be true), exit criteria (**a command whose
+output proves it**), owner (A or B), time-box, and the specific bounty requirement it ticks. Phases must be
+ordered so that a working demo exists as early as possible and every later phase makes it better rather than
+making it exist. Call out which phase produces the submission-ready artifact.
+
+**D. Risk register.** Top 5 risks, each with likelihood, impact, and a **concrete** mitigation that is a
+decision (not "be careful"). Include the risks that follow from the constraints — e.g. the front end and
+backend sharing types without a workspace; two people editing one package concurrently; Foundry not being
+installed; the Cournot metering.
+
+**E. Cut list.** If the team is four hours behind at 03:00, rank what to cut first, and say what the demo
+looks like after each cut.
+
+## Output rules
+
+- Concrete over comprehensive. No filler, no restating this brief.
+- No invented API behaviour, no invented file paths, no invented sponsor requirements. Cite the file you got
+  a fact from, or mark it `UNVERIFIED`.
+- Every path you propose must appear in the skeleton in section A.
+- If your plan cannot fit in ~14 person-hours × 2, say so explicitly and give the reduced plan that does.
+
+2026-11-26T11:56:52.445848Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://mcp.notion.com/.well-known/oauth-protected-resource/mcp\", scope=\"default\"" })
+warning: clamping SessionEnd hook timeout to 3s in C:\Users\shell\.codex\plugins\cache\claude-plugins-official\vercel\0.56.0\hooks\hooks.json
+2026-11-26T11:56:52.804699Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://mcp.vercel.com/.well-known/oauth-protected-resource\"" })
+2026-11-26T11:56:52.831101Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://cmem.ai/.well-known/oauth-protected-resource/api/mcp\", scope=\"read:memory write:memory\"" })
+2026-11-26T11:56:53.093346Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=failed to refresh OAuth tokens for server supabase
+2026-11-26T11:56:54.374647Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:8080/mcp)")))
+2026-11-26T11:56:54.662135Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://localhost:8000/mcp)")))
+2026-11-26T11:56:56.674742Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:8080/mcp)")))
+warning: Exceeded skills context budget. All skill descriptions were removed and 169 additional skills were not included in the model-visible skills list.
+2026-11-26T11:56:57.282301Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://localhost:8000/mcp)")))
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+2026-11-26T11:56:59.738469Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:8080/mcp)")))
+2026-11-26T11:57:00.654467Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://localhost:8000/mcp)")))
+hook: SessionStart Failed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Failed
+hook: SessionStart Failed
+hook: SessionStart Failed
+hook: UserPromptSubmit
+hook: UserPromptSubmit
+hook: UserPromptSubmit
+hook: UserPromptSubmit Failed
+hook: UserPromptSubmit Completed
+hook: UserPromptSubmit Completed
+codex
+I’m using the Ponytail skill because this is an architecture/planning task under active Ponytail mode. I’ll first scope only the named evidence and existing call sites, then write the single requested proposal file.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'C:\\Users\\shell\\.codex\\plugins\\cache\\ponytail\\ponytail\\5.3.3\\skills\\ponytail\\SKILL.md'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 2721ms:
+---
+name: ponytail
+description: >
+  Lazy senior dev mode: the smallest change that fully solves the task, and a
+  reply a busy human understands in one read. Use on any coding task (writing,
+  fixing, refactoring, reviewing, choosing dependencies) and when the user says
+  "ponytail", "be lazy", "simplest solution", "yagni", or complains about
+  over-engineering or bloat. Levels: lite, full (default), ultra.
+argument-hint: "[lite|full|ultra|off]"
+license: MIT
+---
+
+# Ponytail
+
+You are a lazy senior developer. The best code is the code never written. You solve the whole problem with the least new code. End your reply with one or two lines: what you skipped or did not check, and any risk the user must know.
+
+Active for the whole session until the user says "stop ponytail" or "normal mode". Switch level: `/ponytail lite|full|ultra`.
+
+## Before you write
+
+Read the task and the code it touches. List every place your change must reach: callers, tests, fixtures, config, exports. Check what your change could break for users: data it would destroy or expose, callers that stop working. That is scope. Extra features are not.
+
+## The smallest complete change
+
+Take the first option that fully works:
+
+1. Does it need to exist? Skip features, options and flexibility nobody asked for, and name them in one line. A vague request ("build me X") gets the smallest version that does the core job.
+2. Already in this codebase (a helper, component, service, pattern)? Use it the way the surrounding code does.
+3. Standard library or a platform feature? Use it, unless the project has its own. A house component beats a native widget.
+4. An installed dependency? Use it. Never add a dependency for a few lines.
+5. Can it be one line a reader gets at a glance? One line.
+6. Otherwise: the minimum code that works.
+
+- Be lazy about the solution, never about the change itself: finish every part the task needs, including the callers, tests and fixtures your change breaks.
+- No abstraction, wrapper, type conversion, option, config, boilerplate or "for later" code nobody asked for. Keep values in the form the platform already gives you. Deletion beats addition. Keep the structure the codebase already has: its layers, interfaces and conventions.
+- The shortest working diff wins, once you know everything it must touch. A one-liner that needs decoding is not short.
+- Comment only the why the code cannot show, in one line.
+- Bug fix: before you edit, grep every caller of the function you touch, then fix the root cause once in the shared code.
+- Code you move or merge keeps its error handling and validation.
+- Between options of equal size, take the one that is correct on edge cases.
+- Lazy code without its check is unfinished: new non-trivial logic (a branch, a loop, a parser, money or security, or a whole new script or app) leaves one small test or an assert-based self-check. Trivial changes need none.
+- A shortcut with a known limit gets a code comment in this form: `shortcut: <the limit>, <when to upgrade>`.
+
+Never cut: validation at trust boundaries, error handling that prevents data loss, security, accessibility, the calibration real hardware needs, anything the user asked for.
+
+## Levels
+
+| Level | Behavior |
+|-------|----------|
+| **lite** | Build what was asked. Name the smaller option in one line and let the user pick. |
+| **full** | The rules above. Default. |
+| **ultra** | Also question the request: before building, push back on any part the need does not justify. |
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'docs/integration-findings.md'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 901ms:
+# Integration findings — verified 2026-11-26 16:29–16:35 (UTC+7)
+
+Every claim below is from a live probe or the vendor's own doc, not from memory. Raw responses are quoted.
+Probe host: this machine, plain `curl`, no API keys.
+
+## 1. CoinMarketCap — two different bases, and the content endpoints are NOT keyless
+
+CMC now runs a **Keyless Public API** on the same host, prefix `/public-api`:
+
+```
+OK   HTTP 200  GET https://pro-api.coinmarketcap.com/public-api/v2/simple/price?symbol=BNB,CAKE&convert=USD
+{"data":[{"id":1839,"name":"BNB","symbol":"BNB","slug":"bnb",
+  "quotes":[{"symbol":"USD","price":552.6301590837155}]},
+ {"id":7186,"name":"Pancake","symbol":"CAKE","slug":"pancakeswap",
+  "quotes":[{"symbol":"USD","price":1.5722643083908194}]}], ...}
+```
+
+Two gotchas visible in that response:
+
+- **`quotes` is an array**, not the `quote.USD.price` object of the classic Pro envelope. If your backend
+  was written against the old shape it will silently read `undefined`.
+- Keyless = IP-shared rate pool, so a 429 is normal; back off (the official SDK does it for you).
+  A free key raises limits and returns "the same response shape".
+
+**Content endpoints reject keyless calls.** All four of these are 403 without a key:
+
+```
+HTTP 403  /public-api/v1/content/posts/latest?symbol=BNB
+  {"status":{"error_code":1005,"error_message":"An API Key is required for this call."}}
+HTTP 403  /public-api/v1/content/posts/latest?slug=binancecoin
+HTTP 403  /public-api/v1/content/posts/top?symbol=BNB
+HTTP 403  /public-api/v1/content/latest?limit=1
+```
+
+and the endpoint is stricter than its own docs:
+
+```
+HTTP 400  /public-api/v1/content/posts/latest
+  {"status":{"error_code":400,
+   "error_message":"Exactly one of `id`, `slug`, or `symbol` is required for this endpoint"}}
+```
+
+Doc says `id` / `slug` / `symbol` are all `required: false`. The API says **exactly one is required**.
+
+### What this changes for Proof of Alpha
+
+| Brief assumed | Reality |
+|---|---|
+| "Free Basic key returns `/v1/content/posts/latest`" | Needs **a key** (1005 on keyless). Whether the free plan includes the Content endpoints is still unconfirmed — but they cost **0 credits** per the doc, so a free key should carry them. **Confirm with a key before you build on it.** |
+| "Filter by symbol; page back with `last_score`" | Correct. Those are the only useful params: `id \| slug \| symbol` (exactly one) and `last_score`. **There is no `limit` param** and no "all posts" call. |
+| Backtest "historical CMC posts" | You can only ask **per-symbol**, walking `last_score` backwards. So the backtest needs a **watchlist of symbols** (e.g. BNB, CAKE, and the BNB-Chain majors) rather than "all KOL calls". Say so on the leaderboard. |
+| `GET /v1/content/latest` | Also keyed, and also not global. |
+
+`plan credit use: 0 credit`, cache/update frequency: five minutes.
+
+## 1b. Three bases, not two — and which one has the Content endpoints
+
+CMC serves the same host under three prefixes. Probed 2026-11-26:
+
+```
+HTTP 200  /public-api/v2/simple/price?symbol=BNB&convert=USD          keyless
+HTTP 200  /trial-pro-api/v3/cryptocurrency/listings/latest            keyless (Trial Pro API)
+HTTP 200  /trial-pro-api/v2/simple/price?symbol=BNB&convert=USD       keyless
+HTTP 403  /trial-pro-api/v1/content/posts/latest?symbol=BNB
+          {"error_code":1005,"error_message":"An API Key is required for this call."}
+```
+
+| Base | Auth | Covers |
+|---|---|---|
+| `/public-api` | none | keyless subset; IP-shared quota, so 429 is normal |
+| `/trial-pro-api` | none | a **fixed** subset: 19 Standard + 17 DEX endpoints (listings, quotes, global metrics, Fear & Greed, CMC indices, Altcoin Season, map/info, DEX token/pools/pairs, holders, k-line, token search). Aggressively rate-limited, subset cannot be extended |
+| `/v1`, `/v2`, `/v3` | `X-CMC_PRO_API_KEY` | everything, including **Content** |
+
+**Bottom line for this build:** the whole price side — posting snapshot, resolution, proxy-Edge, DEX
+swaps/holders for sell-while-shilling — runs today with **no account at all**, on `/trial-pro-api` or
+`/public-api`. Only the **call source** (`/v1/content/posts/latest`) needs a key, and it is not in either
+keyless set. So the critical path is exactly one signup, and it blocks only ingest.
+
+Free Basic plan (pro.coinmarketcap.com/signup, no credit card): **15,000 monthly credits, 50 req/min,
+30+ endpoints, historical data, commercial use** — the key appears on the dashboard immediately. Some
+third-party docs still say 10,000 credits; CMC's own pricing page says 15,000 as of this probe.
+
+Unknown until a real key is tried: whether the free Basic plan includes the Content endpoints. The endpoint
+is 0 credits, so it should — but it is not the keyless set, so confirm with the key before building ingest
+on it. Fallback if not: the brief's verify-by-paste path, plus ask the CMC team at the venue.
+
+## 2. Atlas Oracle — free feeds exist, but they are on BSC **mainnet**, and check the read policy
+
+- Free push feeds are real and public: e.g. feed **#1164 BNBChain EWTB/USD**, tags `Crypto` + `Free`,
+  Push Mode, **Network: BNB Smart Chain (BEP20)**, deviation 2.00%, heartbeat 60s, push status Active.
+  Its update transactions link out to **bscscan.com/tx/...** → these are **mainnet** writes.
+- Pricing page confirms it: **Free Plan $0/mo — "Try Push Mode with limited feeds on BNB Smart Chain"**.
+  Paid tiers ($465/mo Starter, 5 paid feeds) are only for custom/private feeds.
+- Read surface: `SingleFeed` is **fully Chainlink `AggregatorV2V3`-compatible** (so `latestRoundData()`,
+  `latestAnswer()`, `decimals()` work as you'd expect); `MultiFeed` is a registry keyed by a 4-byte
+  `feedId` with `fetch` / `fetchBatch` / `fetchCompact`. Interfaces are MIT at
+  `github.com/oracle-atlas/push-oracle-interfaces`.
+- **Read policy is the trap.** Every read function is `onlyReadAccess`, and each feed instance is either
+  **whitelist** (only authorised callers, plus plain EOAs not delegated via ERC-7702) or **open-read**
+  (anyone). Query `isOpenRead()` on the feed proxy before assuming a contract can read it.
+
+### The architecture bug in your brief
+
+> "The registry contract reads the Atlas feed itself when recording, so a stored price can be checked
+> on-chain rather than taken on our word." — "Mainnet reads are free; this earns the challenge's
+> mainnet bonus without spending real funds."
+
+A `CallRegistry` deployed on **BSC testnet (chain 97) cannot read a mainnet feed**. Cross-chain reads do
+not exist without a bridge or an oracle callback. Two ways out, both cheap:
+
+1. **Deploy the registry on BSC mainnet (56)** where the free Atlas push feeds live. `recordCall` reads
+   `latestRoundData()` in the same transaction, so the stored Atlas price is trustlessly verified and the
+   `roundId` + `updatedAt` prove freshness. Writes cost a few cents of real BNB — this is the version that
+   earns the mainnet bonus, and it is the only version where your differentiator is actually true.
+2. Keep a **testnet registry for the gas-free demo** and record the Atlas `feed`, `roundId` and `updatedAt`
+   **as supplied**, labelled as backend-supplied. Do not claim on-chain verification on testnet.
+
+Two registries, one interface, is the honest and boring answer. Decision needed by T-14h.
+
+**10-minute check to run before coding (no keys needed):**
+```bash
+cast call <feedProxyFrom_atlasoracle.io/feeds/NNNN> "isOpenRead()(bool)" --rpc-url https://bsc-dataseed.binance.org
+cast call <feedProxy> "latestRoundData()(uint80,int256,uint256,uint256,uint80)" --rpc-url https://bsc-dataseed.binance.org
+cast call <feedProxy> "description()(string)" --rpc-url https://bsc-dataseed.binance.org
+```
+If `isOpenRead` is `false`, the read reverts for a contract caller → either pick a different free feed, or
+ask the Atlas team at the venue to whitelist your registry address, or fall back to path 2.
+
+## 2b. Atlas — what the live contract actually answered (verified on BSC mainnet)
+
+Read with `eth_call` against the free feed proxy shown on `atlasoracle.io/feeds/1164`
+(`0xeace519ebb14fb8404fa6ddd23c3b34abade44aa`), 2026-11-26:
+
+```
+isOpenRead()   -> 1                 (open-read: a contract MAY read it)
+decimals()     -> 18
+description()  -> "MultiFeed"
+contractType() -> 2                 (2 == MultiFeed)
+version()      -> 2
+latestRoundData()                -> execution reverted      <-- it is NOT a SingleFeed
+fetch(0x0000048c)                -> execution reverted      <-- catalogue id 1164 is not the feedId
+fetch(0x00001164)                -> execution reverted
+```
+
+Three consequences that would each have cost you an hour on stage:
+
+1. **The proxy is a MultiFeed, not a SingleFeed.** A Chainlink-style `latestRoundData()` reverts on it,
+   so the brief's Chainlink mental model does not apply to the free feeds. Use
+   `fetch(bytes4 feedId)` → `PriceSnapshot { uint80 price; uint48 aggregatedTs; uint48 onchainTs; }`,
+   or the cheaper `fetchCompact(bytes4)` packed as
+   `[Reserved 80][OnchainTs 48][AggTs 48][Price 80]` (decode with the MIT `FeedCodec` library).
+2. **The catalogue number is not the on-chain feedId.** Both `0x0000048c` (1164 as a uint32) and
+   `0x00001164` revert. Get the real 4-byte id from the Atlas team — they are at the venue.
+   Until then the registry cannot read the feed, and neither can your smoke test.
+3. **Reads are open** (`isOpenRead() == true`) on this feed, so `CallRegistry` can read it directly —
+   the contract enforces this at deploy time and reverts with `FeedNotOpenRead()` otherwise.
+
+Selectors, for when you probe by hand: `isOpenRead()` `0xba94e9ff` · `fetch(bytes4)` `0x7ffc4b97` ·
+`fetchCompact(bytes4)` `0x1fa1065f` · `decimals()` `0x313ce567` · `contractType()` `0xcb2ef6f7` ·
+`description()` `0x7284e416` · `latestRoundData()` `0xfeaf968c`.
+
+The contract in this repo is written against that interface — in both the verified and referenced modes —
+and compiles clean (`npx solc@0.8.24 --bin --optimize src/CallRegistry.sol`).
+
+### You cannot discover a feedId from the contract — only Atlas can give it
+
+Probed the live MultiFeed for an enumeration surface:
+
+```
+feedCount()  feedIds()  getFeedIds()  feeds()  getFeed(bytes4)  config(bytes4)
+feedConfig(bytes4)  isFeedActive(bytes4)  getLatestPrice(bytes4)  latestAnswer(bytes4)  aggregate(bytes4)
+   -> all execution reverted: 0x
+```
+
+`IMultiFeed` (the MIT interface) has **no** enumeration and no metadata-per-feed: its whole surface is
+`fetch`, `fetchBatch`, `fetchCompact`, `fetchCompactBatch`, `decimals`, `description`, `version`,
+`contractType`, `isAuthorizedCaller`, `isOpenRead`. Governance and price-reporting functions are omitted
+deliberately. So the `feedId` per asset has to come from Atlas — the team at the venue, or their dashboard.
+
+Diagnostic to remember: an **unknown `feedId` reverts with an empty reason** (`execution reverted: 0x`),
+while a **known but never-updated feed returns a zero-initialised snapshot**. A revert means "wrong id",
+not "oracle down".
+
+## 3. Cournot — the probability needs NO API key; the key in their docs is for something else
+
+Probed live 2026-11-26 against `https://interface.cournot.ai` (no credentials of any kind):
+
+```
+GET  /cournot/markets/public                          -> 200 {"code":4100,"msg":"slug is required"}
+GET  /cournot/markets/public?slug=…&source=test        -> 200 {"code":4100,"msg":"invalid source: test"}
+POST /cournot/markets/dispute/submit                   -> 200 {"code":4100,"msg":"api_key is required"}
+```
+
+**Three separate things, and only one of them is a key:**
+
+| Surface | Auth | What it is |
+|---|---|---|
+| **Intelligence Oracle** (`skill.cournot.ai`) — *what this project needs* | **none to start** | An agent skill that returns the probability for a claim. **Three free calls per IP, in total, shared with divergence, no reset** — the marketing page says "per account", the skill's own billing contract says **per IP**. Then paid per call via x402 (Base) / b402 (BNB Chain). No key, no wallet to start |
+| `GET /cournot/markets/public` | no key | Public settlement records. Note it wants a recognised partner `source` — `source=test` is rejected |
+| `POST /cournot/markets/dispute/submit` | **`x-api-key`** | The only thing the partner key is for: **filing a dispute on behalf of an end user**. A write action. Rules: the partner's own `source` (derived from the key) must match the market's source; only `resolved` markets; one dispute per market |
+
+So: **do not go looking for a Cournot partner key.** The `x-api-key` in the partner docs is a
+prediction-market operator credential for filing disputes — irrelevant to reading a probability, and not
+what the challenge asks for. The challenge asks for **one successful live call to the Intelligence Oracle
+skill**, which the free tier covers exactly.
+
+**Architectural consequence — read this before wiring the backend.** The published REST surface has **no
+endpoint that returns a probability for an arbitrary claim**. Probabilities only come out of the skill,
+whose client is bundled (`npx cournot-skills add Cournot-AI/cournot-skills/skills/cournot`, Node ≥ 22.20,
+"all calls use the bundled client"). So "one live Cournot call per new call" cannot be a plain
+`fetch()` — the backend has to drive the skill. Keep the call behind one small module so the demo path can
+fall back to **recorded responses**, and spend the three free calls on: one shape-check now, one rehearsal,
+one on stage.
+
+Verified on their own site: "First release covers crypto events · **three free calls per account**", and
+"the skill runs only on an explicit request — one instruction produces at most one paid call". A request
+that cannot be resolved to a specific claim **stops and asks rather than guessing**, so the extractor must
+emit a claim naming an asset and a threshold or a date.
+
+- The challenge needs: one successful live call, the probability **driving a real decision**, claim +
+  evidence shown verbatim, a `Cournot Integration` README section, and reproducible proof (request ID or
+  sanitised log). **Develop against recorded responses; spend the real calls on the demo + the proof.**
+Verified live 2026-11-26 with the bundled client (no key, no wallet, no signup):
+
+```bash
+git clone --depth 1 https://github.com/Cournot-AI/cournot-skills
+node <skill-root>/scripts/cournot-client.mjs balance     # free  -> {"state":"credential_missing", "Anonymous queries remain available"}
+node <skill-root>/scripts/cournot-client.mjs resolve --request-base64 <b64>   # free, no charge
+node <skill-root>/scripts/cournot-client.mjs prepare --request-base64 <b64>   # the CHARGED probability call
+```
+
+`resolve` is **free** and returned real candidates in about a second, e.g. for
+"BNB price above $600 before December 31, 2026":
+
+| id | market | match confidence |
+|---|---|---|
+| 113195 | BNB price above $600.00 at any time before 2026-12-01 05:00 UTC | 0.823 |
+| 1571 | BNB price above $1,000 at any time before 2027-01-01 05:00 UTC | 0.820 |
+| 1570 | BNB price above $1,100 … before 2027-01-01 05:00 UTC | 0.818 |
+
+**The constraint that shapes the extractor: Cournot markets are discrete strike × deadline pairs.** There is
+no market for "$600 before December 31" — the nearest are *$600 before December 1 2026* and *$1,000 before
+January 1 2027*. So a KOL claim can only be priced when it maps onto an existing market; otherwise the skill
+stops and asks rather than guessing. Two consequences: (a) the extractor should normalise a claim onto the
+nearest available strike/date, and (b) the leaderboard's Edge only exists for calls that landed on a market —
+say so in the UI rather than hiding it.
+
+Auto-proceed rule from the skill's flow reference, worth knowing for the demo path: with several candidates
+you may only continue without asking a human when the leader's confidence is **≥ 0.85 and at least 0.15
+ahead** of the next. The run above does not qualify, which is exactly the case a demo script must handle.
+
+Raw client output is saved in `evidence/cournot/`.
+
+### Outcome of the one paid attempt: `payment_choice_required` — no probability obtained
+
+The `prepare` call for market 113195 returned:
+
+```json
+{"state":"payment_choice_required","choices":["topup","import","per_call"]}
+```
+
+Per the skill's own flow reference, that state means **the free allowance ran out** (as opposed to
+`pack_exhausted`, which means prepaid calls ran out). `resolve` and `balance` are free and had already
+succeeded minutes earlier, and no probability call had ever been made from this machine — so the **lifetime
+per-IP free allowance was already consumed before we started**, almost certainly by another user of this
+egress IP (NAT / proxy / shared connection). That is the practical consequence of "three free calls per IP"
+rather than per account:
+
+**On any shared network — a hackathon venue's wifi above all — you cannot count on the free tier. Assume
+zero and plan for it.** The three routes, all equally valid:
+
+1. **`/cournot topup`** — buy a pack. **Starter: $5 for 600 calls**, which removes this entire risk class for
+   less than a coffee, and packs stack, never expire and are non-refundable. Requires a wallet that can sign
+   x402 (Base) or b402 (BNB Chain) payments.
+2. **Pay per query** — $0.01 for a single query, reviewed and confirmed before anything is charged. Same
+   wallet requirement.
+3. **`/cournot import <key>`** — use a prepaid account purchased elsewhere or on another device.
+
+Plus the free route that actually fits this event: the challenge text says selected eligible projects
+receive Cournot access, and the Cournot team is at the venue. **Ask them for hackathon credits** — it is the
+cheapest option and it puts you in front of the people judging the bounty.
+
+What remains free and verified: `resolve` (market disambiguation — real candidates, ids and
+`matching_confidence` in about a second), `balance`, divergence **page turns** (re-reading a saved snapshot),
+and an empty divergence ranking. Those are enough to develop and to rehearse the whole demo path against
+recorded fixture data — only the probability number itself is metered.
+
+## 4. Living Brain — early access, key + subject id
+
+- Docs are at `docs.livingbrain.com`; append `.md` to any page for clean markdown (agent-friendly).
+- Auth needs an **API key (`lbk_...`) and a `subject id`** — brains are owned by subjects. Both come from
+  the org dashboard; "Now in early access".
+- SDKs: `@living-brain/sdk` (TS) or `livingbrain-sdk` (Python); also a hosted **MCP server** at
+  `https://livingbrain.fernmcp.dev/livingbrain` (`x-api-key`, `x-subject-id`), and a `livingbrain` CLI.
+  **Hermes is a listed MCP client** — if you want the memory layer set up fast, that path is one snippet.
+- Captures are **asynchronous**: `captures.capture` returns an ingest source with `status: pending`, and
+  Living Brain compiles it into pages in the background — register a **webhook** rather than polling.
+  Your demo must not show a spinner because a capture had not compiled yet. Pre-warm the memories.
+- Free-tier limits are **not published** anywhere public. Ask at the booth; your brief already flags this.
+
+## 5. Free-tier claims worth re-checking
+
+- "Etherscan's API no longer has a free tier for BNB Chain" — Etherscan now runs one unified v2 API across
+  chains; verify at the booth before you route around it. Public RPC + `eth_getLogs` is the safe default anyway.
+- CMC Pro key, Atlas feed access and Living Brain keys are all **approval-gated**. In a 17-hour window the
+  approval is the critical path, not the code.
+
+## Sources
+- `coinmarketcap.com/api/documentation/pro-api-reference/keyless-public-api.md`
+- `coinmarketcap.com/api/documentation/pro-api-reference/content/content-latest-posts.md`
+- `docs.atlasoracle.io/developers/atlas-oracle/integrate-the-push-mode`, `.../api-reference/single-feed-contract`, `.../multi-feed-contract`
+- `atlasoracle.io/pricing`, `atlasoracle.io/feeds`, `atlasoracle.io/feeds/1164`
+- `docs.livingbrain.com/llms.txt`, `docs.livingbrain.com/docs/quickstart`
+- `cournot.ai/`, `github.com/Cournot-AI/cournot-skills`
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'README.md'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 939ms:
+# Proof of Alpha
+
+A credit record for crypto KOLs. Every call becomes a verifiable claim, priced against what the market
+already expected (Cournot), locked on BNB Chain before the outcome is known, and scored once it resolves.
+
+**Headline metric — Edge.** `Edge_call = outcome − p`, where `p` is the Cournot probability of the claim
+at the moment it was posted. A consensus hit at p=0.9 earns +0.1; a contrarian hit at p=0.2 earns +0.8;
+a confident miss at p=0.7 costs −0.7. Raw hit rate rewards a bull market; Edge does not.
+
+## The loop
+
+```
+CMC Community post ──▶ LLM extracts {asset, direction, target, deadline}
+                            │
+                            ├─▶ Cournot: probability + claim + evidence   (the baseline)
+                            ├─▶ CMC price + Atlas on-chain price          (the snapshot)
+                            └─▶ CallRegistry.recordCall() on BNB Chain    (the receipt)
+                                        │
+                    at deadline + 1d/7d/30d ──▶ resolve ──▶ hit/miss, return, Edge
+                                        │
+                                        └─▶ Living Brain: per-KOL memory, linked calls
+```
+
+## Setup
+
+```bash
+cp .env.example .env          # fill in: CMC key, Atlas feed address, wallets, Living Brain, LLM
+node --version                # need >= 22.20 (Cournot skill requirement)
+node scripts/smoke.mjs        # proves each integration before you write app code
+```
+
+Foundry (contracts):
+```bash
+curl -L https://foundry.paradigm.xyz | bash && foundryup
+forge test
+forge script script/Deploy.s.sol --rpc-url $BSC_TESTNET_RPC --broadcast
+```
+
+## Verified integration facts (do not re-discover these)
+
+Full evidence with raw responses: [`docs/integration-findings.md`](docs/integration-findings.md).
+
+- `GET /v1/content/posts/latest` needs an **API key** and **exactly one** of `id`, `slug`, `symbol`.
+  There is **no `limit` param** and no global "all posts" call — the backtest must use a symbol watchlist
+  and page backwards with `last_score`. Costs 0 credits, cache 5 minutes.
+- CMC also serves a **keyless** base on the same host: `https://pro-api.coinmarketcap.com/public-api/...`
+  (prices, DEX, k-line). Its envelope puts quotes in an **array** (`data[0].quotes[0].price`).
+- Atlas free push feeds live on **BSC mainnet** (e.g. feed #1164, `Crypto`+`Free`), 60s heartbeat.
+  **The proxy is a MultiFeed**: `latestRoundData()` reverts; use `fetch(bytes4 feedId)` →
+  `PriceSnapshot{price, aggregatedTs, onchainTs}`. `isOpenRead()` was **true** on the feed we probed,
+  and `decimals()` is **18** (registry-wide). The catalogue number (#1164) is **not** the on-chain
+  `feedId` — `fetch()` reverts on it. Get the 4-byte id from the Atlas team before you wire the contract.
+  The registry reverts with `FeedNotOpenRead()` at deploy if the feed is whitelist-only.
+- **A testnet contract cannot read mainnet Atlas.** See "How we use Atlas" below.
+
+## How we use Atlas
+
+We read Atlas prices **directly from the chain, with no key.** Atlas publishes prices to a MultiFeed
+contract on BSC mainnet; we call that contract over a free public RPC, the same way we read any other
+on-chain data — no sign-up, no key, no account, no billing. **This on its own satisfies the CMC × Atlas
+requirement** ("read an on-chain feed").
+
+| | |
+|---|---|
+| Contract | Atlas MultiFeed on BSC mainnet (56). One registry, one `feedId` per asset |
+| Read | `fetch(bytes4 feedId)` → `{uint80 price, uint48 aggregatedTs, uint48 onchainTs}`; `fetchBatch` for several assets in one call |
+| Precision | `decimals()` — one value for the whole registry (18 on the registry we probed) |
+| Access | `isOpenRead()` must be `true`. On a whitelist-only feed a contract read is blocked while a manual read looks fine |
+| Cost | Free. The paid tiers ($465+/mo) are for **creating** custom feeds, not for reading free ones |
+| Gotcha | The `feedId` is a 4-byte on-chain id, **not** the catalogue number in the UI, and it cannot be enumerated from the contract — see `docs/integration-findings.md` |
+
+### A testnet contract cannot read mainnet Atlas
+
+The original design had `CallRegistry` on BSC testnet read Atlas itself. That does not work: **a testnet
+contract cannot read mainnet data**, and there is no cross-chain read without a bridge or an oracle callback.
+
+- **Plan A — default.** The backend reads the Atlas price on **mainnet** over the keyless public RPC and
+  writes it into the **testnet** receipt together with the claim, the Cournot probability and the CMC price.
+  The receipt stores the price plus the Atlas timestamp **and the mainnet block it was read at**, so anyone
+  can check the stored price against Atlas's mainnet history. `CallRegistry.recordCallReferenced()` does this
+  and flags the call `atlasVerified = false` — the price is referenced, not verified by the contract.
+- **Plan B — bonus, if time allows.** Deploy `CallRegistry` on **BSC mainnet (56)**, where the contract reads
+  the feed in the same transaction as the write. Gas is cheap on BSC, the price is verified on-chain rather
+  than referenced, and it earns the challenge's mainnet bonus. `recordCall()` does this and sets
+  `atlasVerified = true`.
+
+**One ABI, two deployments:** a registry built with a feed address reads the feed itself; a registry built
+with `address(0)` only accepts referenced prices. Each refuses the other's call, so there is no way to
+silently present a referenced price as a verified one.
+
+### What we need before coding (both items are Atlas's to give)
+
+- [x] **The MultiFeed contract address on BSC mainnet** — `0xeace519ebb14fb8404fa6ddd23c3b34abade44aa`
+      (verified live: `contractType()` = 2 MultiFeed, `decimals()` = 18, `isOpenRead()` = true). A MultiFeed
+      is one registry per chain holding many feeds, so this address is most likely shared by every free
+      BNB-Chain feed; what varies per asset is the `feedId`.
+- [ ] **The `feedId`s for the assets we track** (BNB, CAKE, …) — **only Atlas can give these.** The contract
+      exposes no enumeration function (probed: `feedCount()`, `feedIds()`, `getFeedIds()`, `feeds()`,
+      `getFeed(bytes4)`, `config(bytes4)` all revert), and `fetch()` reverts on an unknown id. Ask the Atlas
+      team at the venue, or use their feed detail page / dashboard.
+
+Addresses: see [`docs/addresses.md`](docs/addresses.md) (fill in after deploy).
+
+## Track eligibility
+
+Tick these against the briefs before submitting. Each line is a stated requirement, not a nicety.
+
+### Developer Track — Build on BNB Chain ($10,000 pool)
+- [x] Project built on BNB Chain (RWA / on-chain AI agent focus themes — this is an on-chain AI agent)
+- [ ] Demo video ≤ 3 minutes → `docs/demo-script.md`, recording path `evidence/demo.mp4`
+- [x] Focus themes covered: on-chain AI agent + Trading
+- Evidence a judge can check: `CallRegistry` address, `CallRecorded`/`CallResolved` logs.
+
+### CoinMarketCap × Atlas Challenge ($10,000 shared pool)
+- [ ] ≥1 **live Pro API call** in a core feature → `GET /v1/content/posts/latest` is the call source
+      (`scripts/smoke.mjs` prints the request id and HTTP status as proof)
+- [ ] Atlas: read an on-chain feed (push) — `CallRegistry.recordCall` does the read on mainnet
+- [ ] Deploy on BNB Chain — testnet qualifies, **mainnet is a bonus** → deploy mainnet (56)
+- [ ] Open/shared repo with working data calls + README setup instructions
+- [ ] One-page write-up: problem & audience, endpoints/feeds used and why, contract addresses, what's next
+      → `docs/one-pager.md`
+- [ ] **API keys out of the front end and out of the repo.** Usage verifiable via API logs tied to our key,
+      or on-chain reads. Our proof artifact: `evidence/evidence.json` (request ids + tx hashes).
+- Rubric: data integration depth 25 · real-world potential 25 · BNB Chain & RWA focus 20 · technical
+  quality & safety 15 · originality 10 · demo & presentation 5.
+
+### Cournot — Intelligence Oracle (2,000 USDT)
+- [ ] ≥1 **successful live call** to the official skill, with a request ID or sanitised log as proof
+- [ ] The returned probability **drives a real decision** — it sets each call's Edge baseline and weighs
+      the "ask the agent" answer. Mocked/hardcoded probabilities do not qualify.
+- [ ] Show the exact claim evaluated + Cournot's evidence verbatim (`CournotResponse` panel, our own
+      commentary labelled `Our note`)
+- [ ] README section titled **"Cournot Integration"**: where we call it, how the probability is used,
+      where users see claim + evidence, and proof of a successful call
+- [ ] Demo + backup recording
+- Gate: all three build requirements must pass or the project is not scored.
+- Rubric: integration depth 35 · product potential 25 · innovation 20 · execution & UX 20.
+
+### ChatAndBuild — Living Brain (in-kind)
+- [ ] Working AI agent using Living Brain as its persistent memory layer (API / SDK / MCP / CLI)
+- [ ] Demo video **3–5 minutes** showing the three verbs: **remember** (write resolved calls),
+      **retrieve** ("how did this KOL do on meme tokens?"), **connect** (KOLs who post the same token
+      together)
+- [ ] Short description: problem, solution, what makes it unique
+- Note: captures are **asynchronous** — pre-warm the brains before the demo, never show a spinner.
+
+### Not entering
+- Flap, Four.meme/OpenFour — different product surface.
+- AWS credits — requires AWS Activate eligibility and a **valid business registration**.
+
+## Judging notes
+Design and usability · scalability · innovation · open source · integration, plus roadmap, community and a
+sustainable business model. Every score links to the calls and the on-chain receipts behind it.
+
+## Fairness and safety rules we hold ourselves to
+- Flags state facts, never accusations: "wallet sold 41% within 26 minutes of the post", not "dump".
+- Vague posts with a defaulted horizon are labelled; posts with no testable claim are stored as `opinion`
+  and not scored.
+- A KOL needs a minimum number of resolved calls before appearing on the leaderboard.
+- Keys live only in the backend environment. The backend never holds user funds.
+- Tokenized-RWA / ETF-style concepts stay mock or testnet unless independently reviewed.
+
+## Repo layout
+```
+contracts/src/CallRegistry.sol   receipt registry (Chainlink-compatible Atlas read)
+contracts/test/CallRegistry.t.sol
+contracts/script/Deploy.s.sol
+scripts/smoke.mjs                integration smoke test → evidence/evidence.json
+docs/integration-findings.md     live probe results, raw responses, the traps
+docs/one-pager.md                the required one-page write-up
+docs/demo-script.md              3-minute stage script + backup
+docs/submission-checklist.md     tick-list per track
+```
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'contracts/src/CallRegistry.sol'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 953ms:
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+/// @notice Read-only interface of an Atlas Oracle MultiFeed registry, transcribed from
+///         https://github.com/oracle-atlas/push-oracle-interfaces/blob/main/src/IMultiFeed.sol (MIT).
+/// @dev Verified live on BSC mainnet 2026-11-26 against the free feed proxy
+///      `0xeace519ebb14fb8404fa6ddd23c3b34abade44aa`: `contractType()` = 2, `decimals()` = 18,
+///      `isOpenRead()` = true. NOTE: that proxy is a MultiFeed — `latestRoundData()` reverts on it,
+///      so a Chainlink-style read only works against a *SingleFeed* proxy.
+interface IMultiFeed {
+    struct PriceSnapshot {
+        uint80 price; // aggregated price, scaled by decimals()
+        uint48 aggregatedTs; // off-chain aggregation timestamp
+        uint48 onchainTs; // on-chain update timestamp
+    }
+
+    /// @return priceSnapshot zero-initialised if the feed has never been updated; reverts on an
+    ///         unknown feedId (so a revert means "wrong id", not "feed down").
+    function fetch(bytes4 feedId) external view returns (PriceSnapshot memory priceSnapshot);
+
+    function decimals() external view returns (uint8 precision);
+    function description() external view returns (string memory desc);
+    function contractType() external view returns (uint256 typeId);
+    function isOpenRead() external view returns (bool enabled);
+}
+
+/// @title CallRegistry — tamper-proof receipts for KOL calls.
+/// @notice A call is recorded before the outcome is known and can only be resolved after its deadline,
+///         so neither the poster nor we can edit a record after the fact.
+///
+/// Two deployments, one ABI:
+///  - VERIFIED mode — deployed on the same chain as the Atlas feed (BSC mainnet). `recordCall` reads
+///    the feed inside the recording transaction, so the stored price is verified on-chain.
+///  - REFERENCED mode — deployed on BSC testnet, which cannot read mainnet. `recordCallReferenced`
+///    takes the price our backend read from mainnet over a keyless public RPC, plus the Atlas
+///    timestamp and the mainnet block it was read at, so anyone can re-check it against Atlas history.
+contract CallRegistry {
+    struct Call {
+        bytes32 postHash; // keccak256 of the original post text
+        bytes32 kolId; // stable KOL identifier (nickname + avatar hash)
+        bytes4 asset; // symbol, left-aligned, e.g. bytes4("BNB")
+        int8 direction; // +1 bullish, -1 bearish, 0 opinion (not scored)
+        uint16 cournotBps; // Cournot probability in basis points (0..10000)
+        uint64 deadline; // unix seconds; resolution is blocked before this
+        uint128 target; // target price, scaled by atlasDecimals
+        uint128 cmcPrice; // CMC price at posting, scaled by atlasDecimals
+        uint128 atlasPrice; // Atlas price at posting
+        uint48 atlasOnchainTs; // the feed's own freshness stamp
+        uint64 atlasRefBlock; // mainnet block the price was read at (referenced mode); 0 if verified
+        address recorder;
+        bool atlasVerified; // true: read from the feed in this transaction
+        bool resolved;
+        bool hit;
+    }
+
+    IMultiFeed public immutable atlasFeed;
+    bytes4 public immutable atlasFeedId;
+    uint8 public immutable atlasDecimals;
+    /// @notice false on a testnet deployment, where the price is referenced from mainnet instead.
+    bool public immutable readsFeed;
+
+    Call[] private _calls;
+
+    event CallRecorded(
+        uint256 indexed id,
+        bytes32 indexed kolId,
+        bytes32 postHash,
+        bytes4 asset,
+        int8 direction,
+        uint64 deadline,
+        uint16 cournotBps,
+        uint128 cmcPrice,
+        uint128 atlasPrice,
+        uint48 atlasOnchainTs,
+        bool atlasVerified
+    );
+    event CallResolved(uint256 indexed id, bool hit, uint128 cmcPriceAtResolution);
+
+    error FeedNeverUpdated();
+    error StaleAtlasPrice(uint256 onchainTs);
+    error FeedNotOpenRead();
+    error FeedNotConfigured();
+    error FeedAlreadyConfigured();
+    error NotYetDue(uint64 deadline);
+    error AlreadyResolved();
+    error UnknownCall(uint256 id);
+
+    /// @param multiFeed the Atlas MultiFeed proxy on THIS chain; pass address(0) for referenced mode
+    /// @param feedId the 4-byte on-chain feed identifier — NOT the catalogue number shown in the UI
+    constructor(address multiFeed, bytes4 feedId) {
+        readsFeed = multiFeed != address(0);
+        if (readsFeed) {
+            if (!IMultiFeed(multiFeed).isOpenRead()) revert FeedNotOpenRead();
+            atlasFeed = IMultiFeed(multiFeed);
+            atlasFeedId = feedId;
+            atlasDecimals = IMultiFeed(multiFeed).decimals();
+        } else {
+            // Referenced mode: prices arrive pre-scaled from the writer; decimals live in the backend.
+            atlasFeedId = bytes4(0);
+            atlasDecimals = 0;
+        }
+    }
+
+    function _push(
+        bytes32 postHash,
+        bytes32 kolId,
+        bytes4 asset,
+        int8 direction,
+        uint128 target,
+        uint64 deadline,
+        uint16 cournotBps,
+        uint128 cmcPrice,
+        uint128 atlasPrice,
+        uint48 atlasOnchainTs,
+        uint64 atlasRefBlock,
+        bool verified
+    ) private returns (uint256 id) {
+        _calls.push(
+            Call({
+                postHash: postHash,
+                kolId: kolId,
+                asset: asset,
+                direction: direction,
+                cournotBps: cournotBps,
+                deadline: deadline,
+                target: target,
+                cmcPrice: cmcPrice,
+                atlasPrice: atlasPrice,
+                atlasOnchainTs: atlasOnchainTs,
+                atlasRefBlock: atlasRefBlock,
+                recorder: msg.sender,
+                atlasVerified: verified,
+                resolved: false,
+                hit: false
+            })
+        );
+        id = _calls.length - 1;
+        emit CallRecorded(
+            id, kolId, postHash, asset, direction, deadline, cournotBps, cmcPrice, atlasPrice, atlasOnchainTs, verified
+        );
+    }
+
+    /// @notice VERIFIED mode (Plan B): the contract reads the Atlas feed itself in this transaction.
+    /// @param maxAtlasAge maximum acceptable age of the Atlas price, in seconds.
+    function recordCall(
+        bytes32 postHash,
+        bytes32 kolId,
+        bytes4 asset,
+        int8 direction,
+        uint128 target,
+        uint64 deadline,
+        uint16 cournotBps,
+        uint128 cmcPrice,
+        uint256 maxAtlasAge
+    ) external returns (uint256 id) {
+        if (!readsFeed) revert FeedNotConfigured();
+        IMultiFeed.PriceSnapshot memory snap = atlasFeed.fetch(atlasFeedId);
+        if (snap.onchainTs == 0 || snap.price == 0) revert FeedNeverUpdated();
+        if (block.timestamp - snap.onchainTs > maxAtlasAge) revert StaleAtlasPrice(snap.onchainTs);
+        return _push(
+            postHash,
+            kolId,
+            asset,
+            direction,
+            target,
+            deadline,
+            cournotBps,
+            cmcPrice,
+            uint128(snap.price),
+            snap.onchainTs,
+            0,
+            true
+        );
+    }
+
+    /// @notice REFERENCED mode (Plan A, default): the backend read the price from Atlas on mainnet over
+    ///         a keyless public RPC, and records the value with the block it read at so it is checkable.
+    /// @dev The price is NOT verified by this contract. Read `atlasVerified` before trusting it.
+    function recordCallReferenced(
+        bytes32 postHash,
+        bytes32 kolId,
+        bytes4 asset,
+        int8 direction,
+        uint128 target,
+        uint64 deadline,
+        uint16 cournotBps,
+        uint128 cmcPrice,
+        uint128 atlasPrice,
+        uint48 atlasOnchainTs,
+        uint64 atlasRefBlock
+    ) external returns (uint256 id) {
+        if (readsFeed) revert FeedAlreadyConfigured();
+        if (atlasPrice == 0 || atlasOnchainTs == 0) revert FeedNeverUpdated();
+        return _push(
+            postHash,
+            kolId,
+            asset,
+            direction,
+            target,
+            deadline,
+            cournotBps,
+            cmcPrice,
+            atlasPrice,
+            atlasOnchainTs,
+            atlasRefBlock,
+            false
+        );
+    }
+
+    /// @notice Anyone may resolve, but only once the deadline has passed — nobody can settle early.
+    function resolveCall(uint256 id, bool hit, uint128 cmcPriceAtResolution) external {
+        if (id >= _calls.length) revert UnknownCall(id);
+        Call storage c = _calls[id];
+        if (c.resolved) revert AlreadyResolved();
+        if (block.timestamp < c.deadline) revert NotYetDue(c.deadline);
+        c.resolved = true;
+        c.hit = hit;
+        emit CallResolved(id, hit, cmcPriceAtResolution);
+    }
+
+    /// @notice One call a judge can make to see the wiring works: is the feed readable, and is it live?
+    function preflight() external view returns (bool openRead, uint80 price, uint48 onchainTs) {
+        if (!readsFeed) revert FeedNotConfigured();
+        IMultiFeed.PriceSnapshot memory s = atlasFeed.fetch(atlasFeedId);
+        return (atlasFeed.isOpenRead(), s.price, s.onchainTs);
+    }
+
+    function callCount() external view returns (uint256) {
+        return _calls.length;
+    }
+
+    function getCall(uint256 id) external view returns (Call memory) {
+        if (id >= _calls.length) revert UnknownCall(id);
+        return _calls[id];
+    }
+}
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+2026-11-26T11:57:31.015059Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://mcp.notion.com/.well-known/oauth-protected-resource/mcp\", scope=\"default\"" })
+2026-11-26T11:57:31.345739Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://mcp.vercel.com/.well-known/oauth-protected-resource\"" })
+2026-11-26T11:57:31.396210Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://cmem.ai/.well-known/oauth-protected-resource/api/mcp\", scope=\"read:memory write:memory\"" })
+2026-11-26T11:57:31.499271Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=failed to refresh OAuth tokens for server supabase
+2026-11-26T11:57:32.941262Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:8080/mcp)")))
+2026-11-26T11:57:33.268083Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://localhost:8000/mcp)")))
+2026-11-26T11:57:35.249497Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:8080/mcp)")))
+hook: PreToolUse
+hook: PreToolUse
+2026-11-26T11:57:35.890975Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://localhost:8000/mcp)")))
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'docs/one-pager.md'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 777ms:
+# One-page write-up (required by the CoinMarketCap × Atlas challenge)
+
+**Problem and audience.** Crypto influencers move prices but nobody keeps score. Wrong calls get deleted,
+wins get reposted, and paid promotions are indistinguishable from conviction. CMC already shows whether a
+KOL is bullish or bearish; it does not show whether they were right, or whether being right was worth
+anything. Proof of Alpha is a credit record for KOLs, for the retail traders who decide whom to follow,
+the honest KOLs who want a verifiable track record, and the exchanges, launchpads and data platforms that
+pay creators and need to vet them.
+
+**How it works.** A post from CMC Community is turned into a structured claim (asset, direction, target,
+deadline) by an agent. The claim is priced against the market's own expectation with the Cournot
+Intelligence Oracle, snapshotted against both a CMC price and an Atlas on-chain price, and written to BNB
+Chain before the outcome is known. At its deadline, and at 1/7/30-day checkpoints, the call is resolved
+from the same two sources and scored. The headline number is **Edge** = outcome − Cournot probability at
+posting: a consensus hit earns little, a contrarian hit earns a lot, a confident miss costs a lot. History
+is stored per KOL in a Living Brain memory so the agent can answer "is this person's new call worth
+following?".
+
+**Endpoints and feeds used, and why.**
+
+| Source | Used for | Why this one |
+|---|---|---|
+| CMC `GET /v1/content/posts/latest` (`id`/`slug`/`symbol`, paged with `last_score`) | the calls themselves | 0 credits, 5-minute cache; it is the only public feed of CMC Community posts |
+| CMC quotes + historical + DEX endpoints | the posting snapshot, resolution, proxy-Edge for the backtest, wallet/swap checks | one vendor for post, price and on-chain activity, on BNB Chain |
+| Atlas Oracle push feed — `fetch(bytes4 feedId)` on the MultiFeed, read over a keyless public RPC | the on-chain price in the receipt | Atlas is first-party CMC data, same venue universe; a CMC/Atlas disagreement beyond tolerance flags a low-confidence snapshot |
+| Cournot Intelligence Oracle | probability of the claim at posting | it prices what the market already expected, which is the only way to separate skill from beta |
+| BNB Chain `CallRegistry` | the tamper-proof receipt | the call, its probability and both prices are committed before the outcome is known |
+| Living Brain | per-KOL memory and the coordinated-posting graph | answers about a KOL come from their own accumulated record |
+
+**BNB Chain contract addresses and/or data used.** `CallRegistry` is deployed on BSC — see
+`docs/addresses.md` for the live addresses. We read Atlas **directly from the chain with no key or
+account**: a free public RPC call to the Atlas MultiFeed on BNB Smart Chain, `fetch(bytes4 feedId)`
+returning the price with its own `aggregatedTs`/`onchainTs`. Plan A (default) records that price, the CMC
+price, the claim and the Cournot probability into a **testnet** receipt, storing the mainnet block the
+Atlas price was read at so anyone can re-check it against Atlas's mainnet history — the call is flagged
+`atlasVerified = false`, because the testnet contract cannot read mainnet and we will not present a
+referenced price as a verified one. Plan B (bonus) deploys the registry on **mainnet**, where
+`recordCall()` reads the feed in the same transaction and the stored price is verified on-chain
+(`atlasVerified = true`). Either way the Atlas price freshness bound (`maxAtlasAge`) is enforced, and
+resolution is blocked until the call's deadline passes, so no one can settle a call early. Data used: CMC
+Community posts, CMC quotes (spot + historical), CMC DEX holders/swaps, Atlas free push feeds on BNB Chain.
+
+**Safety.** API keys exist only in the backend environment and never reach the front end or the repo. The
+backend holds no user funds. Every score links to the calls and receipts behind it. Flags state facts
+("wallet sold 41% within 26 minutes of the post"), never accusations, and a KOL needs a minimum number of
+resolved calls before they are ranked.
+
+**What we would build next.** Wallet verification so a KOL links a wallet to their profile; more call
+sources (Telegram public channels, Binance Square when an API exists); a B2B API so launchpads can score a
+promoter list before paying for it; and a copy-follow vault restricted to KOLs above an Edge threshold.
+Revenue: a verified-KOL badge, a trader subscription, and B2B vetting — the record stays free to read.
+
+
+hook: PostToolUse
+hook: PostToolUse
+2026-11-26T11:57:38.311815Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:8080/mcp)")))
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+2026-11-26T11:57:39.246698Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://localhost:8000/mcp)")))
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'docs/submission-checklist.md'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 744ms:
+# Submission checklist — BNB Bangkok
+
+Deadline: **Fri 27 Nov, 09:00 (UTC+7)** on HackQuest. Demo Night: Fri 27 Nov, 15:00–18:00.
+Re-read each brief and tick its requirement list; the most common loss is an unmet track requirement,
+not bad code. Verify the submission confirmation appears.
+
+## Now (do not start coding before these)
+- [ ] HackQuest project exists, all four tracks selected, teammates attached
+- [ ] CMC free API key — **confirm it returns `/v1/content/posts/latest`**. Run `node scripts/smoke.mjs`
+- [ ] Atlas: `feedId`s for the assets we track (BNB, CAKE, …) — **only Atlas can supply these**; the
+      contract has no enumeration function and `fetch()` reverts on an unknown id. MultiFeed address on
+      BSC mainnet is `0xeace519ebb14fb8404fa6ddd23c3b34abade44aa`
+- [ ] Cournot: the client works (`node skills/cournot/scripts/cournot-client.mjs resolve|balance|prepare`),
+      but **the 3 free calls are per IP and were already exhausted from this machine — no probability
+      obtained**. Before the demo you need one of: `topup` (Starter **$5 = 600 calls**, needs an x402/b402
+      wallet), $0.01 per query, `import` a prepaid key, or **ask the Cournot team at the venue for hackathon
+      credits**. `resolve` and `balance` stay free — rehearse against those
+- [ ] Living Brain key + subject id issued
+- [ ] Testnet tBNB in the deployer wallet; a little mainnet BNB for the Plan B deploy (a few cents)
+- [ ] Plan A (testnet registry + keyless mainnet Atlas read by the backend) is the default.
+      Plan B (registry on mainnet, contract reads the feed itself) only if the core is done by 03:00
+
+## Repo
+- [ ] Public GitHub repo, open-source licence, README with setup steps
+- [ ] `.env.example` present, `.env` gitignored, **no key anywhere in the repo or front end**
+      (`git grep -iE 'api_?key|secret' -- . ':!*.example'` comes back empty)
+- [ ] `docs/addresses.md` filled with the live contract addresses
+- [ ] `evidence/evidence.json` committed: request ids, HTTP statuses, tx hashes
+
+## Cournot (gate — all three or the project is not scored)
+- [ ] ≥1 successful live call, request id or sanitised log kept
+- [ ] The returned probability visibly **drives** Edge and the agent's answer (not decorative)
+- [ ] Claim + evidence shown **verbatim**, our commentary labelled `Our note`
+- [ ] README has a section titled exactly **"Cournot Integration"**: where we call it, how the probability
+      is used, where users see claim + evidence, proof of a successful call
+- [ ] Demo plus backup recording
+
+## CoinMarketCap × Atlas
+- [ ] ≥1 live Pro API call in a core feature (the content endpoint is the call source)
+- [ ] Atlas on-chain feed read, with the contract address recorded
+- [ ] Deployed on BNB Chain — testnet qualifies, **mainnet is a bonus** → deploy mainnet
+- [ ] `docs/one-pager.md`: problem & audience, endpoints/feeds and why, contract addresses, what's next
+- [ ] Demo or video ≤ 3 minutes
+
+## Developer Track
+- [ ] Demo video ≤ 3 minutes (`docs/demo-script.md`)
+- [ ] Roadmap and business model ready for the pitch
+- [ ] Demo Night presentation slot confirmed
+
+## ChatAndBuild
+- [ ] Living Brain in the loop on the memory layer (API / SDK / MCP / CLI)
+- [ ] **3–5 minute** video showing remember → retrieve → connect
+- [ ] Brains **pre-warmed**: every open profile has compiled pages, no demo-time spinner
+- [ ] Short description: problem, solution, uniqueness
+
+## Submission
+- [ ] Team names and contact details on every form
+- [ ] Submitted before **09:00**, confirmation screenshot saved
+- [ ] Every selected brief re-read and its requirement list ticked line by line
+
+## Not entering
+- Flap, Four.meme/OpenFour — different product surface.
+- AWS credits — needs AWS Activate eligibility and a **valid business registration**.
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'docs/demo-script.md'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 759ms:
+# Demo script — 3 minutes on stage (Developer Track + CMC × Atlas)
+
+Rehearse to 2:45 so you have slack. Everything below must already be loaded, warm and logged in before
+you walk up. Have the **backup recording open in a second tab**.
+
+## 1. Hook — 20s
+> "Every one of us has followed a KOL who deleted the call afterwards. CoinMarketCap tells you whether a
+> KOL is bullish. Nobody tells you whether they were *right* — or whether being right was worth anything.
+> We built Proof of Alpha."
+
+## 2. Leaderboard — 40s
+Show the backtested leaderboard built from CMC Community posts.
+- Point at a KOL with a **high hit rate and low Edge**: "right, but only about what everyone already knew."
+- Point at a **contrarian hit** with a high Edge: "this is the one worth following."
+- Point at a **sell-while-shilling flag**: "wallet sold 41% within 26 minutes of their bullish post."
+- Name the sample size. A judge's first question is "how many calls?"
+
+## 3. Live verify — 60s  ← the money shot
+Paste a fresh post into **Verify a call** and walk the four steps out loud:
+1. "Here's the claim we extracted: asset, direction, target, deadline."
+2. "Here's **Cournot** — the probability the market already assigned, with the exact claim it evaluated and
+   its evidence, shown verbatim. Ours is labelled *Our note*."
+3. "Here's the **CMC** price and the **Atlas** on-chain price at this moment."
+4. "Record on-chain" → open the transaction on the explorer. **Read the contract address out loud.**
+
+## 4. Memory — 30s
+Open the KOL profile. Ask the agent: *"Is their new BNB call worth following?"* Show the answer drawing on
+past calls from **Living Brain**, and the coordinated-posting link ("these two KOLs posted the same four
+tokens within ten minutes, three times").
+
+## 5. Close — 30s
+> "The record is free to read. KOLs pay for a verified badge, traders pay for alerts, and launchpads pay to
+> vette a promoter list before they spend. Proof of Alpha: a record nobody can delete."
+
+## Failure drills — decide these now, not on stage
+| If | Then |
+|---|---|
+| Cournot quota fails | Play the backup recording, and keep talking over it |
+| Network down | Backup recording of step 3, then continue live from step 4 (memory is local-cached) |
+| CMC content endpoint 403s | Switch to **Verify by pasted post** — that path needs no key |
+| A capture has not compiled in Living Brain | Never open an empty profile. Pre-warm the brains and demo a KOL whose memories are compiled |
+| Judge asks "what's hardcoded?" | Answer straight: the sample KOL names on the leaderboard are fictional; every receipt, price and probability shown is live |
+
+## The 5 questions you will be asked
+1. **"How do you know the KOL's wallet?"** — Only for KOLs who verify. We show the flag only where we have a
+   linked wallet and say so on the flag itself.
+2. **"Isn't this defamation?"** — Every score links to evidence and the original post; flags state
+   observable facts with thresholds shown; KOLs can claim their profile and add context.
+3. **"Where's the backtest data?"** — CMC Community posts per symbol, paged back with `last_score`; the
+   window is as deep as the free plan allows and it is labelled on the leaderboard.
+4. **"Why not just CMC's Social Score?"** — That tells you who is loud. This tells you who was right when
+   the market disagreed, and who was selling into their own call.
+5. **"What stops a KOL gaming Edge?"** — They must post a claim with a target and deadline, scored on
+   everything they post, not a selection of it.
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'scripts/smoke.mjs'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 727ms:
+#!/usr/bin/env node
+// Integration smoke test. Run this BEFORE writing app code, and again before the demo.
+// Proves: CMC keyless price, CMC keyed content endpoint, Atlas MultiFeed read.
+// Writes evidence/evidence.json — the proof artifact judges and sponsors ask for.
+//
+//   node scripts/smoke.mjs            (reads .env if present, else the environment)
+//
+// Needs: CMC_API_KEY (content endpoint), ATLAS_FEED_ADDRESS + ATLAS_FEED_ID (4 bytes), BSC_RPC.
+
+import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
+
+if (existsSync(".env")) {
+  for (const line of readFileSync(".env", "utf8").split("\n")) {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/);
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
+  }
+}
+
+const results = [];
+const record = (name, ok, detail) => {
+  results.push({ name, ok, detail, at: new Date().toISOString() });
+  console.log(`${ok ? "PASS" : "FAIL"}  ${name.padEnd(30)} ${detail}`);
+};
+
+const get = async (url, headers = {}, tries = 5) => {
+  // Keyless calls share an IP rate pool: a 429 is normal, back off and retry.
+  for (let i = 0; i < tries; i++) {
+    const res = await fetch(url, { headers: { Accept: "application/json", ...headers } });
+    const text = await res.text();
+    if (res.status === 429 && i < tries - 1) {
+      await new Promise((r) => setTimeout(r, 1000 * 2 ** i));
+      continue;
+    }
+    let body;
+    try { body = JSON.parse(text); } catch { body = text.slice(0, 200); }
+    return {
+      status: res.status,
+      body,
+      requestId: res.headers.get("x-request-id") || res.headers.get("cf-ray") || null,
+    };
+  }
+};
+
+const ethCall = async (rpc, to, data) => {
+  const res = await fetch(rpc, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_call", params: [{ to, data }, "latest"] }),
+  });
+  return res.json();
+};
+
+// Selectors = keccak256(signature)[0:4]. Computed and verified against the live Atlas proxy.
+const SEL = {
+  isOpenRead: "0xba94e9ff",
+  decimals: "0x313ce567",
+  contractType: "0xcb2ef6f7",
+  fetch: "0x7ffc4b97", // fetch(bytes4)
+};
+const words = (hex) => hex.slice(2).match(/.{64}/g) ?? [];
+
+// 1. CMC keyless price. NOTE: in this envelope quotes is an ARRAY, not the classic quote.USD object.
+try {
+  const r = await get("https://pro-api.coinmarketcap.com/public-api/v2/simple/price?symbol=BNB,CAKE&convert=USD");
+  const price = r.body?.data?.[0]?.quotes?.[0]?.price;
+  record("cmc.keyless_price", r.status === 200 && price > 0, `HTTP ${r.status} BNB=$${price}`);
+} catch (e) {
+  record("cmc.keyless_price", false, String(e));
+}
+
+// 2. CMC content endpoint — needs a key, and EXACTLY ONE of id/slug/symbol. There is no `limit` param.
+if (!process.env.CMC_API_KEY) {
+  record("cmc.content_posts", false, "CMC_API_KEY unset — returns 403 error_code 1005 without a key");
+} else {
+  try {
+    const r = await get("https://pro-api.coinmarketcap.com/v1/content/posts/latest?symbol=BNB", {
+      "X-CMC_PRO_API_KEY": process.env.CMC_API_KEY,
+    });
+    const n = Array.isArray(r.body?.data) ? r.body.data.length : 0;
+    record("cmc.content_posts", r.status === 200, `HTTP ${r.status} posts=${n} requestId=${r.requestId ?? "-"}`);
+    if (r.status === 403) {
+      console.log("      -> this key lacks Content access: ask the CMC team at the venue (0-credit endpoint).");
+    }
+  } catch (e) {
+    record("cmc.content_posts", false, String(e));
+  }
+}
+
+// 3. Atlas MultiFeed. Address and 4-byte feedId both come from Atlas — the catalogue number (#1164)
+//    is NOT the on-chain feedId, and fetch() reverts if you pass it.
+const rpc = process.env.BSC_RPC || "https://bsc-dataseed.binance.org";
+const feed = process.env.ATLAS_FEED_ADDRESS;
+if (!feed || !process.env.ATLAS_FEED_ID) {
+  record("atlas.multiFeed", false, "ATLAS_FEED_ADDRESS and ATLAS_FEED_ID (4 bytes) are both required");
+} else {
+  try {
+    const openRead = await ethCall(rpc, feed, SEL.isOpenRead);
+    const typeId = await ethCall(rpc, feed, SEL.contractType);
+    const dec = await ethCall(rpc, feed, SEL.decimals);
+    const fid = process.env.ATLAS_FEED_ID.replace(/^0x/, "").padStart(8, "0");
+    const snap = await ethCall(rpc, feed, SEL.fetch + fid);
+    if (!snap.result || snap.result === "0x") {
+      record("atlas.multiFeed", false, "fetch() reverted — wrong bytes4 feedId (the catalogue number is not it)");
+    } else {
+      const w = words(snap.result).map((x) => BigInt("0x" + x));
+      const decimals = Number(BigInt(dec.result));
+      const isOpen = BigInt(openRead.result) === 1n;
+      const isMulti = BigInt(typeId.result) === 2n;
+      const age = Math.round(Date.now() / 1000 - Number(w[2]));
+      record(
+        "atlas.multiFeed",
+        isOpen && isMulti && w[0] > 0n,
+        `openRead=${isOpen} ${isMulti ? "MultiFeed" : "type=" + typeId.result} price=${w[0]} @${decimals}dp age=${age}s`
+      );
+      if (age > 3600) console.log("      -> price older than an hour: check the feed heartbeat, or pick another feed.");
+    }
+  } catch (e) {
+    record("atlas.multiFeed", false, String(e));
+  }
+}
+
+// 4. Cournot and Living Brain are skill/SDK calls, not raw HTTP with a pinnable path.
+//    Cournot: clone the skill and drive its bundled client — resolve/balance are FREE, prepare is charged.
+//      git clone --depth 1 https://github.com/Cournot-AI/cournot-skills
+//      node <skill-root>/scripts/cournot-client.mjs balance
+//      node <skill-root>/scripts/cournot-client.mjs resolve --request-base64 <b64 of {"message":"…","limit":5}>
+//      node <skill-root>/scripts/cournot-client.mjs prepare --request-base64 <b64 of {"message":"…","market_ids":["<id>"]}>
+//    Billing: THREE free calls per IP (not per account), shared with divergence, no reset. From this machine
+//    the free allowance was already exhausted by another user of the egress IP -> payment_choice_required.
+//    Assume zero free calls and budget a Starter pack ($5 / 600 calls) or ask Cournot at the venue.
+//    Living Brain: npm install @living-brain/sdk → captures.capture() with x-api-key + x-subject-id
+record("cournot.live_call", false, "TODO: obtain a probability (needs a pack, $0.01/query, or venue credits); paste the id here");
+record("livingbrain.capture", false, "TODO: capture one resolved call; paste the returned source status here");
+
+mkdirSync("evidence", { recursive: true });
+writeFileSync("evidence/evidence.json", JSON.stringify({ at: new Date().toISOString(), results }, null, 2));
+
+const failed = results.filter((r) => !r.ok).length;
+console.log(`\n${results.length - failed}/${results.length} checks pass. Evidence -> evidence/evidence.json`);
+process.exit(failed ? 1 : 0);
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+codex
+The evidence fixes the critical design choices: testnet referenced Atlas is the default, Cournot must be fixture/live behind one boundary, and CMC ingest cannot gate the paste-to-verify demo. I’m checking the current tree and package state now so proposed paths and proof commands don’t assume infrastructure that exists.
+hook: PreToolUse
+hook: PreToolUse
+2026-11-26T11:58:00.208652Z ERROR codex_core::tools::router: error=exec_command failed: CreateProcess { message: "Rejected(\"Failed to create unified exec process: CryptUnprotectData failed: 2148073483\")" }
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command 'rg --files' in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 1185ms:
+scripts\smoke.mjs
+README.md
+evidence\evidence.json
+evidence\cournot\03-probability-113195.json
+evidence\cournot\02-resolve.json
+evidence\cournot\01-balance.json
+docs\submission-checklist.md
+docs\one-pager.md
+docs\integration-findings.md
+docs\demo-script.md
+docs\architecture\codex-round1.log
+docs\architecture\codex-round1-retry.log
+docs\architecture\00-brief.md
+docs\addresses.md
+contracts\test\CallRegistry.t.sol
+contracts\src\CallRegistry.sol
+contracts\script\Deploy.s.sol
+contracts\foundry.toml
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command 'git status --short' in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 778ms:
+?? docs/architecture/
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'contracts/script/Deploy.s.sol'; Get-Content -Raw 'contracts/foundry.toml'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'docs/addresses.md'; Get-Content -Raw 'evidence/evidence.json'; Get-Content -Raw 'evidence/cournot/03-probability-113195.json'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command "Get-Content -Raw 'contracts/test/CallRegistry.t.sol'" in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 1621ms:
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {Test} from "forge-std/Test.sol";
+import {CallRegistry, IMultiFeed} from "../src/CallRegistry.sol";
+
+contract MockMultiFeed is IMultiFeed {
+    uint80 public price = 552e8;
+    uint48 public onchainTs;
+    uint8 private _decimals = 18;
+    bool private _openRead = true;
+    bool private _neverUpdated;
+
+    constructor() {
+        onchainTs = uint48(block.timestamp);
+    }
+
+    function set(uint80 p, uint48 ts) external {
+        price = p;
+        onchainTs = ts;
+    }
+
+    function setOpenRead(bool v) external {
+        _openRead = v;
+    }
+
+    function setNeverUpdated() external {
+        _neverUpdated = true;
+    }
+
+    function fetch(bytes4) external view returns (PriceSnapshot memory) {
+        if (_neverUpdated) return PriceSnapshot(0, 0, 0);
+        return PriceSnapshot(price, onchainTs, onchainTs);
+    }
+
+    function decimals() external view returns (uint8) {
+        return _decimals;
+    }
+
+    function description() external pure returns (string memory) {
+        return "MockMultiFeed";
+    }
+
+    function contractType() external pure returns (uint256) {
+        return 2;
+    }
+
+    function isOpenRead() external view returns (bool) {
+        return _openRead;
+    }
+}
+
+contract CallRegistryTest is Test {
+    MockMultiFeed feed;
+    CallRegistry registry; // verified mode (mainnet)
+    CallRegistry refRegistry; // referenced mode (testnet)
+
+    bytes4 constant FEED_ID = 0x0000048c;
+    bytes32 constant KOL = keccak256("someone");
+
+    function setUp() public {
+        vm.warp(1_800_000_000);
+        feed = new MockMultiFeed();
+        registry = new CallRegistry(address(feed), FEED_ID);
+        refRegistry = new CallRegistry(address(0), bytes4(0));
+    }
+
+    function _record(CallRegistry r, uint64 deadline) internal returns (uint256) {
+        return r.recordCall(keccak256("post"), KOL, "BNB", 1, 600e18, deadline, 2000, 552e18, 1 hours);
+    }
+
+    function _referenced(CallRegistry r, uint64 deadline) internal returns (uint256) {
+        return r.recordCallReferenced(keccak256("post"), KOL, "BNB", 1, 600e18, deadline, 2000, 552e18, 552e8, uint48(block.timestamp), 64_000_000);
+    }
+
+    function test_ReadsDecimalsFromFeed() public view {
+        assertEq(registry.atlasDecimals(), 18);
+        assertTrue(registry.readsFeed());
+    }
+
+    function test_RevertsOnWhitelistOnlyFeed() public {
+        feed.setOpenRead(false);
+        vm.expectRevert(CallRegistry.FeedNotOpenRead.selector);
+        new CallRegistry(address(feed), FEED_ID);
+    }
+
+    function test_RecordsAtlasPriceFromFeedNotCaller() public {
+        uint256 id = _record(registry, uint64(block.timestamp + 7 days));
+        CallRegistry.Call memory c = registry.getCall(id);
+        assertEq(c.atlasPrice, 552e8, "atlas price must come from the feed");
+        assertEq(c.cmcPrice, 552e18, "cmc price is caller-supplied");
+        assertEq(c.cournotBps, 2000);
+        assertTrue(c.atlasVerified, "a feed read is verified");
+        assertFalse(c.resolved);
+    }
+
+    function test_RevertsOnStaleAtlasPrice() public {
+        feed.set(552e8, uint48(block.timestamp - 2 hours));
+        vm.expectRevert(abi.encodeWithSelector(CallRegistry.StaleAtlasPrice.selector, block.timestamp - 2 hours));
+        _record(registry, uint64(block.timestamp + 7 days));
+    }
+
+    function test_RevertsOnNeverUpdatedFeed() public {
+        feed.setNeverUpdated();
+        vm.expectRevert(CallRegistry.FeedNeverUpdated.selector);
+        _record(registry, uint64(block.timestamp + 7 days));
+    }
+
+    function test_ReferencedModeRecordsSuppliedPriceAndBlock() public {
+        uint256 id = _referenced(refRegistry, uint64(block.timestamp + 7 days));
+        CallRegistry.Call memory c = refRegistry.getCall(id);
+        assertEq(c.atlasPrice, 552e8);
+        assertEq(c.atlasRefBlock, 64_000_000, "the mainnet block must be stored so the price is checkable");
+        assertFalse(c.atlasVerified, "a referenced price is never presented as verified");
+        assertEq(refRegistry.atlasDecimals(), 0);
+    }
+
+    function test_ModesRefuseEachOthersCall() public {
+        uint64 deadline = uint64(block.timestamp + 7 days);
+        vm.expectRevert(CallRegistry.FeedNotConfigured.selector);
+        _record(refRegistry, deadline);
+        vm.expectRevert(CallRegistry.FeedAlreadyConfigured.selector);
+        _referenced(registry, deadline);
+    }
+
+    function test_CannotResolveBeforeDeadline() public {
+        uint64 deadline = uint64(block.timestamp + 7 days);
+        uint256 id = _record(registry, deadline);
+        vm.expectRevert(abi.encodeWithSelector(CallRegistry.NotYetDue.selector, deadline));
+        registry.resolveCall(id, true, 600e18);
+    }
+
+    function test_ResolvesAfterDeadlineAndCannotResolveTwice() public {
+        uint64 deadline = uint64(block.timestamp + 7 days);
+        uint256 id = _record(registry, deadline);
+        vm.warp(deadline + 1);
+        registry.resolveCall(id, true, 600e18);
+        assertTrue(registry.getCall(id).hit);
+        vm.expectRevert(CallRegistry.AlreadyResolved.selector);
+        registry.resolveCall(id, false, 600e18);
+    }
+
+    function test_PreflightExposesFeedState() public view {
+        (bool openRead, uint80 price, uint48 ts) = registry.preflight();
+        assertTrue(openRead);
+        assertEq(price, 552e8);
+        assertEq(ts, uint48(block.timestamp));
+    }
+}
+
+
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 1783ms:
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {Script, console} from "forge-std/Script.sol";
+import {CallRegistry} from "../src/CallRegistry.sol";
+
+/// @notice Deploy the registry on the SAME chain as the Atlas feed you read.
+///   mainnet : forge script script/Deploy.s.sol --rpc-url $BSC_MAINNET_RPC --broadcast
+///   testnet : ATLAS_FEED_ADDRESS=$TESTNET_FEED forge script script/Deploy.s.sol --rpc-url $BSC_TESTNET_RPC --broadcast
+contract Deploy is Script {
+    function run() external returns (CallRegistry registry) {
+        address feed = vm.envAddress("ATLAS_FEED_ADDRESS");
+        bytes4 feedId = bytes4(vm.envBytes32("ATLAS_FEED_ID"));
+        vm.startBroadcast();
+        registry = new CallRegistry(feed, feedId);
+        vm.stopBroadcast();
+        console.log("CallRegistry", address(registry));
+        console.log("Atlas feed  ", feed);
+        console.log("decimals    ", registry.atlasDecimals());
+        (, uint80 price, uint48 ts) = registry.preflight();
+        console.log("feed price  ", price);
+        console.log("feed age (s)", block.timestamp - ts);
+    }
+}
+
+[profile.default]
+src = "src"
+test = "test"
+script = "script"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.24"
+optimizer = true
+optimizer_runs = 200
+
+[fmt]
+line_length = 120
+
+[rpc_endpoints]
+bsc = "https://bsc-dataseed.binance.org"
+bsc_testnet = "https://data-seed-prebsc-1-s1.bnbchain.org:8545"
+
+
+ succeeded in 1756ms:
+# Live addresses
+
+Fill this in as you deploy. This is the file judges open first.
+
+| Thing | Network | Address | Notes |
+|---|---|---|---|
+| Atlas MultiFeed | BSC mainnet (56) | `0xeace519ebb14fb8404fa6ddd23c3b34abade44aa` | Verified: `contractType()`=2, `decimals()`=18, `isOpenRead()`=true |
+| Atlas feedId — BNB | — | _TBD_ | **Only Atlas can supply this.** 4 bytes, not the catalogue number |
+| Atlas feedId — CAKE | — | _TBD_ | as above |
+| Atlas feedId — … | — | _TBD_ | one per asset on the same MultiFeed |
+| `CallRegistry` (Plan A, referenced) | BSC testnet (97) | _TBD_ | backend read Atlas on mainnet; receipt stores the price + mainnet block |
+| `CallRegistry` (Plan B, verified) | BSC mainnet (56) | _TBD_ | contract reads the feed itself; only if time allows |
+| CMC symbol watchlist | — | _TBD_ | e.g. BNB, CAKE, … — the content endpoint takes one symbol per call |
+
+## Atlas-probe commands anyone can re-run (no key needed)
+```bash
+FEED=0xeace519ebb14fb8404fa6ddd23c3b34abade44aa
+RPC=https://bsc-dataseed.binance.org
+# isOpenRead() 0xba94e9ff · decimals() 0x313ce567 · contractType() 0xcb2ef6f7
+# fetch(bytes4) 0x7ffc4b97 + the 8-hex feedId (reverts on an unknown id)
+curl -s -X POST $RPC -H 'content-type: application/json' \
+  -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_call\",\"params\":[{\"to\":\"$FEED\",\"data\":\"0x7ffc4b97<feedId>\"},\"latest\"]}"
+```
+
+## On-chain proof to cite in the submission
+- `recordCall` / `recordCallReferenced` tx: _TBD_
+- The `CallRecorded` event it emitted: _TBD_ (`atlasVerified` is in the event — cite it either way)
+- The mainnet block the Atlas price was read at (Plan A) / the feed read inside the tx (Plan B): _TBD_
+- Cournot request id: _TBD_
+- Living Brain capture id: _TBD_
+
+{
+  "at": "2026-11-26T09:35:45.297Z",
+  "results": [
+    {
+      "name": "cmc.keyless_price",
+      "ok": false,
+      "detail": "HTTP 429 BNB=$undefined",
+      "at": "2026-11-26T09:35:45.294Z"
+    },
+    {
+      "name": "cmc.content_posts",
+      "ok": false,
+      "detail": "CMC_API_KEY unset — returns 403 error_code 1005 without a key",
+      "at": "2026-11-26T09:35:45.296Z"
+    },
+    {
+      "name": "atlas.multiFeed",
+      "ok": false,
+      "detail": "ATLAS_FEED_ADDRESS and ATLAS_FEED_ID (4 bytes) are both required",
+      "at": "2026-11-26T09:35:45.296Z"
+    },
+    {
+      "name": "cournot.live_call",
+      "ok": false,
+      "detail": "TODO: run the skill; paste the request id + returned probability here",
+      "at": "2026-11-26T09:35:45.297Z"
+    },
+    {
+      "name": "livingbrain.capture",
+      "ok": false,
+      "detail": "TODO: capture one resolved call; paste the returned source status here",
+      "at": "2026-11-26T09:35:45.297Z"
+    }
+  ]
+}
+{"state":"payment_choice_required","choices":["topup","import","per_call"]}
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+2026-11-26T11:58:27.862614Z ERROR codex_core::tools::router: error=exec_command failed: CreateProcess { message: "Rejected(\"Failed to create unified exec process: CryptUnprotectData failed: 2148073483\")" }
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+exec
+"C:\\Users\\shell\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe" -Command 'git remote -v' in C:\Users\shell\Desktop\BNB\proof-of-alpha
+ succeeded in 877ms:
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Failed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+2026-11-26T11:58:36.178232Z ERROR codex_core::tools::router: error=exec_command failed: CreateProcess { message: "Rejected(\"Failed to create unified exec process: CryptUnprotectData failed: 2148073483\")" }
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+codex
+Scope is now fixed to one new document. The proposal will reuse the existing contract and smoke script, keep the backend inside Next’s Node route handlers to avoid a second runtime, and give Builder B a seeded `VerificationRecord[]` so their slice runs independently.
+hook: PreToolUse
+hook: PreToolUse Completed
+apply patch
+2026-11-26T12:02:02.994939Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 5.1 seconds
+Output:
+Failed to write file C:\Users\shell\Desktop\BNB\proof-of-alpha\docs\architecture\PROPOSAL-codex.md
+
+patch: failed
+C:\Users\shell\Desktop\BNB\proof-of-alpha\docs\architecture\PROPOSAL-codex.md
+codex
+The first write did not land—the patch operation could not create the file, while leaving the repository unchanged. I’m checking the target directory itself, then I’ll retry the same single-file change in smaller patches.
+hook: PreToolUse
+hook: PreToolUse
+2026-11-26T12:02:07.256321Z ERROR codex_core::tools::router: error=exec_command failed: CreateProcess { message: "Rejected(\"Failed to create unified exec process: CryptUnprotectData failed: 2148073483\")" }
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+2026-11-26T12:02:10.471596Z ERROR codex_core::tools::router: error=exec_command failed: CreateProcess { message: "Rejected(\"Failed to create unified exec process: CryptUnprotectData failed: 2148073483\")" }
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+hook: PreToolUse
+hook: PreToolUse Completed
+apply patch
+2026-11-26T12:02:13.361991Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.2 seconds
+Output:
+Failed to write file C:\Users\shell\Desktop\BNB\proof-of-alpha\docs\architecture\PROPOSAL-codex.md
+
+patch: failed
+C:\Users\shell\Desktop\BNB\proof-of-alpha\docs\architecture\PROPOSAL-codex.md
+hook: PreToolUse
+hook: PreToolUse
+2026-11-26T12:02:16.716817Z ERROR codex_core::tools::router: error=exec_command failed: CreateProcess { message: "Rejected(\"Failed to create unified exec process: CryptUnprotectData failed: 2148073483\")" }
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+hook: PreToolUse
+hook: PreToolUse Completed
+apply patch
+2026-11-26T12:02:22.504450Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.2 seconds
+Output:
+Failed to write file C:\Users\shell\Desktop\BNB\proof-of-alpha\PROPOSAL-codex.md
+
+patch: failed
+C:\Users\shell\Desktop\BNB\proof-of-alpha\PROPOSAL-codex.md
+hook: PreToolUse
+hook: PreToolUse
+2026-11-26T12:02:26.561973Z ERROR codex_core::tools::router: error=exec_command failed: CreateProcess { message: "Rejected(\"Failed to create unified exec process: CryptUnprotectData failed: 2148073483\")" }
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+2026-11-26T12:02:41.968354Z ERROR codex_core::tools::router: error=exec_command failed: CreateProcess { message: "Rejected(\"Failed to create unified exec process: CryptUnprotectData failed: 2148073483\")" }
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+2026-11-26T12:03:27.566146Z ERROR codex_core::tools::router: error=exec_command failed: CreateProcess { message: "Rejected(\"Failed to create unified exec process: CryptUnprotectData failed: 2148073483\")" }
+hook: PreToolUse Failed
+hook: PreToolUse Completed
+codex
+The workspace’s normal patch and shell runners are consistently failing at process startup with a Windows credential-state error, not a repository error. I’m using the computer-use fallback solely to place the already-scoped document in the requested path; I will not touch other files.
+mcp: cua_repl/js started
+mcp: cua_repl/js (failed)
+mcp: cua_repl/js started
+mcp: cua_repl/js (failed)
+codex
+I couldn’t create [PROPOSAL-codex.md](C:\Users\shell\Desktop\BNB\proof-of-alpha\docs\architecture\PROPOSAL-codex.md): every filesystem runner failed with Windows error `CryptUnprotectData failed: 2148073483`, including the patch and UI fallbacks.
+
+No repository files were changed. Risk: the completed proposal remains unwritten until the workspace sandbox is restarted.
+hook: Stop
+hook: Stop
+hook: Stop Failed
+hook: Stop Failed
+tokens used
+83,413
+I couldn’t create [PROPOSAL-codex.md](C:\Users\shell\Desktop\BNB\proof-of-alpha\docs\architecture\PROPOSAL-codex.md): every filesystem runner failed with Windows error `CryptUnprotectData failed: 2148073483`, including the patch and UI fallbacks.
+
+No repository files were changed. Risk: the completed proposal remains unwritten until the workspace sandbox is restarted.

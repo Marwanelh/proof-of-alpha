@@ -1,0 +1,773 @@
+2026-11-26T12:08:08.746620Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://mcp.notion.com/.well-known/oauth-protected-resource/mcp\", scope=\"default\"" })
+OpenAI Codex v0.154.0
+--------
+workdir: C:\Users\shell\Desktop\BNB\proof-of-alpha
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: none
+session id: 01a217b7-2b2c-7b70-bc45-4cfed4d28b94
+--------
+user
+# Adversarial review of `PROPOSAL-codex.md` — round 1
+
+Reviewer: Hermes. Target: `docs/architecture/PROPOSAL-codex.md` (26.6 KB, 249 lines).
+Method: every claim checked against the repository's own files and against live probes already recorded in
+`docs/integration-findings.md`. Findings are ordered by damage, not by how easy they are to fix.
+
+## Verdict
+
+The structure is sound and it obeys the constraints: one package, Next route handlers as the Node backend
+(no second runtime — the right call under constraint 1), A/B split by vertical, JSON instead of a hosted
+database, and a disciplined cut list. I accept the skeleton and the module table almost entirely.
+
+**I do not accept Phase 2 as written.** One sequencing defect gates the entire critical path behind the
+single artifact that is externally unavailable. Plus five smaller defects.
+
+---
+
+## 1. BLOCKER — Phase 2 is gated on the one thing we cannot obtain
+
+Phase 2's entry criteria: *"successful Cournot response available for recorded mode"*. Phase 7 says to
+withdraw from Cournot if no success exists. So if the Cournot call never becomes available — as it is not
+today, `evidence/cournot/03-probability-113195.json` shows `payment_choice_required`, and the free allowance
+is per-IP and already spent — **Phase 2 never starts, and the money shot is never built.**
+
+That inverts the plan: the demo's core is built last-by-dependency on the least controllable input. The
+remaining 14 hours must not depend on a vendor gate.
+
+**Required change.** Phase 2's entry criterion becomes *"a committed `CournotResponse` fixture"*, not a real
+call. `shared/types.ts` already defines the shape; Phase 1 commits `evidence/cournot/fixture.json` behind
+that shape and marks it `FIXTURE`. `success.json` replaces it when a real call arrives — same interface,
+different provenance. Provenance becomes **three-state, not two**: `live` | `recorded live response` |
+`fixture`. The UI must render all three honestly, and `fixture` may never be presented on stage as evidence.
+
+## 2. Type contradiction — `VerificationRecord` cannot hold a backtested row
+
+`VerificationRecord` requires `cournot: CournotResponse` and `receipt: OnChainReceipt`, and `receipt.txHash`
+is a confirmed transaction. But `data/seed.json` is described as *"Committed `VerificationRecord[]`"* for the
+leaderboard, whose rows are historical/backtested calls that by definition have **no Cournot probability**
+(your own § C, Phase 6: *"never assign Edge without a Cournot probability"*) and **no receipt** (they were
+never recorded on chain by us).
+
+As written, Phase 3 cannot produce an honest seed file: every row either fabricates a probability and a
+tx hash, or the type fails to hold it. The type must model the reality:
+
+```ts
+type CallKind = "verified" | "backtested";
+// verified:   cournot + receipt present, edge computable
+// backtested: no cournot, no receipt, proxy probability labelled, edge marked "proxy"
+```
+
+Recommend a `kind` discriminator with `cournot?: CournotResponse` and `receipt?: OnChainReceipt`, so the
+type makes fabrication impossible rather than merely discouraged. Section B's own rule — *"never assign Edge
+where no Cournot probability exists"* — is currently enforced by convention while the type contradicts it.
+
+## 3. Fabricated receipts are a credibility hazard, and `seed.json` is where they enter
+
+Follows from #2. If seed rows carry `receipt.txHash`, the leaderboard will display plausible-looking
+transaction hashes that do not exist. A judge who clicks one and finds nothing loses trust in the *real*
+receipt alongside it. Either backtested rows carry no receipt at all (preferred, per #2), or every synthetic
+field is labelled `synthetic: true` **and rendered as such in the UI**, not only in the docs.
+
+## 4. Foundry installation is orphaned — it appears in Risks but in no phase
+
+Risk 3 says *"A owns Foundry setup as the first contract task"*, but no phase lists it as work: Phase 1 is
+root package/alias/app shell/shared types/seed/core test; Phase 2 assumes the deploy script can be run and
+modified. Phase 7's exit command runs `forge test --root contracts`, so the whole contract path silently
+assumes a tool that is **verified absent on this machine** (`forge: command not found`).
+
+**Required change.** Add Foundry install + `forge-std` + `forge test` green as the **first task of Phase 2**
+with its own exit command (`forge test --root contracts` → tests pass), or as its own 20-minute phase.
+`contracts/lib/forge-std/` as a submodule also needs the exact init command stated, since the teammate's
+first clone will otherwise fail the import.
+
+## 5. Builder B is idle for the first 90 minutes
+
+Phase 0 (45 min) and Phase 1 (45 min) are A-only, and Phase 3 does not start until Phase 1 lands. That is
+1.5 hours of a two-person team's remaining budget spent single-threaded, on the critical path of a deadline.
+
+**Required change.** Give B an explicit parallel track in that window, none of which depends on A's code:
+author `data/seed.json` (labelled, dated, with sample size — it is Phase 3's entry criterion anyway); obtain
+the Living Brain API key + subject id and create the brain (Phase 5's entry criterion); pick the one KOL and
+the exact pre-warmed retrieve/connect prompts; and walk the demo script against the current UI so the
+narration is rehearsed before the code exists. All four are currently serialised behind A.
+
+## 6. `smoke.mjs` is being overloaded
+
+Phases 2, 4, 5 and 7 all extend `node scripts/smoke.mjs` and expect it to print `PASS verify.recorded`,
+`PASS livingbrain.capture` and `5/5 checks pass`. But `evidence/evidence.json` written by that script is the
+**sponsor proof artifact** — the thing the CMC × Atlas brief asks for ("usage verifiable via logs tied to
+your key"). Mixing app end-to-end checks into it dilutes the artifact a judge reads and makes `5/5` depend on
+the demo app being up.
+
+**Required change.** Keep `smoke.mjs` as provider probes only (CMC keyed, CMC keyless, Atlas MultiFeed,
+Cournot, Living Brain), each writing a request id / tx hash into `evidence/evidence.json`. Put the verify
+end-to-end assertion in `tests/` and let Phase 2 cite a test, not a smoke line.
+
+## 7. The env-loading mechanism is undefined, and it is a real failure mode
+
+`.env.example` exists and the backend is inside Next, so Next auto-loads `.env.local` for route handlers —
+but `scripts/*.mjs` and `tests/*.ts` do **not** (the current `scripts/smoke.mjs` hand-rolls a parser).
+Under the single-package constraint this is where "works in the UI, fails in the smoke script" comes from.
+
+**Required change.** Name one mechanism and use it everywhere: Node 22's `--env-file=.env.local` in the
+`npm` script definitions, with `.env.local` gitignored and `.env.example` updated to say so. State it in
+section A/B so both builders load secrets the same way.
+
+## 8. Add the Next-specific secret leak to the risk register
+
+Rule 4 of Phase 4 (`git grep` for key material) is good but catches leaks after the fact. Inside a Next app,
+a provider key becomes a public bundle value the moment someone prefixes it `NEXT_PUBLIC_`. That is one
+keystroke from a disqualifying leak, and it is specific to the architecture you chose.
+
+**Required change.** Add to section D: *"Every provider credential is server-only; `NEXT_PUBLIC_` is
+forbidden for any value in `.env.example`. Enforced by the Phase 4 `git grep` and by reviewing
+`app/providers.tsx` at the Phase 1 freeze."*
+
+## 9. The backup video is recorded too late
+
+The only recording task is Phase 7 (A, 2 h) — after Phases 2, 3, 4 and 5, hours before a 09:00 deadline.
+`docs/demo-script.md` already depends on a backup recording existing; if Phase 4 or 5 overruns, there is no
+video and nothing to submit.
+
+**Required change.** Record a rough 60-second screen capture at the end of Phase 2 — the first runnable money
+shot — as insurance. It costs minutes and it is the difference between "submitted with a rough video" and
+"missed the deadline".
+
+## 10. Facts I resolved so Codex does not have to
+
+Three items were marked `UNVERIFIED`. All three are now verified, from this machine:
+
+| Item | Status |
+|---|---|
+| `git remote -v` / repo existence | **No remote; the repo does not exist yet.** Local `git init` only, one commit `c2dd00d`, 17 files. |
+| Foundry availability | **Confirmed absent** (`forge: command not found`). Node is `v22.23.1`. |
+| Public GitHub ownership | `gh` is authenticated as **`Marwanelh`** with `repo` + `workflow` scopes, so creation and push are possible without further credentials. |
+
+Also worth folding into the plan: the `[windows] sandbox = "elevated"` setting in Codex's own config makes
+its shell/patch runners fail under a service context (`CryptUnprotectData failed: 2148073483`), which is why
+this proposal arrived by stdout rather than as a written file. Any phase that expects Codex to write files
+directly will hit the same wall.
+
+---
+
+## What I need from you (Codex) — round 2
+
+Do **not** use any file-writing, patch, shell, exec or computer-use tool: those runners are broken on this
+host. Print your reply to stdout instead, between the lines `===BEGIN ROUND2===` and `===END ROUND2===`.
+
+Answer, in this order:
+
+1. **Finding 1** — accept the fixture decoupling and the three-state provenance, or rebut it with a concrete
+   path to a real Cournot call inside the remaining time that I have not considered. Name which.
+2. **Finding 2** — give me the corrected `VerificationRecord` (and any split types) as final TypeScript,
+   keeping it JSON-safe and under the single-package constraint.
+3. **Findings 3–9** — for each: `ACCEPT` with the exact revised text I should commit, or `REJECT` with the
+   reason. No partial accepts.
+4. **Revised phase table** — only the rows that change, plus B's new parallel track from finding 5, with the
+   same columns (entry, owner+work, time-box, exit command and proving output, requirement ticked).
+5. **One thing you still disagree with me about**, and what would change your mind.
+
+Keep it dense. If you accept everything, say so and give only the changed rows.
+
+2026-11-26T12:08:08.956099Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://mcp.notion.com/.well-known/oauth-protected-resource/mcp\", scope=\"default\"" })
+2026-11-26T12:08:09.159793Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=failed to refresh OAuth tokens for server supabase
+2026-11-26T12:08:09.176543Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://cmem.ai/.well-known/oauth-protected-resource/api/mcp\", scope=\"read:memory write:memory\"" })
+2026-11-26T12:08:09.265080Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://mcp.vercel.com/.well-known/oauth-protected-resource\"" })
+warning: clamping SessionEnd hook timeout to 3s in C:\Users\shell\.codex\plugins\cache\claude-plugins-official\vercel\0.56.0\hooks\hooks.json
+2026-11-26T12:08:10.680442Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:8080/mcp)")))
+2026-11-26T12:08:11.023652Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://localhost:8000/mcp)")))
+2026-11-26T12:08:12.992065Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:8080/mcp)")))
+2026-11-26T12:08:13.646394Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://localhost:8000/mcp)")))
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+2026-11-26T12:08:16.027706Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:8080/mcp)")))
+hook: SessionStart Failed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Failed
+hook: SessionStart Failed
+hook: SessionStart Failed
+hook: UserPromptSubmit
+hook: UserPromptSubmit
+hook: UserPromptSubmit
+2026-11-26T12:08:17.012017Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://localhost:8000/mcp)")))
+hook: UserPromptSubmit Failed
+hook: UserPromptSubmit Completed
+hook: UserPromptSubmit Completed
+codex
+===BEGIN ROUND2===
+
+## 1. Finding 1 — ACCEPT
+
+Accept fixture decoupling and three-state provenance.
+
+Use the machine values `"live" | "recorded-live" | "fixture"` and render them as:
+
+- `Live`
+- `Recorded live response`
+- `FIXTURE — not sponsor evidence`
+
+Phase 2 depends only on a schema-valid fixture. A real successful response replaces it through the same adapter when available. Fixture records must be excluded from `evidence/evidence.json`, final videos, submission claims, and sponsor-proof transaction lists.
+
+I disagree only with storing synthetic data under `evidence/`; see item 5.
+
+## 2. Finding 2 — corrected final TypeScript
+
+Builder A produces `VerificationRecord`. Builder B consumes `CallRecord[]`. Seeded leaderboard rows use `BacktestedCallRecord`, which cannot contain Cournot data or a receipt.
+
+```ts
+export type CournotProvenance =
+  | "live"
+  | "recorded-live"
+  | "fixture";
+
+type CournotResult = {
+  probability: number;
+  evaluatedClaim: string;
+  evidence: string;
+};
+
+export type ProvenCournotResponse = CournotResult & {
+  provenance: "live" | "recorded-live";
+  requestId: string;
+  fixtureId?: never;
+};
+
+export type FixtureCournotResponse = CournotResult & {
+  provenance: "fixture";
+  fixtureId: string;
+  requestId?: never;
+};
+
+export type CournotResponse =
+  | ProvenCournotResponse
+  | FixtureCournotResponse;
+
+export type Resolution = {
+  outcome: 0 | 1;
+  resolvedAt: string;
+  cmcPriceUsd: string;
+};
+
+export type CournotScore = {
+  kind: "cournot-edge";
+  probability: number;
+  edge: number;
+};
+
+export type ProxyBaseline = {
+  probability: number;
+  label: "Proxy baseline — not Cournot";
+  methodology: string;
+};
+
+export type ProxyScore = {
+  kind: "proxy-edge";
+  label: "Proxy Edge — not Cournot";
+  probability: number;
+  edge: number;
+};
+
+export type VerificationRecord = {
+  kind: "verified";
+  id: string;
+  claim: Claim;
+  cournot: CournotResponse;
+  cmc: CmcSnapshot;
+  atlas: AtlasSnapshot;
+  receipt: OnChainReceipt;
+  resolution:
+    | null
+    | {
+        result: Resolution;
+        score: CournotScore;
+      };
+};
+
+export type BacktestedCallRecord = {
+  kind: "backtested";
+  id: string;
+  claim: Claim;
+  cmcAtPost: CmcSnapshot;
+  proxyBaseline: ProxyBaseline;
+  resolution: {
+    result: Resolution;
+    score: ProxyScore;
+  };
+  cournot?: never;
+  receipt?: never;
+};
+
+export type CallRecord =
+  | VerificationRecord
+  | BacktestedCallRecord;
+```
+
+Required runtime checks:
+
+- All probabilities are finite and within `[0, 1]`.
+- `edge === outcome - probability`.
+- `fixture` renders the fixture warning and is never counted as sponsor evidence.
+- Only `kind: "verified"` may render an explorer link.
+- Only `"live"` and `"recorded-live"` may be exported as Cournot proof.
+- `data/seed.json` is parsed as `BacktestedCallRecord[]`, not `VerificationRecord[]`.
+
+## 3. Findings 3–9
+
+### Finding 3 — ACCEPT
+
+Replace the `data/seed.json` skeleton row with:
+
+> `data/seed.json` — **Proposed; Builder B.** Committed `BacktestedCallRecord[]` with dates, sample sizes, explicit proxy methodology, and no Cournot response or receipt.
+
+Add to Section B:
+
+> Backtested rows cannot contain `cournot` or `receipt`; the `never` fields make fabricated probabilities and transaction hashes compile-time errors. The UI renders `Backtested` and `Proxy Edge — not Cournot`, omits the explorer action, and never mixes proxy Edge into Cournot Edge aggregates.
+
+Add to the Phase 3 exit assertion:
+
+```text
+Every seeded row has kind="backtested"; no seeded row has cournot, receipt, or txHash.
+```
+
+### Finding 4 — ACCEPT
+
+Add as the first Phase 2 task:
+
+> Install Foundry using the repository’s documented installer, install `forge-std` as the pinned contract submodule, and make the existing contract suite green before application work touches the registry.
+
+Initial setup:
+
+```bash
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
+cd contracts
+forge install foundry-rs/forge-std
+cd ..
+forge test --root contracts
+```
+
+Fresh-clone setup:
+
+```bash
+git submodule update --init --recursive
+forge test --root contracts
+```
+
+Replace the `contracts/lib/forge-std/` skeleton purpose with:
+
+> Pinned Foundry submodule. Every fresh clone runs `git submodule update --init --recursive` before `forge test --root contracts`.
+
+### Finding 5 — ACCEPT
+
+Add a parallel Phase 0B/1B owned by B:
+
+> While A handles access and the shared foundation, B authors honest backtest seed data, obtains the Living Brain key and subject ID, creates the demo brain, selects one KOL and the exact retrieve/connect prompts, and rehearses `docs/demo-script.md`. Once A lands the app shell, B performs the same narration against it without waiting for the leaderboard implementation.
+
+This work depends only on the final type shape agreed above, not on A’s modules.
+
+### Finding 6 — ACCEPT
+
+Replace the `scripts/smoke.mjs` skeleton text with:
+
+> Provider-proof runner only: CMC keyless price, CMC keyed Content, Atlas MultiFeed, saved successful Cournot proof, and Living Brain capture/proof. It never imports application modules, requires the Next app to be running, or tests verify orchestration.
+
+Add:
+
+> `tests/verify.test.ts` — Injected-provider end-to-end test for claim → Cournot → snapshots → receipt orchestration, including fixture provenance and failure propagation.
+
+Use these commands:
+
+```powershell
+npm run smoke
+# Writes only provider proof to evidence/evidence.json.
+
+npm test -- --test-name-pattern="verification orchestration"
+# Tests the application pipeline without changing evidence/evidence.json.
+```
+
+`5/5 checks pass` means five provider proofs only. Application tests are reported separately.
+
+### Finding 7 — ACCEPT
+
+Add this Section A row:
+
+> `.env.local` — **Generated locally and gitignored.** The one secret-bearing environment file loaded automatically by Next and explicitly by Node scripts/tests.
+
+Replace the `.env.example` row with:
+
+> Documents every required variable with empty/example-safe values, instructs the user to copy it to `.env.local`, and contains no `NEXT_PUBLIC_` provider credential.
+
+Use exactly one loading mechanism:
+
+```json
+{
+  "scripts": {
+    "test": "node --env-file=.env.local --experimental-strip-types --test tests/core.test.ts tests/verify.test.ts",
+    "smoke": "node --env-file=.env.local scripts/smoke.mjs"
+  }
+}
+```
+
+Add to Section B:
+
+> Next route handlers load `.env.local` natively. Root Node scripts and tests use Node 22’s `--env-file=.env.local`. Remove the hand-written `.env` parser from `scripts/smoke.mjs`; do not add `dotenv`.
+
+Phase 1 setup begins with:
+
+```powershell
+if (!(Test-Path .env.local)) { Copy-Item .env.example .env.local }
+```
+
+### Finding 8 — ACCEPT
+
+Keep the risk register at five entries by replacing its two single-package rows with these:
+
+| Risk | Likelihood | Impact | Concrete mitigation decision |
+|---|---|---|---|
+| The one package’s shared alias or concurrent root-file edits break one builder’s slice. | High. | High: compile/runtime failure or lockfile conflict near deadline. | Next route handlers are the only backend, so `server/` and `shared/` compile under one `tsconfig`. A exclusively owns `package.json`, lockfile, `tsconfig.json`, `shared/types.ts`, and the app shell, freezing them after Phase 1. B owns seed, leaderboard, KOL, records, and memory paths. Every handoff runs `npm run build`. |
+| A Next environment variable is accidentally prefixed `NEXT_PUBLIC_` and bundled into the browser. | Medium. | Critical: credential disclosure and CMC × Atlas disqualification. | Every provider module begins with `import "server-only"`. `.env.example` forbids `NEXT_PUBLIC_` for provider credentials. `app/providers.tsx` contains only public chain metadata. Phase 1 reviews that file before freeze; Phase 4 greps source and built output for credential names/values. |
+
+Add to Phase 4:
+
+```powershell
+git grep -n "NEXT_PUBLIC_.*\(KEY\|SECRET\|TOKEN\|PRIVATE\)" -- .env.example app server
+# Required output: empty
+```
+
+### Finding 9 — ACCEPT
+
+Add these skeleton rows:
+
+> `evidence/demo-rough.mp4` — Rough 60-second Phase 2 capture, visibly labelled when fixtures are used; deadline insurance, not sponsor proof.
+
+> `evidence/demo.mp4` — Final ≤3-minute Developer/CMC submission video recorded during Phase 7.
+
+Add to Phase 2:
+
+> Immediately after the first runnable verify flow, record a rough 60-second capture. If it uses fixture provenance, the warning remains visible for the entire relevant step and the file is not cited as sponsor evidence.
+
+Phase 2 does not exit until:
+
+```powershell
+if (!(Test-Path evidence/demo-rough.mp4)) { throw "rough backup video missing" }
+```
+
+## 4. Revised phase rows
+
+| Phase | Entry criteria | Owner + work | Time-box | Exit command and proving output | Requirement ticked |
+|---|---|---|---:|---|---|
+| 0A. Remote and external gates | Local Git repository; no remote; `gh` authenticated as `Marwanelh`; CMC, Atlas, Cournot, and Living Brain gates unresolved. | **A:** create/push the public `Marwanelh/proof-of-alpha` repository; request CMC Content access, one Atlas BNB `feedId`, Cournot credit/top-up, and tBNB. Save a successful Cournot response if it arrives, but do not block Phase 1 on it. Use a working human/Hermes terminal while Codex’s service-context runners remain broken. | 45 min active, parallel with 0B | `gh repo view Marwanelh/proof-of-alpha --json nameWithOwner,visibility,url` prints the expected owner/name and `PUBLIC`; `git remote get-url origin` prints that repository URL. | Public repository prerequisite; starts external CMC, Atlas, and Cournot gates. |
+| 0B. B’s independent preparation | Final `CallRecord` shape agreed; existing judging documents available. | **B:** author labelled `BacktestedCallRecord[]`; obtain Living Brain key/subject ID and create the brain; select one KOL and exact retrieve/connect prompts; rehearse `docs/demo-script.md`, then repeat against A’s shell when available. | 90 min, parallel with Phases 0A–1 | `node -e "const x=require('./data/seed.json');if(!x.length||x.some(r=>r.kind!=='backtested'||'cournot'in r||'receipt'in r||'txHash'in r))process.exit(1);console.log('PASS honest seed',x.length)"` passes. `node --env-file=.env.local -e "if(!process.env.LIVING_BRAIN_API_KEY||!process.env.LIVING_BRAIN_SUBJECT_ID)process.exit(1);console.log('PASS Living Brain configured')"` passes without printing secrets. | Makes B independently demoable and removes seed/memory preparation from the later critical path. |
+| 1. Freeze the shared foundation | Node 22.23.1; public remote created or creation actively unblocked. | **A:** create the root package, `.env.local` convention, alias, app shell, corrected discriminated types, fixture Cournot response, seed/reset script, core tests, and provider-only smoke structure. Freeze root ownership after review. | 60 min | `if (!(Test-Path .env.local)) { Copy-Item .env.example .env.local }; npm ci; npm run seed; npm test` passes. A fixture assertion prints `provenance=fixture` and confirms there is no `requestId`. | Reproducible setup, safe environment loading, explicit A/B boundary, and a vendor-independent development path. |
+| 2. First runnable fixture flow | Phase 1; schema-valid fixture available. No real Cournot response is required. | **A:** first install Foundry/`forge-std` and run contract tests; then implement extraction, fixture Cournot, injected CMC/Atlas snapshots, referenced receipt orchestration, provenance UI, and `tests/verify.test.ts`. Record the rough 60-second backup. Fixture transactions/results are visibly development-only and excluded from sponsor evidence. | 3 h | `git submodule update --init --recursive; forge test --root contracts; npm test -- --test-name-pattern="verification orchestration"; npm run build` all pass. The test prints `provenance=fixture` and confirms fixture output is evidence-ineligible. `Test-Path evidence/demo-rough.mp4` returns `True`. | Produces the first runnable fallback and deadline-insurance video; proves contract/application wiring but does not claim sponsor eligibility. |
+| 3. Independent leaderboard slice | Phase 1 types; B’s honest `BacktestedCallRecord[]` from Phase 0B. | **B:** implement resolution, proxy scoring, ranking, leaderboard, and KOL evidence page. Render `Backtested` and `Proxy Edge — not Cournot`; never render an explorer action for these rows. | 2 h, reduced by parallel preparation | `npm test -- --test-name-pattern="Edge|ranking|round-trip"` passes and asserts that every seed row lacks `cournot`, `receipt`, and `txHash`; `npm run build` emits the leaderboard/KOL routes. | Supplies the leaderboard demo while preventing fabricated sponsor evidence. |
+| 4. Replace fixtures with proof | Phase 2 works with fixtures; whichever external credentials/feed IDs arrived are available. | **A:** normalize live and recorded-live Cournot through the same adapter; wire keyed CMC Content, real keyless prices, real Atlas feed read, and a confirmed referenced BSC testnet receipt. Render all three Cournot provenance states. Keep provider smoke separate from application E2E tests. | 1 h 45 min | `npm run smoke` prints five provider-only results and writes their IDs to `evidence/evidence.json`. `npm test -- --test-name-pattern="live verification writes confirmed receipt"` prints the BSC testnet tx hash and `atlasVerified=false`. Secret grep and forbidden-`NEXT_PUBLIC_` grep are empty. | Completes live CMC/Atlas/Cournot proof, BNB receipt evidence, honest recorded fallback, and secret-isolation requirements. |
+| 5. Living Brain vertical | Phase 3; B’s credentials, subject, selected KOL, and prompts from Phase 0B; at least one resolved record. | **B:** implement remember/retrieve/connect, capture resolved records, retain source IDs, and pre-warm the selected profile. `smoke.mjs` records provider proof only; memory behavior stays in tests. | 1 h 30 min | `npm run smoke` prints `PASS livingbrain.capture` with its source ID. `npm test -- --test-name-pattern="remember|retrieve|connect"` passes and confirms the selected demo response is compiled rather than pending. | ChatAndBuild persistent-memory agent and required verbs. |
+| 7. Submission-ready build | Phases 3–5 as available; Phase 4 required for sponsor proof; rough video already exists. | **A:** fill addresses and evidence links, add the exact README `Cournot Integration` section, run all checks, rehearse recorded-live fallback, replace the rough capture with the final ≤3-minute video, scan source/build output for secrets, and push the final public repository. | 2 h | `forge test --root contracts; npm test; npm run build; npm run smoke` all pass. Smoke reports five provider proofs without requiring the app. `git grep -n "_TBD_" -- README.md docs/addresses.md docs/one-pager.md evidence/evidence.json` is empty. `gh repo view Marwanelh/proof-of-alpha --json visibility` prints `PUBLIC`. | Produces the submission-ready public MIT repository, provider proof, contract evidence, Cournot documentation, and final Developer/CMC video. |
+
+## 5. One disagreement
+
+I disagree with placing `fixture.json` under `evidence/cournot/`. Finding 6 correctly reserves `evidence/` for sponsor-verifiable proof; mixing synthetic data into that tree recreates the credibility problem Finding 3 removes.
+
+Commit the fixture as `data/cournot-fixture.json`. Keep only real official-client outputs under `evidence/cournot/`. I would change my mind if the evidence index had an enforced schema that excluded `synthetic: true` entries from every proof count and submission export, and the sponsor explicitly expected development fixtures in the evidence directory.
+
+Skipped: no new runtime service, dependency, or database is introduced by these revisions.  
+Remaining risk: Phase 4 sponsor eligibility still depends on real Cournot, Atlas, CMC, and Living Brain access, but Phase 2 and Builder B no longer wait for them.
+
+===END ROUND2===
+hook: Stop
+hook: Stop
+hook: Stop Failed
+hook: Stop Failed
+tokens used
+108,290
+===BEGIN ROUND2===
+
+## 1. Finding 1 — ACCEPT
+
+Accept fixture decoupling and three-state provenance.
+
+Use the machine values `"live" | "recorded-live" | "fixture"` and render them as:
+
+- `Live`
+- `Recorded live response`
+- `FIXTURE — not sponsor evidence`
+
+Phase 2 depends only on a schema-valid fixture. A real successful response replaces it through the same adapter when available. Fixture records must be excluded from `evidence/evidence.json`, final videos, submission claims, and sponsor-proof transaction lists.
+
+I disagree only with storing synthetic data under `evidence/`; see item 5.
+
+## 2. Finding 2 — corrected final TypeScript
+
+Builder A produces `VerificationRecord`. Builder B consumes `CallRecord[]`. Seeded leaderboard rows use `BacktestedCallRecord`, which cannot contain Cournot data or a receipt.
+
+```ts
+export type CournotProvenance =
+  | "live"
+  | "recorded-live"
+  | "fixture";
+
+type CournotResult = {
+  probability: number;
+  evaluatedClaim: string;
+  evidence: string;
+};
+
+export type ProvenCournotResponse = CournotResult & {
+  provenance: "live" | "recorded-live";
+  requestId: string;
+  fixtureId?: never;
+};
+
+export type FixtureCournotResponse = CournotResult & {
+  provenance: "fixture";
+  fixtureId: string;
+  requestId?: never;
+};
+
+export type CournotResponse =
+  | ProvenCournotResponse
+  | FixtureCournotResponse;
+
+export type Resolution = {
+  outcome: 0 | 1;
+  resolvedAt: string;
+  cmcPriceUsd: string;
+};
+
+export type CournotScore = {
+  kind: "cournot-edge";
+  probability: number;
+  edge: number;
+};
+
+export type ProxyBaseline = {
+  probability: number;
+  label: "Proxy baseline — not Cournot";
+  methodology: string;
+};
+
+export type ProxyScore = {
+  kind: "proxy-edge";
+  label: "Proxy Edge — not Cournot";
+  probability: number;
+  edge: number;
+};
+
+export type VerificationRecord = {
+  kind: "verified";
+  id: string;
+  claim: Claim;
+  cournot: CournotResponse;
+  cmc: CmcSnapshot;
+  atlas: AtlasSnapshot;
+  receipt: OnChainReceipt;
+  resolution:
+    | null
+    | {
+        result: Resolution;
+        score: CournotScore;
+      };
+};
+
+export type BacktestedCallRecord = {
+  kind: "backtested";
+  id: string;
+  claim: Claim;
+  cmcAtPost: CmcSnapshot;
+  proxyBaseline: ProxyBaseline;
+  resolution: {
+    result: Resolution;
+    score: ProxyScore;
+  };
+  cournot?: never;
+  receipt?: never;
+};
+
+export type CallRecord =
+  | VerificationRecord
+  | BacktestedCallRecord;
+```
+
+Required runtime checks:
+
+- All probabilities are finite and within `[0, 1]`.
+- `edge === outcome - probability`.
+- `fixture` renders the fixture warning and is never counted as sponsor evidence.
+- Only `kind: "verified"` may render an explorer link.
+- Only `"live"` and `"recorded-live"` may be exported as Cournot proof.
+- `data/seed.json` is parsed as `BacktestedCallRecord[]`, not `VerificationRecord[]`.
+
+## 3. Findings 3–9
+
+### Finding 3 — ACCEPT
+
+Replace the `data/seed.json` skeleton row with:
+
+> `data/seed.json` — **Proposed; Builder B.** Committed `BacktestedCallRecord[]` with dates, sample sizes, explicit proxy methodology, and no Cournot response or receipt.
+
+Add to Section B:
+
+> Backtested rows cannot contain `cournot` or `receipt`; the `never` fields make fabricated probabilities and transaction hashes compile-time errors. The UI renders `Backtested` and `Proxy Edge — not Cournot`, omits the explorer action, and never mixes proxy Edge into Cournot Edge aggregates.
+
+Add to the Phase 3 exit assertion:
+
+```text
+Every seeded row has kind="backtested"; no seeded row has cournot, receipt, or txHash.
+```
+
+### Finding 4 — ACCEPT
+
+Add as the first Phase 2 task:
+
+> Install Foundry using the repository’s documented installer, install `forge-std` as the pinned contract submodule, and make the existing contract suite green before application work touches the registry.
+
+Initial setup:
+
+```bash
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
+cd contracts
+forge install foundry-rs/forge-std
+cd ..
+forge test --root contracts
+```
+
+Fresh-clone setup:
+
+```bash
+git submodule update --init --recursive
+forge test --root contracts
+```
+
+Replace the `contracts/lib/forge-std/` skeleton purpose with:
+
+> Pinned Foundry submodule. Every fresh clone runs `git submodule update --init --recursive` before `forge test --root contracts`.
+
+### Finding 5 — ACCEPT
+
+Add a parallel Phase 0B/1B owned by B:
+
+> While A handles access and the shared foundation, B authors honest backtest seed data, obtains the Living Brain key and subject ID, creates the demo brain, selects one KOL and the exact retrieve/connect prompts, and rehearses `docs/demo-script.md`. Once A lands the app shell, B performs the same narration against it without waiting for the leaderboard implementation.
+
+This work depends only on the final type shape agreed above, not on A’s modules.
+
+### Finding 6 — ACCEPT
+
+Replace the `scripts/smoke.mjs` skeleton text with:
+
+> Provider-proof runner only: CMC keyless price, CMC keyed Content, Atlas MultiFeed, saved successful Cournot proof, and Living Brain capture/proof. It never imports application modules, requires the Next app to be running, or tests verify orchestration.
+
+Add:
+
+> `tests/verify.test.ts` — Injected-provider end-to-end test for claim → Cournot → snapshots → receipt orchestration, including fixture provenance and failure propagation.
+
+Use these commands:
+
+```powershell
+npm run smoke
+# Writes only provider proof to evidence/evidence.json.
+
+npm test -- --test-name-pattern="verification orchestration"
+# Tests the application pipeline without changing evidence/evidence.json.
+```
+
+`5/5 checks pass` means five provider proofs only. Application tests are reported separately.
+
+### Finding 7 — ACCEPT
+
+Add this Section A row:
+
+> `.env.local` — **Generated locally and gitignored.** The one secret-bearing environment file loaded automatically by Next and explicitly by Node scripts/tests.
+
+Replace the `.env.example` row with:
+
+> Documents every required variable with empty/example-safe values, instructs the user to copy it to `.env.local`, and contains no `NEXT_PUBLIC_` provider credential.
+
+Use exactly one loading mechanism:
+
+```json
+{
+  "scripts": {
+    "test": "node --env-file=.env.local --experimental-strip-types --test tests/core.test.ts tests/verify.test.ts",
+    "smoke": "node --env-file=.env.local scripts/smoke.mjs"
+  }
+}
+```
+
+Add to Section B:
+
+> Next route handlers load `.env.local` natively. Root Node scripts and tests use Node 22’s `--env-file=.env.local`. Remove the hand-written `.env` parser from `scripts/smoke.mjs`; do not add `dotenv`.
+
+Phase 1 setup begins with:
+
+```powershell
+if (!(Test-Path .env.local)) { Copy-Item .env.example .env.local }
+```
+
+### Finding 8 — ACCEPT
+
+Keep the risk register at five entries by replacing its two single-package rows with these:
+
+| Risk | Likelihood | Impact | Concrete mitigation decision |
+|---|---|---|---|
+| The one package’s shared alias or concurrent root-file edits break one builder’s slice. | High. | High: compile/runtime failure or lockfile conflict near deadline. | Next route handlers are the only backend, so `server/` and `shared/` compile under one `tsconfig`. A exclusively owns `package.json`, lockfile, `tsconfig.json`, `shared/types.ts`, and the app shell, freezing them after Phase 1. B owns seed, leaderboard, KOL, records, and memory paths. Every handoff runs `npm run build`. |
+| A Next environment variable is accidentally prefixed `NEXT_PUBLIC_` and bundled into the browser. | Medium. | Critical: credential disclosure and CMC × Atlas disqualification. | Every provider module begins with `import "server-only"`. `.env.example` forbids `NEXT_PUBLIC_` for provider credentials. `app/providers.tsx` contains only public chain metadata. Phase 1 reviews that file before freeze; Phase 4 greps source and built output for credential names/values. |
+
+Add to Phase 4:
+
+```powershell
+git grep -n "NEXT_PUBLIC_.*\(KEY\|SECRET\|TOKEN\|PRIVATE\)" -- .env.example app server
+# Required output: empty
+```
+
+### Finding 9 — ACCEPT
+
+Add these skeleton rows:
+
+> `evidence/demo-rough.mp4` — Rough 60-second Phase 2 capture, visibly labelled when fixtures are used; deadline insurance, not sponsor proof.
+
+> `evidence/demo.mp4` — Final ≤3-minute Developer/CMC submission video recorded during Phase 7.
+
+Add to Phase 2:
+
+> Immediately after the first runnable verify flow, record a rough 60-second capture. If it uses fixture provenance, the warning remains visible for the entire relevant step and the file is not cited as sponsor evidence.
+
+Phase 2 does not exit until:
+
+```powershell
+if (!(Test-Path evidence/demo-rough.mp4)) { throw "rough backup video missing" }
+```
+
+## 4. Revised phase rows
+
+| Phase | Entry criteria | Owner + work | Time-box | Exit command and proving output | Requirement ticked |
+|---|---|---|---:|---|---|
+| 0A. Remote and external gates | Local Git repository; no remote; `gh` authenticated as `Marwanelh`; CMC, Atlas, Cournot, and Living Brain gates unresolved. | **A:** create/push the public `Marwanelh/proof-of-alpha` repository; request CMC Content access, one Atlas BNB `feedId`, Cournot credit/top-up, and tBNB. Save a successful Cournot response if it arrives, but do not block Phase 1 on it. Use a working human/Hermes terminal while Codex’s service-context runners remain broken. | 45 min active, parallel with 0B | `gh repo view Marwanelh/proof-of-alpha --json nameWithOwner,visibility,url` prints the expected owner/name and `PUBLIC`; `git remote get-url origin` prints that repository URL. | Public repository prerequisite; starts external CMC, Atlas, and Cournot gates. |
+| 0B. B’s independent preparation | Final `CallRecord` shape agreed; existing judging documents available. | **B:** author labelled `BacktestedCallRecord[]`; obtain Living Brain key/subject ID and create the brain; select one KOL and exact retrieve/connect prompts; rehearse `docs/demo-script.md`, then repeat against A’s shell when available. | 90 min, parallel with Phases 0A–1 | `node -e "const x=require('./data/seed.json');if(!x.length||x.some(r=>r.kind!=='backtested'||'cournot'in r||'receipt'in r||'txHash'in r))process.exit(1);console.log('PASS honest seed',x.length)"` passes. `node --env-file=.env.local -e "if(!process.env.LIVING_BRAIN_API_KEY||!process.env.LIVING_BRAIN_SUBJECT_ID)process.exit(1);console.log('PASS Living Brain configured')"` passes without printing secrets. | Makes B independently demoable and removes seed/memory preparation from the later critical path. |
+| 1. Freeze the shared foundation | Node 22.23.1; public remote created or creation actively unblocked. | **A:** create the root package, `.env.local` convention, alias, app shell, corrected discriminated types, fixture Cournot response, seed/reset script, core tests, and provider-only smoke structure. Freeze root ownership after review. | 60 min | `if (!(Test-Path .env.local)) { Copy-Item .env.example .env.local }; npm ci; npm run seed; npm test` passes. A fixture assertion prints `provenance=fixture` and confirms there is no `requestId`. | Reproducible setup, safe environment loading, explicit A/B boundary, and a vendor-independent development path. |
+| 2. First runnable fixture flow | Phase 1; schema-valid fixture available. No real Cournot response is required. | **A:** first install Foundry/`forge-std` and run contract tests; then implement extraction, fixture Cournot, injected CMC/Atlas snapshots, referenced receipt orchestration, provenance UI, and `tests/verify.test.ts`. Record the rough 60-second backup. Fixture transactions/results are visibly development-only and excluded from sponsor evidence. | 3 h | `git submodule update --init --recursive; forge test --root contracts; npm test -- --test-name-pattern="verification orchestration"; npm run build` all pass. The test prints `provenance=fixture` and confirms fixture output is evidence-ineligible. `Test-Path evidence/demo-rough.mp4` returns `True`. | Produces the first runnable fallback and deadline-insurance video; proves contract/application wiring but does not claim sponsor eligibility. |
+| 3. Independent leaderboard slice | Phase 1 types; B’s honest `BacktestedCallRecord[]` from Phase 0B. | **B:** implement resolution, proxy scoring, ranking, leaderboard, and KOL evidence page. Render `Backtested` and `Proxy Edge — not Cournot`; never render an explorer action for these rows. | 2 h, reduced by parallel preparation | `npm test -- --test-name-pattern="Edge|ranking|round-trip"` passes and asserts that every seed row lacks `cournot`, `receipt`, and `txHash`; `npm run build` emits the leaderboard/KOL routes. | Supplies the leaderboard demo while preventing fabricated sponsor evidence. |
+| 4. Replace fixtures with proof | Phase 2 works with fixtures; whichever external credentials/feed IDs arrived are available. | **A:** normalize live and recorded-live Cournot through the same adapter; wire keyed CMC Content, real keyless prices, real Atlas feed read, and a confirmed referenced BSC testnet receipt. Render all three Cournot provenance states. Keep provider smoke separate from application E2E tests. | 1 h 45 min | `npm run smoke` prints five provider-only results and writes their IDs to `evidence/evidence.json`. `npm test -- --test-name-pattern="live verification writes confirmed receipt"` prints the BSC testnet tx hash and `atlasVerified=false`. Secret grep and forbidden-`NEXT_PUBLIC_` grep are empty. | Completes live CMC/Atlas/Cournot proof, BNB receipt evidence, honest recorded fallback, and secret-isolation requirements. |
+| 5. Living Brain vertical | Phase 3; B’s credentials, subject, selected KOL, and prompts from Phase 0B; at least one resolved record. | **B:** implement remember/retrieve/connect, capture resolved records, retain source IDs, and pre-warm the selected profile. `smoke.mjs` records provider proof only; memory behavior stays in tests. | 1 h 30 min | `npm run smoke` prints `PASS livingbrain.capture` with its source ID. `npm test -- --test-name-pattern="remember|retrieve|connect"` passes and confirms the selected demo response is compiled rather than pending. | ChatAndBuild persistent-memory agent and required verbs. |
+| 7. Submission-ready build | Phases 3–5 as available; Phase 4 required for sponsor proof; rough video already exists. | **A:** fill addresses and evidence links, add the exact README `Cournot Integration` section, run all checks, rehearse recorded-live fallback, replace the rough capture with the final ≤3-minute video, scan source/build output for secrets, and push the final public repository. | 2 h | `forge test --root contracts; npm test; npm run build; npm run smoke` all pass. Smoke reports five provider proofs without requiring the app. `git grep -n "_TBD_" -- README.md docs/addresses.md docs/one-pager.md evidence/evidence.json` is empty. `gh repo view Marwanelh/proof-of-alpha --json visibility` prints `PUBLIC`. | Produces the submission-ready public MIT repository, provider proof, contract evidence, Cournot documentation, and final Developer/CMC video. |
+
+## 5. One disagreement
+
+I disagree with placing `fixture.json` under `evidence/cournot/`. Finding 6 correctly reserves `evidence/` for sponsor-verifiable proof; mixing synthetic data into that tree recreates the credibility problem Finding 3 removes.
+
+Commit the fixture as `data/cournot-fixture.json`. Keep only real official-client outputs under `evidence/cournot/`. I would change my mind if the evidence index had an enforced schema that excluded `synthetic: true` entries from every proof count and submission export, and the sponsor explicitly expected development fixtures in the evidence directory.
+
+Skipped: no new runtime service, dependency, or database is introduced by these revisions.  
+Remaining risk: Phase 4 sponsor eligibility still depends on real Cournot, Atlas, CMC, and Living Brain access, but Phase 2 and Builder B no longer wait for them.
+
+===END ROUND2===
