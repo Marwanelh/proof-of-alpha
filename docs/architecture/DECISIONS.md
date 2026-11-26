@@ -57,6 +57,34 @@ fixture lives in `data/`.
 | Cournot credit or pack | Open — blocks Phase 4 and the Cournot track's minimum viable proof: one real successful call |
 | Living Brain key + subject id | Open — blocks Phases 0B and 5 (ChatAndBuild track) |
 
+## Security incident — 2026-11-26: a live credential reached the public repo
+
+**What happened.** A real Living Brain API key and subject id were written into `.env.example` (the file
+committed to a public repository, and the one that had just been committed with `git add -A`). They were
+public from the first push.
+
+**Why the existing check missed it.** The ad-hoc gate grepped for `sk-`, `ghp_` and 64-hex keys — the
+provider's own prefix was `lbk_`, so the check reported "clean" while a key sat in the tracked tree. A gate
+that does not know the credential shapes the project uses is not a gate.
+
+**Containment done.** Values moved to `.env.local` (gitignored); `.env.example` reduced to documentation
+plus public URLs; all commits rewritten with `git-filter-repo --replace-text`; `main` force-pushed and
+verified to carry zero live key values. `scripts/check-secrets.mjs` now runs on every `npm test`, scans
+git-tracked files for every credential shape this project uses (`lbk_`, `sk-`, `ghp_`, bearer tokens,
+64-hex keys, `x-api-key`), and separately requires `.env.example` to be value-free. It was proven both ways:
+clean on the tree, non-zero on an injected key.
+
+**Residual risk, unresolved.** GitHub still serves the pre-rewrite commit by SHA and that object still
+contains the key. Unreachable objects are not instantly collected. **The only reliable remedy is rotation**,
+which is an account action; recreating the repository is the only immediate way to purge the cached object.
+
+**Two rules that follow, and they are not optional.**
+
+1. **Rotation is the fix; history rewriting is hygiene.** Assume any value that was ever public is
+   compromised, regardless of what the git history now says.
+2. **Never `git add -A` in a repository that holds an env file.** Stage paths explicitly, and run the
+   credential gate before the first push, not after an incident.
+
 ## Environment note (not a project decision)
 
 Codex's own runners fail in this host's service context — `[windows] sandbox = "elevated"` triggers

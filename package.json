@@ -11,7 +11,7 @@
   "scripts": {
     "seed": "node scripts/seed.mjs",
     "check:secrets": "node scripts/check-secrets.mjs",
-    "test": "node scripts/check-secrets.mjs && node --env-file-if-exists=.env.local --experimental-strip-types --test tests/core.test.ts",
+    "test": "node scripts/check-secrets.mjs && node --env-file-if-exists=.env.local --experimental-strip-types --test tests/core.test.ts tests/verify.test.ts",
     "test:verify": "node --env-file-if-exists=.env.local --experimental-strip-types --test tests/verify.test.ts",
     "smoke": "node --env-file-if-exists=.env.local scripts/smoke.mjs"
   },
