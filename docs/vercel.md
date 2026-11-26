@@ -7,7 +7,7 @@ deliberate and is explained at the bottom.
 
 Vercel dashboard → **Add New → Project** → import `Marwanelh/proof-of-alpha`. It is a standard Next.js app;
 `vercel.json` pins `framework: nextjs`, `regions: ["sin1"]` (Singapore, the closest region to the venue and
-to the BSC RPCs) and sets the build command to `npm run seed && npm run build`.
+to the BSC RPCs) and sets the build command to seed the store, build the app and check the route manifests.
 
 No build settings need changing. `npm run seed` is what turns the committed `data/seed.json` into the
 `data/local.json` the app reads; if it is skipped the app still works, because the loader falls back to the
@@ -17,7 +17,7 @@ committed seed.
 
 Project → **Settings → Environment Variables**. `.env.example` documents each one with an empty value.
 
-**Public, safe to paste (they are chain constants):**
+**Atlas defaults.** The receipt API uses the following public BSC feed when both settings are absent. Set both to override it.
 
 ```
 ATLAS_FEED_ADDRESS=0xeace519ebb14fb8404fa6ddd23c3b34abade44aa
@@ -77,11 +77,10 @@ result:
 
 ```bash
 npm run build
-grep -rl "data/seed.json" .next --include="*.nft.json" | wc -l   # expect >= 4, one per route that reads it
+node scripts/check-vercel-build.mjs
 ```
 
-If that prints 0, the deployed leaderboard renders empty while working perfectly on localhost. Verified
-before the first deploy: 8 manifests, covering `/leaderboard`, `/kol/[id]`, `/api/memory` and `/api/verify`.
+The deployment build runs the same check before publishing.
 
 ### A 200 does not tell you *which* server answered
 

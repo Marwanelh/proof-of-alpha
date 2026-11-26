@@ -24,6 +24,9 @@ function cournotMode(): CournotMode {
 function atlasConfig(): { feedAddress: string; feedId: string } | null {
   const feedAddress = process.env["ATLAS_FEED_ADDRESS"];
   const feedId = process.env["ATLAS_FEED_ID"];
+  if (!feedAddress && !feedId) {
+    return { feedAddress: "0xeace519ebb14fb8404fa6ddd23c3b34abade44aa", feedId: "0x0000048c" };
+  }
   if (!feedAddress || !feedId) return null;
   return { feedAddress, feedId };
 }

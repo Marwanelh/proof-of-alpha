@@ -6,7 +6,7 @@
   "description": "A credit record for crypto KOLs: verifiable calls, Edge scored against the market's own expectation, receipts on BNB Chain.",
   "license": "MIT",
   "engines": {
-    "node": ">=22.20"
+    "node": "^22.20.0"
   },
   "scripts": {
     "dev": "next dev -p 3000",

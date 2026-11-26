@@ -76,7 +76,7 @@ export function readFixture(path: string = FIXTURE_PATH): FixtureCournotResponse
 }
 
 export function readRecorded(path: string = RECORDED_PATH): ProvenCournotResponse {
-  if (!existsSync(path)) {
+  if (!existsSync(/* turbopackIgnore: true */ path)) {
     throw new CournotError(
       `${path} does not exist yet — the official client has not returned a successful response.\n${liveCommandHint({
         source: "paste",
@@ -100,9 +100,9 @@ export function readRecorded(path: string = RECORDED_PATH): ProvenCournotRespons
 }
 
 function readJson(path: string): Record<string, unknown> {
-  if (!existsSync(path)) throw new CournotError(`${path} is missing`);
+  if (!existsSync(/* turbopackIgnore: true */ path)) throw new CournotError(`${path} is missing`);
   try {
-    const parsed: unknown = JSON.parse(readFileSync(path, "utf8"));
+    const parsed: unknown = JSON.parse(readFileSync(/* turbopackIgnore: true */ path, "utf8"));
     if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
       throw new CournotError(`${path} must contain a JSON object`);
     }

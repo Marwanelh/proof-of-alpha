@@ -13,7 +13,7 @@
  * as live data.
  */
 
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 
 import type { CallRecord } from "../shared/types.ts";
 
@@ -21,9 +21,8 @@ export type LoadedStore = { records: CallRecord[]; source: string; sample: boole
 
 export function loadStore(): LoadedStore {
   for (const path of ["data/local.json", "data/seed.json"]) {
-    if (!existsSync(path)) continue;
     try {
-      const parsed: unknown = JSON.parse(readFileSync(path, "utf8"));
+      const parsed: unknown = JSON.parse(readFileSync(/* turbopackIgnore: true */ path, "utf8"));
       const records = Array.isArray(parsed)
         ? (parsed as CallRecord[])
         : ((parsed as { records?: CallRecord[] }).records ?? []);

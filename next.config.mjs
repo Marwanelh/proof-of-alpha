@@ -20,7 +20,10 @@ const nextConfig = {
   // Force the JSON store into every server bundle. Without this, a runtime `readFileSync("data/seed.json")`
   // is not traced into a serverless deployment and the leaderboard renders empty there while working
   // perfectly on localhost. The build script verifies the emitted trace manifest actually contains the file.
-  outputFileTracingIncludes: { "/**/*": ["./data/**/*.json"] },
+  outputFileTracingIncludes: {
+    "/**/*": ["./data/**/*.json"],
+    "/api/verify": ["./evidence/cournot/success.json"],
+  },
 };
 
 export default nextConfig;

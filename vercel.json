@@ -2,5 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "regions": ["sin1"],
   "framework": "nextjs",
-  "buildCommand": "npm run seed && npm run build"
+  "buildCommand": "npm run seed && npm run build && node scripts/check-vercel-build.mjs"
 }
