@@ -1,0 +1,35 @@
+{
+  "at": "2026-11-26T09:35:45.297Z",
+  "results": [
+    {
+      "name": "cmc.keyless_price",
+      "ok": false,
+      "detail": "HTTP 429 BNB=$undefined",
+      "at": "2026-11-26T09:35:45.294Z"
+    },
+    {
+      "name": "cmc.content_posts",
+      "ok": false,
+      "detail": "CMC_API_KEY unset — returns 403 error_code 1005 without a key",
+      "at": "2026-11-26T09:35:45.296Z"
+    },
+    {
+      "name": "atlas.multiFeed",
+      "ok": false,
+      "detail": "ATLAS_FEED_ADDRESS and ATLAS_FEED_ID (4 bytes) are both required",
+      "at": "2026-11-26T09:35:45.296Z"
+    },
+    {
+      "name": "cournot.live_call",
+      "ok": false,
+      "detail": "TODO: run the skill; paste the request id + returned probability here",
+      "at": "2026-11-26T09:35:45.297Z"
+    },
+    {
+      "name": "livingbrain.capture",
+      "ok": false,
+      "detail": "TODO: capture one resolved call; paste the returned source status here",
+      "at": "2026-11-26T09:35:45.297Z"
+    }
+  ]
+}

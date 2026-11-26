@@ -1,0 +1,8 @@
+.env
+node_modules/
+contracts/out/
+contracts/cache/
+contracts/*.bin
+contracts/*.abi
+evidence/*.mp4
+__pycache__/
