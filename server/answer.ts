@@ -200,7 +200,10 @@ export async function answerWithModel(
     body: JSON.stringify({
       model: config.model,
       temperature: 0,
-      max_tokens: 220,
+      // Generous on purpose. Models that reason before answering spend tokens on reasoning that never reaches
+      // us, so a budget sized for the visible answer alone truncates it — two free models returned 200 with
+      // an empty content because of exactly that. The answer itself is two or three sentences.
+      max_tokens: 900,
       messages: [
         { role: "system", content: SYSTEM },
         { role: "user", content: `FACTS (authoritative, use verbatim):\n${JSON.stringify(facts, null, 2)}\n\nBRAIN PAGES:\n${context || "(none)"}\n\nQUESTION: ${question}` },
@@ -210,8 +213,19 @@ export async function answerWithModel(
   });
 
   if (!res.ok) throw new AnswerError(`model request failed with HTTP ${res.status}`);
-  const body = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
-  const text = body.choices?.[0]?.message?.content?.trim();
+  const body = (await res.json()) as {
+    choices?: Array<{ message?: { content?: string }; finish_reason?: string }>;
+  };
+  const choice = body.choices?.[0];
+  let text = choice?.message?.content?.trim();
   if (!text) throw new AnswerError("the model returned no content");
+
+  // A response that stopped on "length" was cut off mid-thought. Showing half a sentence as if it were the
+  // answer looks broken on a panel a judge is reading, so drop the dangling fragment at the last complete
+  // sentence. If there is no complete sentence, keep what came back — it is still the model's words.
+  if (choice?.finish_reason === "length") {
+    const lastEnd = text.search(/[.!?][^.!?]*$/);
+    if (lastEnd !== -1) text = text.slice(0, lastEnd + 1).trim();
+  }
   return text;
 }

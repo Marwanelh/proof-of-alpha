@@ -202,4 +202,47 @@ describe("answer — the model is optional and its failure is reported", () => {
     assert.match(sent, /"cournotEdge"/, "the computed Edge is given to the model rather than left to it");
     assert.match(sent, /BNB/, "brain context is included");
   });
+
+  test("a 200 with no content is a failure, not an answer", async () => {
+    // Not hypothetical: two free models returned exactly this — HTTP 200 with empty content, because the
+    // token budget went on reasoning. Inferring success from the status code would have rendered a blank
+    // panel and called it model-written.
+    const empty = (async () => ({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: "   " }, finish_reason: "length" }] }),
+    })) as unknown as typeof fetch;
+    const facts = buildFacts("kol-a", [cournotCall("c1", "kol-a", 1)], price);
+    await assert.rejects(
+      () => answerWithModel("q", facts, [], { apiKey: "k", baseUrl: "https://x/v1", model: "m" }, empty),
+      (e) => e instanceof AnswerError && /no content/.test(e.message),
+    );
+  });
+
+  test("a response cut off by the token budget loses its dangling fragment", async () => {
+    const cut = (async () => ({
+      ok: true,
+      json: async () => ({
+        choices: [
+          { message: { content: "Three of four calls were right. The KOL is decent but the sample" }, finish_reason: "length" },
+        ],
+      }),
+    })) as unknown as typeof fetch;
+    const facts = buildFacts("kol-a", [cournotCall("c1", "kol-a", 1)], price);
+    const text = await answerWithModel("q", facts, [], { apiKey: "k", baseUrl: "https://x/v1", model: "m" }, cut);
+    assert.equal(text, "Three of four calls were right.");
+  });
+
+  test("a response that finished normally is returned whole", async () => {
+    const done = (async () => ({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: "First sentence. Second sentence." }, finish_reason: "stop" }],
+      }),
+    })) as unknown as typeof fetch;
+    const facts = buildFacts("kol-a", [cournotCall("c1", "kol-a", 1)], price);
+    assert.equal(
+      await answerWithModel("q", facts, [], { apiKey: "k", baseUrl: "https://x/v1", model: "m" }, done),
+      "First sentence. Second sentence.",
+    );
+  });
 });
