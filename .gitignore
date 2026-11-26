@@ -11,3 +11,6 @@ contracts/*.abi
 evidence/demo*.mp4
 __pycache__/
 tsconfig.tsbuildinfo
+
+.vercel
+.env*
