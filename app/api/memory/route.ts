@@ -149,7 +149,14 @@ export async function POST(request: Request) {
         }
 
         return NextResponse.json(
-          { state: "ok", text: composeAnswer(facts, memories), source: "composed", facts, memories },
+          {
+            state: "ok",
+            text: composeAnswer(facts, memories),
+            source: "composed",
+            modelNote: "no model configured: needs LLM_MODEL plus LLM_API_KEY or a Vercel OIDC token",
+            facts,
+            memories,
+          },
           { status: 200 },
         );
       }
