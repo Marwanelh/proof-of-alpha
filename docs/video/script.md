@@ -11,6 +11,42 @@ Captions only. No voiceover: judges watch muted, sometimes at 1.5×, and every f
 
 ---
 
+## As built — the five scenes in `video/film/`, and the exact numbers on screen
+
+The beats below are the revision that got rendered. Where they differ from the sections under
+"Beat 1…5", **this table wins**: the product changed under us twice (a public *check* that records
+nothing, and reviewed calls that carry Cournot and the chain), and the film follows the product.
+
+| Scene | Time | On screen |
+|---|---|---|
+| S1 | 0:00–0:30 | the check panel + `$553.92` CoinMarketCap keyed · `$553.56` Atlas single feed “bnb/usd” at block **135,924,867** · baseline **64%** `proxy · not Cournot` · `edge +0.96 if right · −0.04 if wrong` |
+| S2 | 0:30–0:52 | the board: **8** calls · **3** KOLs · **1** on-chain receipt, real CMC Community posts, each row labelled `proxy · not Cournot` |
+| S3 | 0:52–1:06 | `edge = outcome − probability` with three **illustrative** cases: p=0.9→+0.1, p=0.2→+0.8, p=0.7 wrong→−0.7, tagged `illustrative inputs` |
+| S4 | 1:06–1:34 | the reviewed call: DemoBear, **29%** Cournot at post, receipt **0x2527…4a80**, `edge — open until 1 Dec`, `Atlas price verified in tx: false · referenced read` |
+| S5 | 1:34–2:00 | works today / still missing (the outcome on 1 Dec, a real probability for the rest) + both links |
+
+`npm run check` reports **0 errors**; the remaining warnings are a silent film (no music bed) and small
+mono source labels below the 28 px phone legibility floor — both deliberate, and both noted in
+`plan.md` §7 rather than silently ignored.
+
+### Numbers ledger for the film (supersedes the older table below)
+
+| On screen | Value | Source | Status |
+|---|---|---|---|
+| CMC at posting | `$553.92` | live `POST /api/verify` → `record.cmc.priceUsd`, `source: keyed` | real, captured 27 Nov 06:15 BKK |
+| Atlas now | `$553.56` · block `135,924,867` | `record.atlas.price`, `mainnetBlock`, `description "bnb/usd"` | real, block-pinned |
+| Baseline | `64%` | `proxyBaseline` — a trailing-volatility proxy | **labelled `proxy · not Cournot` in frame** |
+| Edge if right/wrong | `+0.96` / `−0.04` | 1 − 0.64 and −0.64 | arithmetic on the labelled baseline |
+| Board counters | `8` · `3` · `1` | `/leaderboard` | real |
+| Reviewed call | `29%` · `0x2527…4a80` | `data/live.json` call #0 (`p 0.2902`, `recorded-live`) | real, tx verified on BSC testnet |
+| `atlasVerified` | `false` | `call-0.receipt.atlasVerified` | real |
+
+**Never in frame:** the fixture probability `0.35`, any probability attributed to Cournot on the check
+screen (that screen is a proxy and says so), or any claim that the Atlas price was verified in the
+transaction.
+
+---
+
 ## Beat 1 — Paste → receipt · 0:00–0:32 (32 s)
 
 **Screen:** the real product, captured from the deployment. The post is the one that produced call #0 —
