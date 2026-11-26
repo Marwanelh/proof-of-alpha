@@ -44,8 +44,8 @@ export function Register({ summaries, sample }: { summaries: readonly KolSummary
     <div className="table-scroll">
       <table className="register">
         <caption>
-          Ranked by Cournot Edge. A KOL with only proxy-scored calls sorts below every KOL with a real
-          baseline, however good their hit rate looks.
+          Ranked by mean Cournot Edge, then hit rate, then KOL id. KOLs without a Cournot Edge appear after
+          the ranked cohort. Hit rate counts every resolved call, of both kinds.
           {sample ? " Rows marked SAMPLE are backtested, not live-resolved." : ""}
         </caption>
         <thead>

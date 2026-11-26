@@ -45,8 +45,24 @@ export function CmcStamp({ cmc }: { cmc: CmcSnapshot }) {
   return <Stamp state="referenced">CMC · source unrecorded</Stamp>;
 }
 
-/** The on-chain receipt, or an honest statement that there is none. */
-export function ReceiptStamp({ receipt }: { receipt: OnChainReceipt | null }) {
-  if (receipt === null) return <Stamp state="referenced">Not on chain · draft</Stamp>;
-  return <Stamp state="verified">On chain · chain {receipt.chainId}</Stamp>;
+/**
+ * The on-chain receipt, or an honest statement that there is none.
+ *
+ * Three distinct states, not two. A backtested sample can never have a receipt, so calling it a "draft"
+ * implies it might yet get one. Codex's proposal was right that empty or vague space here is too ambiguous:
+ * a sample row says so in words.
+ */
+export function ReceiptStamp({ receipt, sample }: { receipt: OnChainReceipt | null; sample?: boolean | undefined }) {
+  if (receipt === null) {
+    return sample ? (
+      <Stamp state="referenced">No receipt · sample row</Stamp>
+    ) : (
+      <Stamp state="referenced">Not on chain · draft</Stamp>
+    );
+  }
+  return receipt.atlasVerified ? (
+    <Stamp state="verified">On chain · read verified in-tx</Stamp>
+  ) : (
+    <Stamp state="referenced">On chain · referenced read</Stamp>
+  );
 }

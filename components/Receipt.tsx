@@ -108,32 +108,52 @@ export function Receipt({ data }: { data: ReceiptData }) {
         </Row>
 
         {atlas === null ? (
-          <Row label="Atlas price" stamp={<Stamp state="referenced">Not read</Stamp>}>
+          <Row label="Atlas feed read" stamp={<Stamp state="referenced">Not read</Stamp>}>
             <span className="hint">
               A backtested sample carries no on-chain price. Only a live call reads the Atlas feed.
             </span>
           </Row>
         ) : (
-          <Row label="Atlas price" stamp={<AtlasStamp atlas={atlas} verified={data.receipt?.atlasVerified === true} />}>
+          <Row label="Atlas feed read" stamp={<AtlasStamp atlas={atlas} verified={data.receipt?.atlasVerified === true} />}>
             <span className="value">${scaled(atlas.price, atlas.decimals)}</span>
-            <span className="hint"> feed {atlas.feedId} · updated {ageSeconds}s before this page rendered</span>
+            <span className="hint">
+              {" "}feed {atlas.feedId} · updated {ageSeconds}s before this page rendered. This is an Atlas feed we
+              read at a known block, not the price of {claim.asset}: the per-asset feed id for {claim.asset} is
+              still pending from Atlas, and we will not show this number as though it were.
+            </span>
           </Row>
         )}
 
-        <Row label="Transaction" stamp={<ReceiptStamp receipt={data.receipt} />}>
+        <Row label="Transaction" stamp={<ReceiptStamp receipt={data.receipt} sample={data.sample} />}>
           {data.receipt ? (
             <span className="value">{data.receipt.txHash}</span>
           ) : (
-            <span className="hint">No transaction. This call is scored but not yet locked on chain, so it is not final.</span>
+            <span className="hint">
+              {data.sample
+                ? "A backtested row was never written to the chain and never will be."
+                : "No transaction. This call is scored but not yet locked on chain, so it is not final."}
+            </span>
           )}
         </Row>
       </div>
+
+      {data.receipt !== null && data.receipt.atlasVerified === false ? (
+        <div className="receipt-foot" style={{ background: "var(--referenced-wash)", borderTop: "1px solid var(--rule-2)" }}>
+          <p className="hint" style={{ margin: 0, color: "var(--referenced)", fontWeight: 600 }}>
+            Referenced Atlas read. This transaction is real, but the contract did not read the feed: the
+            backend did, at block {atlas?.mainnetBlock ?? "—"}. A confirmed hash must not be read as
+            verifying the Atlas price.
+          </p>
+        </div>
+      ) : null}
 
       <div className="receipt-foot">
         <p className="hint" style={{ margin: 0 }}>
           {data.receipt
             ? `Locked before the outcome was known, at registry ${data.receipt.registry}. Anyone can re-read the Atlas price at block ${atlas?.mainnetBlock ?? "—"} and check the transaction.`
-            : "Locked means a confirmed transaction. Until then this is a draft and we say so."}
+            : data.sample
+              ? "Sample row. Nothing here was locked on chain, and nothing here should be cited as evidence."
+              : "Locked means a confirmed transaction. Until then this is a draft and we say so."}
         </p>
       </div>
     </article>
