@@ -1,12 +1,9 @@
-import { existsSync, readFileSync } from "node:fs";
-
 import { Register } from "../../components/Register.tsx";
 import { rank, summarise, type KolSummary } from "../../server/records.ts";
+import { loadStore } from "../../server/store.ts";
 import type { CallRecord } from "../../shared/types.ts";
 
 export const dynamic = "force-dynamic";
-
-type Loaded = { records: CallRecord[]; source: string; sample: boolean };
 
 /**
  * Read the local store, falling back to the committed sample.
@@ -16,23 +13,8 @@ type Loaded = { records: CallRecord[]; source: string; sample: boolean };
  * backtested rows, so a leaderboard full of samples rendered with no warning at all. The data already says
  * what it is (`kind: "backtested"`); read that instead of trusting the filename.
  */
-function load(): Loaded {
-  const candidates = ["data/local.json", "data/seed.json"];
-  for (const path of candidates) {
-    if (!existsSync(path)) continue;
-    try {
-      const parsed: unknown = JSON.parse(readFileSync(path, "utf8"));
-      const records = Array.isArray(parsed)
-        ? (parsed as CallRecord[])
-        : ((parsed as { records?: CallRecord[] }).records ?? []);
-      if (records.length > 0) {
-        return { records, source: path, sample: records.some((r) => r.kind === "backtested") };
-      }
-    } catch {
-      continue; // a corrupt store is not a reason to invent a leaderboard
-    }
-  }
-  return { records: [], source: "none", sample: true };
+function load() {
+  return loadStore();
 }
 
 /**

@@ -16,6 +16,11 @@ const nextConfig = {
   // the CLI scripts) without help. An extensionAlias shim was tried first and is not needed.
   // `root` is pinned so Turbopack does not walk up to a package-lock.json outside this repository.
   turbopack: { root: fileURLToPath(new URL(".", import.meta.url)) },
+
+  // Force the JSON store into every server bundle. Without this, a runtime `readFileSync("data/seed.json")`
+  // is not traced into a serverless deployment and the leaderboard renders empty there while working
+  // perfectly on localhost. The build script verifies the emitted trace manifest actually contains the file.
+  outputFileTracingIncludes: { "/**/*": ["./data/**/*.json"] },
 };
 
 export default nextConfig;

@@ -1,0 +1,95 @@
+{
+  "brainId": "1491a6d2-c341-4486-b964-d392f2aa1a50",
+  "at": "2026-11-26T14:02:32.564Z",
+  "steps": [
+    {
+      "name": "brains.list",
+      "ok": true,
+      "detail": "1 brain(s), using 1491a6d2-c341-4486-b964-d392f2aa1a50"
+    },
+    {
+      "name": "memory.remember",
+      "ok": true,
+      "detail": "source c698b7c3-18d6-4519-a561-3c51f6bcbe5e status=pending pages=0",
+      "extra": {
+        "sourceId": "c698b7c3-18d6-4519-a561-3c51f6bcbe5e",
+        "status": "pending",
+        "affectedPageIds": []
+      }
+    },
+    {
+      "name": "memory.compiled",
+      "ok": true,
+      "detail": "status=completed after 22.9s",
+      "extra": {
+        "status": "completed",
+        "waitedMs": 22878,
+        "timedOut": false
+      }
+    },
+    {
+      "name": "memory.retrieve",
+      "ok": true,
+      "detail": "4 hit(s), first: BNB",
+      "extra": [
+        {
+          "slug": "bnb",
+          "title": "BNB",
+          "similarity": 0.6004088166738955
+        },
+        {
+          "slug": "historical-volatility",
+          "title": "Historical Volatility",
+          "similarity": 0.5824387117197358
+        },
+        {
+          "slug": "sample-kol-alpha",
+          "title": "Sample KOL Alpha",
+          "similarity": 0.5275935782881047
+        },
+        {
+          "slug": "proxy-baseline",
+          "title": "Proxy Baseline",
+          "similarity": 0.534649967766641
+        }
+      ]
+    },
+    {
+      "name": "memory.connect",
+      "ok": true,
+      "detail": "6 node(s), 6 edge(s), truncated=false",
+      "extra": {
+        "nodes": 6,
+        "edges": 6,
+        "truncated": false
+      }
+    },
+    {
+      "name": "memory.health",
+      "ok": true,
+      "detail": "Freshness=91 · Readiness=59 · Strain=10",
+      "extra": {
+        "facets": [
+          {
+            "key": "freshness",
+            "label": "Freshness",
+            "score": 91,
+            "status": "Fresh"
+          },
+          {
+            "key": "readiness",
+            "label": "Readiness",
+            "score": 59,
+            "status": "Getting ready"
+          },
+          {
+            "key": "strain",
+            "label": "Strain",
+            "score": 10,
+            "status": "Low strain"
+          }
+        ]
+      }
+    }
+  ]
+}

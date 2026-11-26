@@ -1,27 +1,11 @@
-import { existsSync, readFileSync } from "node:fs";
-
 import { BacktestedReceipt } from "../../../components/Receipt.tsx";
+import { MemoryPanel } from "../../../components/MemoryPanel.tsx";
 import { Stamp } from "../../../components/Stamp.tsx";
 import { rank, summarise, type KolSummary } from "../../../server/records.ts";
+import { loadRecords } from "../../../server/store.ts";
 import type { BacktestedCallRecord, CallRecord } from "../../../shared/types.ts";
 
 export const dynamic = "force-dynamic";
-
-function load(): CallRecord[] {
-  for (const path of ["data/local.json", "data/seed.json"]) {
-    if (!existsSync(path)) continue;
-    try {
-      const parsed: unknown = JSON.parse(readFileSync(path, "utf8"));
-      const records = Array.isArray(parsed)
-        ? (parsed as CallRecord[])
-        : ((parsed as { records?: CallRecord[] }).records ?? []);
-      if (records.length > 0) return records;
-    } catch {
-      continue;
-    }
-  }
-  return [];
-}
 
 function priceAtResolution(record: CallRecord): number | null {
   if (record.resolution === null) return null;
@@ -36,7 +20,7 @@ function pct(value: number | null): string {
 export default async function KolPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const kolId = decodeURIComponent(id);
-  const records = load();
+  const records = loadRecords();
   const mine = records.filter((r) => r.claim.authorId === kolId);
 
   if (mine.length === 0) {
@@ -109,7 +93,9 @@ export default async function KolPage({ params }: { params: Promise<{ id: string
         ) : null}
       </section>
 
-      <div style={{ display: "grid", gap: 22 }}>
+      <MemoryPanel kolId={kolId} calls={mine.length} />
+
+      <div style={{ display: "grid", gap: 22, marginTop: 28 }}>
         {mine.map((r) =>
           r.kind === "backtested" ? (
             <BacktestedReceipt key={r.id} record={r as BacktestedCallRecord} />
