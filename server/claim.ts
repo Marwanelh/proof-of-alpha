@@ -10,7 +10,7 @@
 import type { Claim, ClaimSource } from "../shared/types.ts";
 
 /** Tickers we will score. An allowlist, not a regex guess: "$GM" and "IMO" are not assets. */
-export const WATCHLIST = ["BNB", "CAKE", "BTC", "ETH", "SOL", "XRP", "DOGE", "ADA", "LINK", "TWT"] as const;
+export const WATCHLIST = ["BNB", "CAKE", "BTC", "ETH", "SOL", "XRP", "DOGE", "ADA", "LINK", "TWT", "TRX", "AVAX", "TON", "DOT", "LTC", "SUI", "SHIB"] as const;
 
 /** The documented default horizon. Applied only when the author gave no date, and flagged. */
 const DEFAULT_HORIZON_DAYS = 7;
