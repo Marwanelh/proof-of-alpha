@@ -34,9 +34,25 @@ describe("claim extraction", () => {
     assert.equal(claim.targetUsd, "1.50");
   });
 
-  test("refuses a vague opinion — no target, nothing to prove wrong", async () => {
-    // The asset must be present or this passes for the wrong reason (no asset, rather than no target).
-    assert.equal(await extractClaim({ ...base, text: "BNB is bullish soon, trust me" }), null);
+  test("a stance with no number is a direction-only call against the price at posting", async () => {
+    const claim = await extractClaim({ ...base, text: "BNB is bullish soon, trust me" });
+    assert.ok(claim);
+    assert.equal(claim.direction, "bullish");
+    assert.equal(claim.targetUsd, "", "the pipeline fills the target with the price at posting");
+    assert.equal(claim.targetSource, "price-at-posting");
+    assert.equal(claim.horizonDefaulted, true);
+  });
+
+  test("refuses a post with no stance and no number", async () => {
+    assert.equal(await extractClaim({ ...base, text: "BNB Chain published a litepaper for its new Layer-1." }), null);
+  });
+
+  test("a futures signal with a bare Take Profits list scores its first TP", async () => {
+    const text = "Futures (Free Signal) Long #BNB/USDT Entry zone : 533.422 - 549.920 Take Profits : 552.642 569.057 585.472 Stop loss :511.4256 Leverage: 10x";
+    const claim = await extractClaim({ ...base, text });
+    assert.ok(claim);
+    assert.equal(claim.direction, "bullish");
+    assert.equal(claim.targetUsd, "552.642");
   });
 
   test("extracts the claimed target, not an earlier entry price", async () => {

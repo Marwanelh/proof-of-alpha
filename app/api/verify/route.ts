@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { extractClaim } from "../../../server/claim.ts";
+import { extractClaimSmart } from "../../../server/llm-claim.ts";
 import { cleanPastedPost } from "../../../shared/clean.ts";
 import { readCournot as readCournotResponse, CournotError, type CournotMode } from "../../../server/cournot.ts";
 import { keylessPrice, keyedQuotes, CmcError } from "../../../server/cmc.ts";
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
         source: "paste",
       },
       {
-        extract: (input) => extractClaim(input),
+        extract: (input) => extractClaimSmart(input),
         // Signature differs on purpose: the adapter takes (mode, skillDir, claim), the pipeline takes
         // (claim, mode). Adapted here rather than changing either contract.
         readCournot: (claim, m) => readCournotResponse(m, process.env["COURNOT_SKILL_DIR"], claim),

@@ -57,4 +57,18 @@ Share`;
     assert.equal(c.author, "CryptoNova");
     assert.equal(c.dropped, 0);
   });
+
+  test("a Take Profits list keeps its numbers, and the name above the handle goes", async () => {
+    const c = cleanPastedPost("Futures (Free Signal)\n✅ Long\n#BNB/USDT\nEntry zone : 533.422 - 549.920\nTake Profits :\n552.642\n569.057\nStop loss :511.4256\nLeverage: 10x\nFab management\n@CrptoFab");
+    assert.equal(c.author, "CrptoFab");
+    assert.ok(c.text.includes("Take Profits : 552.642 569.057"), c.text);
+    assert.ok(!c.text.includes("Fab management"), c.text);
+    const claim = await extractClaim({ text: c.text, authorId: c.author!, postedAt: NOW.toISOString(), now: NOW });
+    assert.equal(claim?.targetUsd, "552.642");
+  });
+
+  test("a name on the last line is the author", () => {
+    const c = cleanPastedPost("BNB Chain has published a litepaper for its new Layer-1.\n🟡 #BNB #Blockchain\nCrypto Henry");
+    assert.equal(c.author, "CryptoHenry");
+  });
 });

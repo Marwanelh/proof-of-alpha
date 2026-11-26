@@ -25,6 +25,13 @@ export type Claim = {
   deadline: string; // ISO-8601, strictly after postedAt
   /** True when the post gave no explicit date and we applied the documented default horizon. */
   horizonDefaulted: boolean;
+  /**
+   * Where the target came from. "price-at-posting" is a direction-only call ("BNB looks bullish"): the author
+   * named no number, so the claim is "higher (or lower) than the price when this was posted".
+   */
+  targetSource?: "post" | "price-at-posting";
+  /** What read the post: "rules", or the model id that extracted it. */
+  extractor?: string;
 };
 
 export type CmcSnapshot = {

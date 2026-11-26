@@ -104,7 +104,25 @@ export function Receipt({ data }: { data: ReceiptData }) {
         <Row label="Author">{claim.authorId}</Row>
         <Row label="Posted">{claim.postedAt}</Row>
 
-        <Row label="Claim">{claim.asset} {claim.direction} to ${claim.targetUsd}</Row>
+        <Row
+          label="Claim"
+          stamp={
+            claim.extractor === undefined || claim.extractor === "rules" ? (
+              <Stamp state="referenced">Read by rules</Stamp>
+            ) : (
+              <Stamp state="verified">Read by AI · {claim.extractor.split("/").pop()}</Stamp>
+            )
+          }
+        >
+          {claim.targetSource === "price-at-posting" ? (
+            <>
+              {claim.asset} {claim.direction === "bullish" ? "higher" : "lower"} than ${claim.targetUsd}
+              <span className="hint"> Direction only: the post named no target, so the claim is measured against the price at posting.</span>
+            </>
+          ) : (
+            <>{claim.asset} {claim.direction} to ${claim.targetUsd}</>
+          )}
+        </Row>
         <Row
           label="Deadline"
           stamp={

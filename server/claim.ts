@@ -10,7 +10,7 @@
 import type { Claim, ClaimSource } from "../shared/types.ts";
 
 /** Tickers we will score. An allowlist, not a regex guess: "$GM" and "IMO" are not assets. */
-const WATCHLIST = ["BNB", "CAKE", "BTC", "ETH", "SOL", "XRP", "DOGE", "ADA", "LINK", "TWT"] as const;
+export const WATCHLIST = ["BNB", "CAKE", "BTC", "ETH", "SOL", "XRP", "DOGE", "ADA", "LINK", "TWT"] as const;
 
 /** The documented default horizon. Applied only when the author gave no date, and flagged. */
 const DEFAULT_HORIZON_DAYS = 7;
@@ -52,12 +52,16 @@ export async function extractClaim(input: ExtractInput): Promise<Claim | null> {
 
   // A trade setup (Long/Short, TP1…, SL) is the most common shape of a KOL call. Its first take-profit is the
   // claim: the price the author says will be reached first. Later TPs are optional extensions, not the call.
-  const setup = findSetup(text);
+  const foundSetup = findSetup(text);
+  if (foundSetup === "contradictory") return null; // a TP on the wrong side of its own stop is not a call
+  const setup = foundSetup;
 
-  const targetUsd = setup?.tp1 ?? findTarget(text);
-  if (targetUsd === null) return null;
-
-  const direction = setup?.direction ?? findDirection(text, targetUsd);
+  const found = setup?.tp1 ?? findTarget(text);
+  // No number, but a clear stance ("BNB looks bullish, loading up"): a direction-only call. The target is
+  // filled in with the price at posting by the verify pipeline, and the receipt says so.
+  const directionOnly = found === null;
+  const targetUsd = found ?? "";
+  const direction = setup?.direction ?? (directionOnly ? findSentiment(text) : findDirection(text, targetUsd));
   if (direction === null) return null;
 
   const postedAt = new Date(input.postedAt);
@@ -70,7 +74,7 @@ export async function extractClaim(input: ExtractInput): Promise<Claim | null> {
     // never wrote. Otherwise an observation with no forward-looking grammar is not a prediction at all.
     if (DEADLINE_LIKE.test(text)) return null;
     // A setup with a take-profit is forward-looking by construction, so it takes the flagged default horizon.
-    if (setup === null && !FORWARD.test(text)) return null;
+    if (setup === null && !directionOnly && !FORWARD.test(text)) return null;
   }
   const deadline =
     explicit ?? new Date(postedAt.getTime() + DEFAULT_HORIZON_DAYS * 86_400_000);
@@ -90,6 +94,8 @@ export async function extractClaim(input: ExtractInput): Promise<Claim | null> {
     targetUsd,
     deadline: deadline.toISOString(),
     horizonDefaulted,
+    targetSource: directionOnly ? "price-at-posting" : "post",
+    extractor: "rules",
   };
   if (input.sourcePostId !== undefined) claim.sourcePostId = input.sourcePostId;
   return claim;
@@ -105,7 +111,23 @@ function findAsset(text: string): string | null {
   return hits.size === 1 ? [...hits][0]! : null;
 }
 
-type Setup = { tp1: string; direction: Claim["direction"] };
+/**
+ * Stance words only — no comparison words. "BNB was above $600 yesterday" has a comparison but no stance, so
+ * it stays an observation; "BNB looks bullish, loading up" has a stance and becomes a direction-only call.
+ */
+const STANCE_BULL =
+  /\b(long(?:ing)?|bullish|bulls?|pump(?:ing)?|moon(?:ing)?|send it|break(?:s|ing)?\s*out|breakout|rally|buy(?:ing)?|undervalued|accumulat(?:e|ing|ion)|load(?:ing|ed)?(?: up)?|rip(?:ping)?|higher|recovery|uptrend)\b|🚀|📈/i;
+const STANCE_BEAR =
+  /\b(short(?:ing)?|bearish|bears?|dump(?:ing)?|crash(?:ing)?|sell(?:ing)?|overvalued|lower|downtrend|breakdown|top(?:ped)? is in)\b|📉/i;
+
+function findSentiment(text: string): Claim["direction"] | null {
+  const bull = STANCE_BULL.test(text);
+  const bear = STANCE_BEAR.test(text);
+  if (bull === bear) return null;
+  return bull ? "bullish" : "bearish";
+}
+
+type Setup = { tp1: string; direction: Claim["direction"] } | "contradictory";
 
 /**
  * "Long setup: Entry $550 · TP1 $569 · TP2 $582 · SL $525". Needs a take-profit. Direction comes from the
@@ -114,7 +136,7 @@ type Setup = { tp1: string; direction: Claim["direction"] };
  */
 function findSetup(text: string): Setup | null {
   const num = "([0-9][0-9,]*(?:\\.[0-9]+)?)";
-  const tp = text.match(new RegExp(`\\b(?:tp\\s*1?|take[\\s-]?profit\\s*1?|target\\s*1)\\s*[:=\\-–]?\\s*\\$?\\s?${num}`, "i"));
+  const tp = text.match(new RegExp(`\\b(?:tp\\s*1?|take[\\s-]?profits?\\s*1?|targets?\\s*1)\\s*[:=\\-–]?\\s*\\$?\\s?${num}`, "i"));
   if (!tp) return null;
   const tp1 = tp[1]!.replace(/,/g, "");
   if (!(Number(tp1) > 0)) return null;
@@ -128,7 +150,7 @@ function findSetup(text: string): Setup | null {
   if (direction === null && stop !== null) direction = Number(tp1) > stop ? "bullish" : "bearish";
   if (direction === null) return null;
 
-  if (stop !== null && (direction === "bullish" ? Number(tp1) <= stop : Number(tp1) >= stop)) return null;
+  if (stop !== null && (direction === "bullish" ? Number(tp1) <= stop : Number(tp1) >= stop)) return "contradictory";
   return { tp1, direction };
 }
 

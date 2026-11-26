@@ -52,6 +52,8 @@ export function cleanPastedPost(raw: string): Cleaned {
   let bear = false;
   let dropped = 0;
   const kept: string[] = [];
+  // Inside "Take Profits :" / "Targets:" lists, bare numbers are the call, not like counts.
+  let inList = false;
 
   for (const line of lines) {
     if (line === "") continue;
@@ -70,9 +72,16 @@ export function cleanPastedPost(raw: string): Cleaned {
     const handle = line.match(HANDLE);
     if (handle) {
       author ??= handle[1]!;
+      // "Alek Carter" / "@Alek_Carter": the display name sits right above the handle.
+      if (kept.length > 0 && isNameLike(kept[kept.length - 1]!)) kept.pop();
       dropped += 1;
       continue;
     }
+    if (inList && /^[+\-−]?\$?\s?\d[\d,]*(?:\.\d+)?$/.test(line)) {
+      kept.push(line);
+      continue;
+    }
+    inList = false;
     if (
       UI_WORDS.has(lower) ||
       RELATIVE_TIME.test(line) ||
@@ -86,17 +95,21 @@ export function cleanPastedPost(raw: string): Cleaned {
       dropped += 1;
       continue;
     }
-    kept.push(line.replace(INLINE_WIDGET, "").trim());
+    const cleanedLine = line.replace(INLINE_WIDGET, "").trim();
+    kept.push(cleanedLine);
+    inList = /:\s*$/.test(cleanedLine);
   }
 
   // A short first line followed by the body is usually the display name ("CryptoNova" / "Crypto Nova ✓").
-  if (kept.length > 1) {
-    const first = kept[0]!;
-    if (first.length <= 32 && !/[$%]|\d{2,}/.test(first) && first.split(" ").length <= 3 && !/[.!?]$/.test(first)) {
-      author ??= first.replace(/[^\p{L}\p{N}_. ]/gu, "").trim().replace(/\s+/g, "") || null;
-      kept.shift();
-      dropped += 1;
-    }
+  if (kept.length > 1 && isNameLike(kept[0]!)) {
+    author ??= asHandle(kept[0]!);
+    kept.shift();
+    dropped += 1;
+  }
+  // …or the last line, when the page puts the name under the post ("… #BNB #Blockchain" / "Crypto Henry").
+  if (kept.length > 1 && author === null && isNameLike(kept[kept.length - 1]!)) {
+    author = asHandle(kept.pop()!);
+    dropped += 1;
   }
 
   let text = kept.join(" ").replace(/\s+/g, " ").trim();
@@ -109,4 +122,19 @@ export function cleanPastedPost(raw: string): Cleaned {
   if (sentiment !== null && !new RegExp(`\\b${sentiment}\\b`, "i").test(text)) text = `${text} (${sentiment})`;
 
   return { text, author, sentiment, dropped };
+}
+
+/** A display name: short, at most three words, no prices, digits runs, hashtags or sentence punctuation. */
+function isNameLike(line: string): boolean {
+  return (
+    line.length <= 32 &&
+    !/[$%#:]|\d{2,}/.test(line) &&
+    line.split(" ").length <= 3 &&
+    !/[.!?,]$/.test(line) &&
+    /\p{L}/u.test(line)
+  );
+}
+
+function asHandle(line: string): string | null {
+  return line.replace(/[^\p{L}\p{N}_. ]/gu, "").trim().replace(/\s+/g, "") || null;
 }

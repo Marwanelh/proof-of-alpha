@@ -64,17 +64,25 @@ export async function verify(
   deps: VerifyDeps,
   options: VerifyOptions,
 ): Promise<VerifyResult> {
-  const claim = await deps.extract(input);
+  let claim = await deps.extract(input);
   if (claim === null) {
     throw new VerifyError(
       "no scorable claim in this post: it needs one asset, a direction, a price target and a future deadline",
     );
   }
 
+  // A direction-only call ("BNB looks bullish") names no number: its claim is "higher (or lower) than the
+  // price when this was posted", so the price is read first and becomes the target.
+  let cmc: CmcSnapshot | null = null;
+  if (claim.targetUsd === "") {
+    cmc = await deps.readPrice(claim.asset);
+    claim = { ...claim, targetUsd: targetFromPrice(cmc.priceUsd), targetSource: "price-at-posting" };
+  }
+
   const cournot = deps.readCournot(claim, options.cournotMode);
   // Timestamp the moment the number was obtained, immediately after obtaining it.
   const probabilityReadAt = new Date().toISOString();
-  const cmc = await deps.readPrice(claim.asset);
+  if (cmc === null) cmc = await deps.readPrice(claim.asset);
   const atlas = await deps.readAtlas();
 
   if (!options.record) {
@@ -116,4 +124,11 @@ export async function verify(
     },
     evidenceEligible: isSponsorEvidence(cournot),
   };
+}
+
+/** "554.0746129" -> "554.07"; sub-dollar prices keep six decimals. A decimal string, never a float in the record. */
+export function targetFromPrice(priceUsd: string): string {
+  const p = Number(priceUsd);
+  if (!Number.isFinite(p) || p <= 0) throw new VerifyError(`cannot set a target from price "${priceUsd}"`);
+  return p >= 1 ? p.toFixed(2) : p.toFixed(6);
 }
