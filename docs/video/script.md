@@ -1,188 +1,172 @@
-# Script — Proof of Alpha, 2:00 (revision 2, after review)
+# Script — Proof of Alpha, 2:00 (revision 3 — after the first live receipt)
 
-Companion to `plan.md`. Revision 1 was 2:40 and opened on typography; the review's single highest-value
-finding was that the first 15 seconds earned **no evidenced credit** toward the 70 points in the top three
-dimensions. So the video now **opens on the working flow** — a pasted BNB call becoming a draft with both
-prices attached — and the title lands *over* the demo at 0:06 instead of before it.
+Revision 2 was written when the honest story was a **refusal**: the registry was deployed and we had not
+written to it. That changed at 20:48 UTC when call #0 was recorded on BSC testnet with a real
+`recorded-live` Cournot probability. Revision 2's whole last act is therefore obsolete, and this one is built
+around a **receipt that exists**.
 
-Captions only. No voiceover: judges watch muted, sometimes at 1.5×, and everything a judge must know is on
-screen. Captions are burned in, one line at a time, bottom title-safe.
+What did not change: the review's top finding. The video opens on the working flow, in the first 15 seconds.
 
-**Word budget: 155 caption words = 60 s of speech in a 120 s cut.** Sparse on purpose — the frames carry dense
-evidence and a judge needs the hold, not a narrator. Measured with a word count, never estimated: this figure
-has been wrong in this file three times before it was computed.
+Captions only. No voiceover: judges watch muted, sometimes at 1.5×, and every fact must survive that.
 
 ---
 
-## Beat 1 — Paste → draft · 0:00–0:32 (32 s)
+## Beat 1 — Paste → receipt · 0:00–0:32 (32 s)
 
-This beat is the submission. A skimming judge forms an impression here, so it opens on the product working,
-not on a premise. The review cut the old opener for precisely this reason.
-
-**Screen:** the real product, screen-captured from the deployment, cropped so no fixture probability is
-visible. The app surface occupies the upper 70%; captions live underneath.
+**Screen:** the real product, captured from the deployment. The post is the one that produced call #0 —
+**not** a different post, or the receipt shown would be a different call's.
 
 | t | On screen |
 |---|---|
-| 0:00 | The post already typed: `BNB will be above $700 by December 5. Loading my bags.` · handle `@chartchaser` |
-| 0:03 | `Score this call` is pressed. The receipt panel slides in from the right. |
+| 0:00 | The post already typed: `BNB will be below $500 by December 1. Rolling over.` · handle `@chartchaser` |
+| 0:03 | `Score this call` pressed. The receipt panel slides in. |
 | 0:06 | **Title lands over the demo**, top-left, small: `Proof of Alpha` |
-| 0:09 | Three real rows resolve, mono, 34 px: block below |
-| 0:18 | Status strip lands: `the probability is unavailable, so this stays a draft` |
-| 0:26 | Both price rows gain their source tags; nothing else moves |
+| 0:09 | The claim row resolves |
+| 0:14 | The two price rows resolve, each with its source tag |
+| 0:20 | The probability row resolves: `0.29 · market #111338 · recorded-live` |
+| 0:25 | Status strip: `RECORDED · call #0 · BSC testnet` |
 
 ```
-CLAIM           BNB · bullish · target $700 · by 5 Dec
-CMC · QUOTE     $554.54        keyed · observed 20:28:19Z
-ATLAS           $554.59        singlefeed "bnb/usd" · BSC mainnet · block <captured>
-STATUS          DRAFT · not recorded
+CLAIM           BNB · bearish · target $500 · by 1 Dec
+CMC · QUOTE     $555.60        keyed · observed 20:46:35Z
+ATLAS           $555.62        singlefeed "bnb/usd" · BSC mainnet · block 135,913,072
+COURNOT         0.29           market #111338 · recorded-live
+STATUS          RECORDED · call #0 · BSC testnet
 ```
 
-**Caption 1 (0:00–0:15):**
-> Paste a call and it becomes a draft with two prices attached: a keyed CoinMarketCap quote, and a read from Atlas on BNB Chain.
+**Caption 1 (0:00–0:16):**
+> Paste a post. It becomes a receipt: CoinMarketCap's keyed quote, Atlas's read on BNB Chain at one block, and the probability the market already assigned.
 
-**Caption 2 (0:15–0:32):**
-> The deadline is in the post itself. Each number is labelled with its own source — one observed at a moment, the other read at a block anyone can re-check.
+**Caption 2 (0:16–0:32):**
+> The deadline comes from the post itself. Every number keeps the source that produced it, and the receipt says which of them the chain has.
 
-**Honesty:** `$554.54` and `$554.59` are **captured values**, re-captured on the render day. The CMC row is
-replayable by its **observation timestamp only** — it is **not** checkable at the Atlas block, and the script
-never says so. The Atlas row is replayable by **block**. Every crop must exclude the fixture probability
-`0.35`.
+**Honesty:** `$555.60`, `$555.62`, block `135,913,072` and `0.2902` are the values stored in **call #0**
+(`data/live.json`), not re-typed. The CMC row is replayable by its **observation timestamp only**; the Atlas
+row is replayable by **block**; the probability is Cournot's market `#111338`, captured verbatim in
+`evidence/cournot/success-raw.json`. No crop may show the fixture probability `0.35`, which belongs to a
+different, synthetic claim.
 
 ---
 
-## Beat 2 — What the draft computes · 0:32–0:50 (18 s)
+## Beat 2 — What the receipt is for · 0:32–0:50 (18 s)
 
-**Screen:** formula at 92 px mono, `EDGE = outcome − probability`, then a boxed example at 0:38.
+**Screen:** `EDGE = outcome − probability` at 92 px, then a boxed example at 0:38.
 
 ```
-ILLUSTRATIVE INPUTS        ← this label stays in frame the whole time
-outcome +1        probability 0.90
-edge    +0.10  =  +1,000 bps
+ILLUSTRATIVE INPUTS        ← label stays in frame while numbers are visible
+outcome +1     probability 0.29  →  edge +0.71
+outcome +1     probability 0.90  →  edge +0.10
 ```
+
+At 0:46 one line under the box: `call #0's outcome arrives 1 December`.
 
 **Caption (0:32–0:50):**
-> Edge is what a call was worth after the market's own odds. Being right about something the market already expected is worth almost nothing. This is arithmetic on labelled inputs, not a measured score.
+> Edge is what a call was worth after the market's own odds. Being right about something the market priced at 90% is worth almost nothing. This arithmetic is an example — call zero's outcome is not known until 1 December.
 
-**Honesty:** `ILLUSTRATIVE INPUTS` must not leave frame while the numbers are visible, and the units are
-stated once as both `0.10` and `1,000 bps` — never decimals in one frame and basis points in the next.
+**Honesty:** `ILLUSTRATIVE INPUTS` never leaves frame while the numbers are visible. The probabilities `0.29`
+and `0.90` are inputs to arithmetic, not measured results; `0.29` is deliberately the real call's value, and
+the label still governs it.
 
 ---
 
-## Beat 3 — One buyer, one decision · 0:50–1:12 (22 s)
+## Beat 3 — One buyer, one decision · 0:50–1:10 (20 s)
 
-**Screen:** the same draft, held, dimmed to 55%; a decision panel lands on the right at 0:54.
+**Screen:** the receipt held and dimmed; a decision panel lands at 0:54.
 
 ```
 LAUNCHPAD REVIEWER
 job        vet a promoter before paying for a campaign
-sees       the call · both prices · the deadline · the draft status
-decision   no track-record endorsement until the probability is real
+sees       the claim · three sources · the probability · the receipt
+decision   endorse the calls whose probability is real — this one is; the other three are labelled proxies
 ```
 
-At 1:06 only the `decision` line brightens.
+At 1:04 only the `decision` line brightens.
 
-**Caption (0:50–1:12):**
-> A launchpad pays promoters to shill. This reviewer inspects the call and the prices behind it — and declines to endorse a track record, because the one number that would make the edge real is missing.
+**Caption (0:50–1:10):**
+> A launchpad pays promoters to shill. This reviewer can tell which of a promoter's calls rest on a real market probability and which rest on a labelled proxy — and endorses only the first.
 
-**Honesty:** this is a **scenario, not a customer**. Nobody has bought anything and there is no demand
-evidence. The header says `LAUNCHPAD REVIEWER` — a role, never a company name. The video never claims
-traction, users, or revenue.
+**Honesty:** a **scenario, not a customer**. No demand evidence, no company name, no traction claim. "the
+other three are labelled proxies" is the deployment's own count: 4 calls scored, 1 priced by Cournot.
 
 ---
 
-## Beat 4 — The deployment, and the refusal it implies · 1:12–1:38 (26 s)
+## Beat 4 — The receipt on chain · 1:10–1:36 (26 s)
 
-**Screen:** explorer-style record, mono, 32 px. The wallet nonce is **cut** — the review was right that it is
-audit detail the video cannot afford.
+**Screen:** the transaction, mono, 32 px.
 
 ```
-BSC TESTNET · DEPLOY TRANSACTION
+BSC TESTNET · CALL #0
 CallRegistry   0x6860e45d869cb42d3552bd67aecc9d6fe4bf0360
-deploy tx      0x8a1770…b201
-block          145,032,286
-bytecode       4,950 bytes
+tx             0x25270499…4a80
+block          145,045,939
+cournotBps     2902
+atlasVerified  false
 ```
 
-At 1:22 the block fades to 40% and two lines land:
+At 1:20 a line lands beneath, and is the beat's point:
 
 ```
-calls recorded   0
-the demo API refuses to record a fixture probability
+the price was read by our backend, not by the contract.
+the record says so.
 ```
 
-At 1:30 a terminal strip, 26 px:
+At 1:30: `$ npm test  # tests 139  # pass 139`
 
-```
-$ npm test          # tests 137   # pass 137
-$ npx tsc --noEmit  exit 0
-```
+**Caption (1:10–1:36):**
+> Call zero is on BNB Chain testnet. The contract stores the probability in basis points, and a flag that says the Atlas price was referenced rather than read inside the transaction. The record does not overstate itself.
 
-**Caption (1:12–1:38):**
-> The registry is deployed on BNB Chain testnet. One transaction, and it holds no calls — because the demo API refuses to write when the probability is a fixture. The chain is permanent and carries no provenance label.
-
-**Honesty:** on screen it is `BSC TESTNET · DEPLOY TRANSACTION` — never "recorded on-chain", never "live on
-BNB Chain" without the testnet qualifier. The refusal is scoped to **the demo API's fixture guard**, which is
-where it lives (`app/api/verify/route.ts`); the shared encoder still computes basis points and the CLI passes
-its own recording flag, so a blanket "the writer refuses" would be false. *"No signing key on the server"* is
-**not** used — unverified for a specific deployment, and a test count alone proves little about safety.
+**Honesty:** `atlasVerified: false` is shown **because** it is the honest value (Plan A, a referenced read).
+Never claim "verified on-chain" for the price. The transaction is on **testnet** and every reference says so.
 
 ---
 
-## Beat 5 — What works, what is missing · 1:38–2:00 (22 s)
+## Beat 5 — What works, what is missing · 1:36–2:00 (24 s)
 
-**Screen:** two columns, 34 px. At 1:50 the links join them, 30 px, held a full 10 s.
+**Screen:** two columns, 34 px; links join at 1:48 and hold.
 
 ```
-WORKS TODAY      a call · two prices · the deadline · a draft you can inspect
-NEEDS ONE THING  one real market probability, to score the edge and record the call
+WORKS TODAY   one call, three sources, a real probability, a receipt on BNB Chain testnet
+STILL MISSING the outcome on 1 December · a real probability for the rest of the record
 
-                 proof-of-alpha-three.vercel.app
-                 github.com/Marwanelh/proof-of-alpha
+              proof-of-alpha-three.vercel.app
+              github.com/Marwanelh/proof-of-alpha
 ```
 
-At 1:56 the left column brightens; the right stays visible but muted. No slogan card — the review cut "a
-record nobody can delete", and it was right: this is a demo of a **draft**.
-
-**Caption (1:38–2:00):**
-> What works today is inspecting a prediction and the prices behind it. What is missing is one real market probability. The deployment and the repository are both on screen, for anyone who wants to check either.
+**Caption (1:36–2:00):**
+> One call is scored against a real market probability and recorded on chain. Its outcome arrives on 1 December, and the rest of the record still needs real probabilities. Both links are on screen.
 
 ---
 
-## Numbers ledger — every figure that appears on screen
+## Numbers ledger — every figure on screen
 
 | On screen | Value | Source | Status |
 |---|---|---|---|
-| CMC BNB price | `$554.54` | `POST /api/verify` → `record.cmc.priceUsd` = `554.5424980386598`, `source: "keyed"` | **captured** — re-capture on render day |
-| CMC observed time | `20:28:19Z` | `record.cmc.observedAt` | captured; the **only** way CMC is replayable |
-| Atlas BNB/USD price | `$554.59` | `record.atlas.price` = `554591755781809163950` @ 18 dp | **captured** — re-capture |
-| Atlas shape + name | `singlefeed` · `"bnb/usd"` | `record.atlas.kind`, `record.atlas.description` | real, from `description()` |
-| Atlas block | `<captured>` | `record.atlas.mainnetBlock` | **must be re-captured**; the addresses file holds an earlier block at a different price |
-| Edge example | `+0.10` = `+1,000 bps` | arithmetic: 1 − 0.90 | **illustrative**, labelled in frame |
-| `CallRegistry` address | `0x6860e45d869cb42d3552bd67aecc9d6fe4bf0360` | `eth_getCode` → 4,950 bytes | **real** |
-| Deploy tx + block | `0x8a1770…b201` · `145,032,286` | [deploy tx on BscScan](https://testnet.bscscan.com/tx/0x8a1770c03320cd8343b9dbd7aaaaa318d18f6153860f3768dd34d7af6de6b201), status SUCCESS | **real** |
-| Calls recorded | `0` | no `recordCall` tx exists; the demo API refuses fixture writes | **real** |
-| Tests / typecheck | `137 passing` · `exit 0` | `npm test`, `npx tsc -p tsconfig.json --noEmit` | **real** |
-| Links | `proof-of-alpha-three.vercel.app` · `github.com/Marwanelh/proof-of-alpha` | live | confirm both open unauthenticated before render |
+| Claim | `BNB · bearish · target $500 · by 1 Dec` | `data/live.json` → `call-0.claim` | **real** |
+| CMC quote | `$555.60` · `20:46:35Z` | `call-0.cmc` = `555.6046996568377`, `source: keyed` | **real**, captured |
+| Atlas price | `$555.62` | `call-0.atlas.price` = `555616385080546615470` @18dp | **real**, captured |
+| Atlas feed | `singlefeed "bnb/usd"` · block `135,913,072` | `call-0.atlas.kind/description/mainnetBlock` | **real** |
+| Cournot probability | `0.29` (stored `0.2902`) · market `#111338` · `recorded-live` | `call-0.cournot`, raw reply in `evidence/cournot/success-raw.json` | **real**, live call |
+| Edge examples | `+0.71` and `+0.10` | arithmetic: 1 − 0.29 and 1 − 0.90 | **illustrative**, labelled in frame |
+| Registry | `0x6860e45d869cb42d3552bd67aecc9d6fe4bf0360` | `eth_getCode` → 4,950 bytes | **real** |
+| Receipt tx | `0x25270499…4a80` · block `145,045,939` · `callId 0` | [tx on BscScan](https://testnet.bscscan.com/tx/0x252704994cb18087439d79462ce8ffbd1079135c71028f1aae29b901dd9a4a80), SUCCESS, 1 `CallRecorded` event | **real**, verified independently |
+| `cournotBps` | `2902` | `data/live.json` / event payload | **real** |
+| `atlasVerified` | `false` | `call-0.receipt.atlasVerified` | **real** |
+| Tests | `139 passing` | `npm test` | **real** |
+| Deployment counters | `4 calls · 1 priced by Cournot` | `/leaderboard` | **real**, quoted in beat 3 |
 
 ### Never to appear
-- A **call receipt** transaction, a `CallRecorded` event, or the words "recorded on-chain". The **deploy**
-  transaction is explicitly permitted and is the point of beat 4: it proves the contract exists, not that a
-  call was written into it.
-- The fixture probability `0.35` in any crop, frame or transition.
-- Any probability attributed to Cournot. If market matching is mentioned at all it is **"matching
-  confidence"** — never a probability.
-- A leaderboard row, an "N of M resolved" count, or the generated answer sentence. The sample rows use a
-  labelled proxy and the profile counts do not agree with the answer text, so **the leaderboard beat is cut
-  entirely**: there is no time to explain a proxy in 120 s, and an unexplained one is worse than none.
-- "no signing key on the server", "live on BNB Chain" without "testnet", and "a record nobody can delete".
+- The fixture probability `0.35`, in any crop or transition. It belongs to a synthetic claim, not call #0.
+- `atlasVerified: true`, or "the Atlas price is verified on chain". It is `false` and that is the point.
+- "mainnet" anywhere near the receipt. The registry is **testnet (97)**.
+- An edge **result** for call #0. Its outcome does not exist until 1 December.
+- Any traction claim: users, customers, revenue, demand.
 
-## Re-capture checklist (run on render day, in this order)
+## Re-capture checklist (render day)
 
-1. `POST /api/verify` with the demo post → `cmc.priceUsd`, `cmc.observedAt`, `atlas.price`,
-   `atlas.mainnetBlock`, `atlas.kind`, `atlas.description`.
-2. Confirm the receipt's probability row does not show a number; if it does, crop it out.
-3. `npm test` → `137`; `npx tsc --noEmit` → exit 0.
-4. Open both links unauthenticated: the deployment, and the repo.
-5. Capture at 2× device pixel ratio → `beat1-receipt.png`, `beat4-explorer.png`.
-6. Only then set the composition's `data-var-text` values.
+1. `POST /api/verify` with the **call #0 post** → confirm the returned draft reproduces `$555.60` / `$555.62` /
+   block / `0.2902`. If the price has moved, that is expected: re-capture and update the ledger, keep call
+   #0's stored values authoritative for the receipt rows.
+2. Confirm the probability row reads `0.29 · recorded-live` and **not** a fixture.
+3. `npm test` → `139`; `npx tsc --noEmit` → exit 0.
+4. Open the deployment, the repo, and the BscScan tx unauthenticated.
+5. Capture at 2× → `beat1-receipt.png`, `beat4-tx.png`.

@@ -36,8 +36,8 @@ This is the part that decides whether the video is a liability. As of now, the l
 | Number | Value today | Status |
 |---|---|---|
 | `CallRegistry` on BSC testnet | `0x6860e45d869cb42d3552bd67aecc9d6fe4bf0360` · deploy tx `0x8a1770…b201` · block 145,032,286 · 4,950 bytes of bytecode · gasUsed 1,128,682 | **real** — verified on-chain, linkable on BscScan |
-| `recordCall` receipts written | **0** | true, and **deliberately** so — see §2b |
-| Calls priced by Cournot | **0** | true; "the rest use a labelled proxy" |
+| `recordCall` receipts written | **1** — call #0, block 145,045,939, `cournotBps` 2902 | **real**, verified: 1 `CallRecorded` event, recorder nonce now 2 |
+| Calls priced by Cournot | **1** of 4; the other three use a labelled proxy | real, from `/leaderboard` |
 | Leaderboard rows | 3, all **sample data**, backtested, not live-resolved | true, and labelled on-page |
 | CMC BNB price | `554.5424980386598`, `source: keyed` | **real**, live |
 | Atlas BNB/USD price | `554591755781809163950` @18dp = **$554.59**, `singlefeed`, `description: "bnb/usd"` | **real**, live, block-pinned |
@@ -62,42 +62,44 @@ green leaderboard full of unlabelled numbers. Ours shows a counter that says wha
 the technical-quality-and-safety score (15) and the originality score (10) in one shot — *"the record tells
 you which of its own numbers are real."*
 
-### 2b. Why there is a deployed contract and still no receipt — the strongest beat in the video
+### 2b. The refusal became a real receipt — and that is the better ending
 
-The registry is on chain (deploy tx above, verifiable). The deployer has sent exactly **one** transaction
-(nonce 1), so **no call has been recorded**, and that is now a deliberate refusal, not a missing step:
+An hour ago this section argued for withholding a receipt: `encodeCall` writes `cournotBps` into the
+transaction and the on-chain `Call` struct carries `atlasVerified` for the price but **no provenance field for
+the probability**, so writing a fixture would have burned an invented number into a permanent public record
+with nothing on-chain to distinguish it.
 
-> `encodeCall` writes `cournotBps` into the transaction, and the on-chain `Call` struct carries
-> `atlasVerified` for the *price* but **no provenance field for the probability** — verified by reading
-> `server/registry.ts` and `contracts/src/CallRegistry.sol`. So a receipt written today would burn
-> `cournotBps = 3500` from **fixture mode** into a tamper-proof public record with **nothing on chain to
-> distinguish it from a real Cournot number**. Anyone reading the contract would be entitled to believe
-> Cournot said 35%. We would rather ship a zero than a number that cannot be told apart from a lie.
+That argument is now settled the other way, because a **real** probability arrived. At 20:48 UTC call #0 was
+recorded on BSC testnet with `provenance: "recorded-live"`, `probability: 0.2902`, market `#111338`, and the
+write was verified independently (`SUCCESS`, block 145,045,939, one `CallRecorded` event, recorder nonce 2).
+The guard in `app/api/verify/route.ts` — a fixture run stays a draft — is what made this the *first* write
+rather than the second: the only thing on chain is the call that earned it.
 
-`ENABLE_ONCHAIN_RECORD` has also been set back to `false` in `.env.local`, as belt-and-braces: the guard
-now lives in **code** (`app/api/verify/route.ts` passes `record: writeDeps !== null && mode !== "fixture"`,
-with the comment *"the chain is permanent and carries no provenance label, so a synthetic number there would
-read as Cournot's forever"*), so a fixture run stays a draft even with recording switched on.
+So the video shows **the receipt that exists**, and the integrity story moves to a different, harder place:
+`atlasVerified: false`. The contract's own field says the Atlas price was **referenced** by our backend, not
+read inside the transaction. Showing that flag is worth more than any claim of "verified on chain", because a
+judge can check it.
+
+The guard that made this possible is the one that was already there: `app/api/verify/route.ts` passes
+`record: writeDeps !== null && mode !== "fixture"`, with the comment *"the chain is permanent and carries no
+provenance label, so a synthetic number there would read as Cournot's forever"*. A fixture run therefore stays
+a draft, and the only call on chain is the one that earned its place.
 
 > Known gap, worth one line to the reviewer: that guard sits in **one caller**, not in `writeReceipt` itself,
 > so `scripts/verify-demo.mjs` could still write a fixture receipt if someone set `wantChain`. Moving the
 > check to the network boundary would make it unbypassable. Filed, not fixed mid-flight — a teammate is
 > actively editing these files.
 
-**Say this on screen.** It is the single most credible thing in the submission: the team that deployed the
-registry is the team that declined to write to it, because the number it would hold was not real. That is
-what "tamper-proof" is worth — it protects the reader from us too.
+**Verdict (review, adopted, then overtaken by events):** the review asked for the testnet deploy beside a
+genuine draft, with the recording rule explained once. We can now exceed that: show the **real receipt**. The
+deployment earns the BNB credit, the write earns the on-chain credit the review said was missing, and
+`atlasVerified: false` earns the safety credit by refusing to overstate itself. The blanket phrase "the
+writer refuses" stays withdrawn — the guard lives in `app/api/verify/route.ts`, not in the shared encoder, so
+the claim is scoped to the demo API or it is false. The wallet nonce is still cut from the video.
 
-**Verdict (review, adopted):** show the **testnet deploy and a genuine draft**, and explain **once** that the
-demo API excludes fixture probabilities from recording. Deployment earns the BNB credit; the refusal earns
-the safety credit; a recorded call stays honestly unproven. The blanket phrase "the writer refuses" is
-withdrawn — the guard lives in `app/api/verify/route.ts`, not in the shared encoder, so the claim is scoped to
-the demo API or it is false. The wallet nonce is cut from the video: it is audit detail a 26-second beat
-cannot afford, and it invites a question the format cannot answer.
-
-A recorded call remains the single gap in the on-chain story, and **gas cannot close it**: a timely
-transaction would not authorise writing fixture data. Only a real Cournot probability can, so the earlier "if
-gas lands, re-render beat 5 with the real tx" contingency is deleted — it was wrong on its own terms.
+The gap the review named — a recorded call — is **closed**, and closed the only way it could be: with a real
+Cournot probability (0.2902, market #111338), not with gas. A timely transaction would never have authorised
+writing fixture data, which is why the earlier "if gas lands, re-render beat 5" contingency was deleted.
 
 ## 3. Structure — five beats in 2:00
 
@@ -107,11 +109,11 @@ flow itself, and it is the money shot; every other beat supports it.
 
 | # | Beat | Time | Serves |
 |---|---|---|---|
-| 1 | **Paste → draft**: the real call, keyed CMC quote, block-pinned Atlas read, draft status | 0:00–0:32 | Data integration (25) + BNB (20) + demo (5), in the first impression |
-| 2 | What the draft computes: Edge, one **illustrative** worked example | 0:32–0:50 | Originality (10) |
-| 3 | One buyer, one decision: a launchpad reviewer declines to endorse pending a real probability | 0:50–1:12 | Real-world potential (25) |
-| 4 | The testnet deployment, and the scoped refusal to write to it | 1:12–1:38 | BNB (20) + technical quality and safety (15) |
-| 5 | What works today, what is missing, both links | 1:38–2:00 | Close; demo (5) |
+| 1 | **Paste → receipt**: the real call #0 post, keyed CMC quote, block-pinned Atlas read, the real probability, status `RECORDED` | 0:00–0:32 | Data integration (25) + BNB (20) + demo (5), in the first impression |
+| 2 | What the receipt is for: Edge, two **illustrative** worked examples, outcome pending 1 Dec | 0:32–0:50 | Originality (10) |
+| 3 | One buyer, one decision: a launchpad reviewer endorses only calls whose probability is real | 0:50–1:10 | Real-world potential (25) |
+| 4 | **The receipt on chain**: tx, block, `cournotBps` 2902, and `atlasVerified: false` | 1:10–1:36 | BNB (20) + technical quality and safety (15) |
+| 5 | What works today, what is missing, both links | 1:36–2:00 | Close; demo (5) |
 
 Two beats from revision 1 are **gone**, both on the review's advice: the sample leaderboard (no time to
 explain a proxy, and an unexplained one is worse than none) and the plain-language answer panel (its counts
