@@ -442,11 +442,11 @@ import { parseMarket } from "../server/cournot.ts";
 
 describe("reading Cournot market titles", () => {
   test("names, phrasings and strikes map onto our claims", () => {
-    assert.deepEqual(parseMarket("Bitcoin price above $62,500 at any time before 2026-12-01 05:00 UTC"), { asset: "BTC", side: "bullish", strike: 62500 });
-    assert.deepEqual(parseMarket("Will the price of Ethereum be above $1,900 on December 1?"), { asset: "ETH", side: "bullish", strike: 1900 });
-    assert.deepEqual(parseMarket("Will the price of Ethereum be less than $1,200 on December 1?"), { asset: "ETH", side: "bearish", strike: 1200 });
-    assert.deepEqual(parseMarket("Solana price above $80.00 at any time before 2026-12-01 05:00 UTC"), { asset: "SOL", side: "bullish", strike: 80 });
-    assert.deepEqual(parseMarket("BNB price below $500.00 at any time before 2026-12-01 05:00 UTC"), { asset: "BNB", side: "bearish", strike: 500 });
+    assert.deepEqual(parseMarket("Bitcoin price above $62,500 at any time before 2026-12-01 05:00 UTC"), { asset: "BTC", side: "bullish", strike: 62500, deadline: "2026-12-01T05:00:00.000Z" });
+    assert.deepEqual(parseMarket("Will the price of Ethereum be above $1,900 on December 1?"), { asset: "ETH", side: "bullish", strike: 1900, deadline: null });
+    assert.deepEqual(parseMarket("Will the price of Ethereum be less than $1,200 on December 1?"), { asset: "ETH", side: "bearish", strike: 1200, deadline: null });
+    assert.deepEqual(parseMarket("Solana price above $80.00 at any time before 2026-12-01 05:00 UTC"), { asset: "SOL", side: "bullish", strike: 80, deadline: "2026-12-01T05:00:00.000Z" });
+    assert.deepEqual(parseMarket("Bitcoin price below $55,000 at any time before 2027-01-01 05:00 UTC"), { asset: "BTC", side: "bearish", strike: 55000, deadline: "2027-01-01T05:00:00.000Z" });
     assert.equal(parseMarket("BTC price  on Jan 1, 2027? (Yes: 55,000 to 59,999.99)"), null, "a range market is not a strike");
   });
 });

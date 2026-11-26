@@ -6,6 +6,7 @@ import {
   readCournot as readCournotResponse,
   readFixture,
   recordedFor,
+  alignToMarket,
   CournotError,
   type CournotMode,
 } from "../../../server/cournot.ts";
@@ -115,7 +116,10 @@ export async function POST(request: Request) {
         source: "paste",
       },
       {
-        extract: (input) => extractClaimSmart(input),
+        extract: async (input) => {
+          const claim = await extractClaimSmart(input);
+          return claim && mode === "recorded-live" ? alignToMarket(claim) : claim;
+        },
         // Signature differs on purpose: the adapter takes (mode, skillDir, claim), the pipeline takes
         // (claim, mode). Adapted here rather than changing either contract.
         readCournot: (claim, m) => {

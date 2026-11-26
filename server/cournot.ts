@@ -143,7 +143,9 @@ const ASSET_NAMES: Record<string, string> = {
  * "Bitcoin price above $62,500 at any time before …", "BNB price below $500.00 …",
  * "Will the price of Ethereum be above $1,900 on December 1?", "… be less than $1,200 …".
  */
-export function parseMarket(title: string): { asset: string; side: "bullish" | "bearish"; strike: number } | null {
+export function parseMarket(
+  title: string,
+): { asset: string; side: "bullish" | "bearish"; strike: number; deadline: string | null } | null {
   const lower = title.toLowerCase();
   const word = Object.keys(ASSET_NAMES).find((n) => new RegExp(`\\b${n}\\b`).test(lower));
   const m = lower.match(/\b(above|over|greater than|below|under|less than)\s*\$\s?([\d,]+(?:\.\d+)?)/);
@@ -152,7 +154,27 @@ export function parseMarket(title: string): { asset: string; side: "bullish" | "
     asset: ASSET_NAMES[word]!,
     side: /above|over|greater/.test(m[1]!) ? "bullish" : "bearish",
     strike: Number(m[2]!.replace(/,/g, "")),
+    deadline: marketDeadline(title),
   };
+}
+
+/** "… before 2027-01-01 05:00 UTC" -> the ISO instant; null when the title names no exact time. */
+export function marketDeadline(title: string): string | null {
+  const d = title.match(/\b(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})(?::\d{2})?\s*UTC\b/i);
+  return d ? new Date(`${d[1]}T${d[2]}:00Z`).toISOString() : null;
+}
+
+/**
+ * A post that names no deadline, matched to a Cournot market that has one, takes the market's deadline:
+ * the probability on the receipt is "before <that date>", and scoring the call against a shorter, invented
+ * horizon would measure it against an event Cournot was not asked about. The horizon stays flagged as not
+ * the author's own.
+ */
+export function alignToMarket(claim: Claim): Claim {
+  if (!claim.horizonDefaulted) return claim;
+  const recorded = recordedFor(claim);
+  const deadline = recorded ? parseMarket(recorded.evaluatedClaim)?.deadline ?? null : null;
+  return deadline && new Date(deadline).getTime() > Date.now() ? { ...claim, deadline } : claim;
 }
 
 /**

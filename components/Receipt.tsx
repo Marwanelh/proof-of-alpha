@@ -86,6 +86,10 @@ export function Receipt({ data }: { data: ReceiptData }) {
   const { claim, atlas } = data;
   const ageSeconds = atlas === null ? 0 : Math.max(0, Math.round(Date.now() / 1000 - atlas.onchainTs));
   const lag = probabilityLag(claim, data.probabilityReadAt);
+  // The deadline came from the matched Cournot market when it equals the "before <date> UTC" in its title.
+  const marketBefore = data.cournot.evaluatedClaim.match(/\b(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})(?::\d{2})?\s*UTC\b/i);
+  const deadlineFromMarket =
+    marketBefore !== null && new Date(`${marketBefore[1]}T${marketBefore[2]}:00Z`).getTime() === new Date(claim.deadline).getTime();
 
   return (
     <article className="receipt">
@@ -126,12 +130,22 @@ export function Receipt({ data }: { data: ReceiptData }) {
         <Row
           label="Deadline"
           stamp={
-            claim.horizonDefaulted ? <Stamp state="referenced">Horizon defaulted</Stamp> : <Stamp state="verified">Stated</Stamp>
+            !claim.horizonDefaulted ? (
+              <Stamp state="verified">Stated</Stamp>
+            ) : deadlineFromMarket ? (
+              <Stamp state="referenced">From the Cournot market</Stamp>
+            ) : (
+              <Stamp state="referenced">Horizon defaulted</Stamp>
+            )
           }
         >
           {claim.deadline}
           {claim.horizonDefaulted ? (
-            <span className="hint"> The post named no date; the documented default horizon applies.</span>
+            <span className="hint">
+              {deadlineFromMarket
+                ? " The post named no date, so the call takes the deadline of the Cournot market that priced it: the probability above is for exactly this window."
+                : " The post named no date; the documented default horizon applies."}
+            </span>
           ) : null}
         </Row>
 
