@@ -170,12 +170,14 @@ export function llmConfigFromEnv(): LlmConfig | null {
 }
 
 const SYSTEM = [
-  "You write one short paragraph answering a question about a prediction-caller, using ONLY the facts given.",
-  "Never invent, round away or recompute a number. Quote the given numbers as they are.",
+  "You write two or three plain sentences answering a question about a prediction-caller, using ONLY the facts given.",
+  "Write for a shop owner with no crypto background: everyday words, no jargon.",
+  "Never print the names of the fields you were given (hitRate, cournotEdge, proxyEdge, baseline, unresolved, meanReturn). Say 'three of four calls were right', not 'hitRate 3of4'.",
+  "Never invent, round away or recompute a number; state the given numbers as ordinary English.",
   "If a fact is missing, say it is not available rather than estimating it.",
-  "Edge = outcome − probability: a correct call the market already expected earns almost nothing.",
-  "If the baseline is proxy rather than Cournot, say plainly that there is no real Edge figure.",
-  "No preamble, no bullet points, no headings. Two to four sentences.",
+  "Edge = outcome minus probability: a correct call the market already expected earns almost nothing.",
+  "If the baseline is proxy rather than Cournot, say plainly that this is not a real Edge and why.",
+  "Lead with the verdict, then the reason. One paragraph, no preamble, no bullets, no headings.",
 ].join(" ");
 
 /**
@@ -194,23 +196,33 @@ export async function answerWithModel(
     .map((m) => `- ${m.title ?? m.slug ?? "page"}${m.snippet ? `: ${m.snippet}` : ""}`)
     .join("\n");
 
-  const res = await fetchImpl(`${config.baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${config.apiKey}` },
-    body: JSON.stringify({
-      model: config.model,
-      temperature: 0,
-      // Generous on purpose. Models that reason before answering spend tokens on reasoning that never reaches
-      // us, so a budget sized for the visible answer alone truncates it — two free models returned 200 with
-      // an empty content because of exactly that. The answer itself is two or three sentences.
-      max_tokens: 900,
-      messages: [
-        { role: "system", content: SYSTEM },
-        { role: "user", content: `FACTS (authoritative, use verbatim):\n${JSON.stringify(facts, null, 2)}\n\nBRAIN PAGES:\n${context || "(none)"}\n\nQUESTION: ${question}` },
-      ],
-    }),
-    signal: AbortSignal.timeout(timeoutMs),
-  });
+  const payload = {
+    model: config.model,
+    temperature: 0,
+    // Generous on purpose. Models that reason before answering spend tokens on reasoning that never reaches
+    // us, so a budget sized for the visible answer alone truncates it — two free models returned 200 with
+    // an empty content because of exactly that. The answer itself is two or three sentences.
+    max_tokens: 900,
+    messages: [
+      { role: "system", content: SYSTEM },
+      { role: "user", content: `FACTS (authoritative, use verbatim):\n${JSON.stringify(facts, null, 2)}\n\nBRAIN PAGES:\n${context || "(none)"}\n\nQUESTION: ${question}` },
+    ],
+  };
+  const post = () =>
+    fetchImpl(`${config.baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${config.apiKey}` },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+
+  let res = await post();
+  // Free tiers rate-limit, and a judge clicking a panel is the worst moment to show the fallback. Retry once,
+  // and only for the statuses that mean "ask again" — never for a 4xx that means the request itself is wrong.
+  if (res.status === 429 || res.status >= 500) {
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    res = await post();
+  }
 
   if (!res.ok) throw new AnswerError(`model request failed with HTTP ${res.status}`);
   const body = (await res.json()) as {

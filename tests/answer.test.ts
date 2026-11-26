@@ -245,4 +245,32 @@ describe("answer — the model is optional and its failure is reported", () => {
       "First sentence. Second sentence.",
     );
   });
+
+  test("a rate-limited model is asked once more before giving up", async () => {
+    // Free tiers rate-limit, which is exactly when a judge is clicking the panel.
+    let calls = 0;
+    const flaky = (async () => {
+      calls += 1;
+      if (calls === 1) return { ok: false, status: 429 };
+      return { ok: true, json: async () => ({ choices: [{ message: { content: "second try" }, finish_reason: "stop" }] }) };
+    }) as unknown as typeof fetch;
+    const facts = buildFacts("kol-a", [cournotCall("c1", "kol-a", 1)], price);
+    const text = await answerWithModel("q", facts, [], { apiKey: "k", baseUrl: "https://x/v1", model: "m" }, flaky);
+    assert.equal(text, "second try");
+    assert.equal(calls, 2, "asked twice — not once, and not forever");
+  });
+
+  test("a malformed request is not retried, because asking again cannot help", async () => {
+    let calls = 0;
+    const bad = (async () => {
+      calls += 1;
+      return { ok: false, status: 400 };
+    }) as unknown as typeof fetch;
+    const facts = buildFacts("kol-a", [cournotCall("c1", "kol-a", 1)], price);
+    await assert.rejects(
+      () => answerWithModel("q", facts, [], { apiKey: "k", baseUrl: "https://x/v1", model: "m" }, bad),
+      (e) => e instanceof AnswerError && /400/.test(e.message),
+    );
+    assert.equal(calls, 1, "a 400 is the request's fault, so it is not repeated");
+  });
 });
