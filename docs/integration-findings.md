@@ -84,6 +84,39 @@ Unknown until a real key is tried: whether the free Basic plan includes the Cont
 is 0 credits, so it should — but it is not the keyless set, so confirm with the key before building ingest
 on it. Fallback if not: the brief's verify-by-paste path, plus ask the CMC team at the venue.
 
+## 1c. CLOSED: the free Basic plan does NOT include the Content endpoints
+
+Probed 2026-11-26 with a real free Basic key (32-hex, no quotes, no whitespace — a correct key):
+
+```
+A) GET /v1/cryptocurrency/listings/latest?symbol=…   -> error_code 0, data rows 1, credit_count 1
+B) GET /v1/content/posts/latest?symbol=BNB           -> error_code 1006
+   "Your API Key subscription plan doesn't support this endpoint."   credit_count 0
+C) GET /public-api/v1/content/posts/latest?symbol=BNB -> HTTP 403 (keyless path also closed)
+```
+
+**This is a plan limit, not a defect and not a bad key** — 1006 means "your subscription doesn't support
+this endpoint", while 1005 means "no key reached the API" and 1001 means "invalid key". The key is valid and
+a keyed Pro API call works.
+
+**Consequences, and none of them end the entry:**
+
+| Requirement | Status |
+|---|---|
+| CMC × Atlas: "at least one live Pro API call in a core feature" | **Satisfied** by the keyed quotes call — so the verify flow must use it, and it does (`snapshotPrice` prefers keyed, falls back to keyless) |
+| Atlas: "read an on-chain feed" | Satisfied, keyless |
+| Ingest from CMC Community posts | **Blocked on the free plan.** Ask the CMC team for access, and use verify-by-paste, which is what `docs/demo-script.md` already specifies for the money shot |
+| Backtest over real post history | **Blocked.** The labelled `data/seed.json` is the leaderboard, exactly as anticipated |
+
+**Envelope divergence, verified side by side on the same pair:** the KEYED endpoint returns the classic
+object envelope `data.BNB.quote.USD.price`, while the KEYLESS endpoint returns an array
+`data[0].quotes[0].price`. Same price, two shapes on the same host. A parser written from one will fail
+silently on the other — `server/cmc.ts` handles both, and a test asserts the array shape is reported as a
+shape error rather than read as `undefined`.
+
+A keyed call for two symbols cost **1 credit**, so the keyed price is cheap enough to sit inside the verify
+flow rather than being a one-off screenshot.
+
 ## 2. Atlas Oracle — free feeds exist, but they are on BSC **mainnet**, and check the read policy
 
 - Free push feeds are real and public: e.g. feed **#1164 BNBChain EWTB/USD**, tags `Crypto` + `Free`,

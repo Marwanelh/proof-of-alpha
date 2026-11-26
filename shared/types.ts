@@ -31,6 +31,12 @@ export type CmcSnapshot = {
   priceUsd: string;
   observedAt: string;
   requestId?: string;
+  /**
+   * Which CMC base produced this price. "keyed" is a live Pro API call against the account's key and is
+   * what the CMC × Atlas entry asks for; "keyless" is the public base and costs nothing. Recorded so the
+   * receipt can show which one it was instead of asserting it.
+   */
+  source?: "keyed" | "keyless";
 };
 
 export type AtlasSnapshot = {

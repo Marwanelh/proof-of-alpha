@@ -5,7 +5,7 @@ import { extractClaim } from "../server/claim.ts";
 import { readFixture, readCournot, CournotError, FIXTURE_PATH } from "../server/cournot.ts";
 import { verify, VerifyError, type VerifyDeps } from "../server/verify.ts";
 import { readAtlas, AtlasError, type RpcCall } from "../server/atlas.ts";
-import { keylessPrice, latestPosts, CmcError } from "../server/cmc.ts";
+import { keylessPrice, keyedQuotes, latestPosts, CmcError } from "../server/cmc.ts";
 import { isSponsorEvidence, type OnChainReceipt } from "../shared/types.ts";
 
 const INPUT = { text: "BNB is going above $600 by November 30", authorId: "sample-kol-alpha", postedAt: "2026-11-26T09:00:00Z" } as const;
@@ -199,6 +199,40 @@ describe("cmc gateway", () => {
       okResponse({ data: [{ id: 1839, symbol: "BNB", quotes: [{ symbol: "USD", price: 552.38 }] }] });
     const snap = await keylessPrice("BNB", { fetchImpl });
     assert.equal(snap.priceUsd, "552.38");
+    assert.equal(snap.source, "keyless");
+  });
+
+  test("a keyless success carrying error_code as the STRING \"0\" is a success, not a failure", async () => {
+    // Regression: the keyless base sends "0", the keyed base sends 0. A strict compare against the number
+    // made a working call throw "HTTP 200" — caught live, so it is pinned here.
+    const fetchImpl = async () =>
+      okResponse({
+        status: { timestamp: "2026-11-26T10:00:00.000Z", error_code: "0", error_message: "", credit_count: 0 },
+        data: [{ quotes: [{ price: 552.38 }] }],
+      });
+    const snap = await keylessPrice("BNB", { fetchImpl });
+    assert.equal(snap.priceUsd, "552.38");
+  });
+
+  test("reads the keyed object envelope, which differs from the keyless array one", async () => {
+    const fetchImpl = async () =>
+      okResponse({
+        status: { error_code: 0, credit_count: 1 },
+        data: { BNB: { quote: { USD: { price: 551.81 } } }, CAKE: { quote: { USD: { price: 1.583 } } } },
+      });
+    const quotes = await keyedQuotes(["BNB", "CAKE"], { apiKey: "k", fetchImpl });
+    assert.equal(quotes["BNB"]?.priceUsd, "551.81");
+    assert.equal(quotes["CAKE"]?.priceUsd, "1.583");
+    assert.equal(quotes["BNB"]?.source, "keyed");
+  });
+
+  test("a 1006 is reported as a plan limit, not as a code defect", async () => {
+    const fetchImpl = async () =>
+      okResponse({ status: { error_code: 1006, error_message: "Your API Key subscription plan doesn't support this endpoint." } });
+    await assert.rejects(
+      () => latestPosts({ symbol: "BNB" }, { apiKey: "k", fetchImpl }),
+      (e) => e instanceof CmcError && e.errorCode === 1006 && /plan excludes the Content endpoints/.test(e.message),
+    );
   });
 
   test("a classic-envelope response is reported as a shape error, not silently undefined", async () => {
