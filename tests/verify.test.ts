@@ -91,11 +91,13 @@ describe("verify pipeline", () => {
     });
     await assert.rejects(
       () => verify({ ...INPUT, text: "this will run soon, trust me" }, deps, { cournotMode: "fixture", record: true }),
-      (e) =>
-        e instanceof VerifyError &&
-        // The wording of this message has changed once already (a stance alone now counts as a call).
-        // Assert the reason is stated, not the exact sentence, so improving the copy cannot red a test.
-        /no call in this post/.test(e.message),
+      (e) => {
+        if (!(e instanceof VerifyError)) return false;
+        // This message has now been reworded twice (a stance alone counts as a call), and each
+        // rewording red-ed this test. The invariant is not the sentence: it is that the refusal
+        // names the ingredients a call needs, so a reader knows what to change.
+        return /coin/i.test(e.message) && /stance/i.test(e.message);
+      },
     );
     assert.equal(providersTouched, 0);
   });
@@ -418,3 +420,4 @@ describe("probability timing — the order of the steps", () => {
     );
   });
 });
+
