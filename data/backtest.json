@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-26T21:14:25.282Z",
+  "updatedAt": "2026-11-26T21:51:56.398Z",
   "source": "data/backfill/posts.txt",
-  "count": 5,
+  "count": 6,
   "records": [
     {
       "kind": "backtested",
@@ -17,7 +17,7 @@
         "deadline": "2026-11-24T05:00:00.000Z",
         "horizonDefaulted": true,
         "targetSource": "post",
-        "extractor": "particle-ai/particle-1:free"
+        "extractor": "baidu/ernie-5.5-flash-preview:free"
       },
       "cmcAtPost": {
         "priceUsd": "1726.5132439164133",
@@ -200,6 +200,46 @@
           "label": "Proxy Edge — not Cournot",
           "probability": 0.5,
           "edge": 0.5
+        }
+      }
+    },
+    {
+      "kind": "backtested",
+      "id": "cmc-fae6cd521e",
+      "claim": {
+        "source": "cmc",
+        "authorId": "Alek_Carter",
+        "originalText": "$BNB is looking interesting at these levels. After a sharp correction, price is showing signs of a bounce from the $565 support zone. If buyers defend this level, a recovery toward $620 and $720 could be on the table. 🎯 TP1: $618 🎯 TP2: $650 🎯 TP3: $720 🛑 SL: $560",
+        "postedAt": "2026-11-17T05:00:00.000Z",
+        "asset": "BNB",
+        "direction": "bullish",
+        "targetUsd": "618",
+        "deadline": "2026-11-18T05:00:00.000Z",
+        "horizonDefaulted": true,
+        "targetSource": "post",
+        "extractor": "particle-ai/particle-1:free"
+      },
+      "cmcAtPost": {
+        "priceUsd": "593.8838108842925",
+        "observedAt": "2026-11-17T05:05:00.000Z",
+        "source": "keyed"
+      },
+      "proxyBaseline": {
+        "probability": 0.07,
+        "label": "Proxy baseline — not Cournot",
+        "methodology": "Trailing 30-day daily volatility (σ 2.71%/day), lognormal odds of BNB being at or above $618 after 1.0 days. CMC historical quotes. The post named no deadline, so it is scored at the 24-hour mark. CMC shows only the posting day, so the post is priced at 12:00 Bangkok that day."
+      },
+      "resolution": {
+        "result": {
+          "outcome": 0,
+          "resolvedAt": "2026-11-18T05:05:00.000Z",
+          "cmcPriceUsd": "591.1340596116618"
+        },
+        "score": {
+          "kind": "proxy-edge",
+          "label": "Proxy Edge — not Cournot",
+          "probability": 0.07,
+          "edge": -0.07
         }
       }
     }
