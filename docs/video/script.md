@@ -3,10 +3,11 @@
 Companion to `plan.md`. Captions are written as **caption lines** (burned in). They are also the voiceover
 script if a VO is chosen — one reading, same words, no second text.
 
-Reading budget: the captions total **226 words** — measured with a word count, not estimated. At a calm
-2.6 words/second that is **87 s of speech inside a 160 s video**: deliberately sparse, because the other 73 s
-are pauses that let a judge actually read a block height off the screen. Demo videos fail when narration
-outruns the viewer. The slack also means a voiceover can be added later without re-cutting anything.
+Reading budget: the captions total **246 words** — measured with a word count, not estimated (the first
+estimate was 402, then 226, and both were wrong before the file said otherwise). At a calm 2.6 words/second
+that is **95 s of speech inside a 160 s video**: deliberately sparse, because the other 65 s are pauses that
+let a judge actually read a block height off the screen. Demo videos fail when narration outruns the viewer.
+The slack also means a voiceover can be added later without re-cutting anything.
 
 ---
 
@@ -126,17 +127,39 @@ this beat's "On-chain receipts 0" is re-captured to 1 — never typed in by hand
 
 ---
 
-## Beat 5 — The contract, the tests, the ask · 2:15–2:40 (25 s)
+## Beat 5 — The contract, and why we did not write to it · 2:15–2:40 (25 s)
 
-**Screen:** `CallRegistry.sol` at the `CallRecorded` event, 26 px mono, syntax-highlighted with the app
-palette. At 2:24 a terminal strip lands over the bottom third:
+**Screen:** the real deployment record, from BscScan, mono, 32 px:
 
 ```
-$ npm test          # tests 118   # pass 118
-$ npx tsc --noEmit  exit 0
+CallRegistry · BSC testnet
+0x6860e45d869cb42d3552bd67aecc9d6fe4bf0360
+deploy tx   0x8a1770…b201
+block       145,032,286
+bytecode    4,950 bytes
 ```
 
-At 2:30 the code fades to 40% and the close card lands:
+At 2:23 one line is added beneath, and is the only number that dips:
+
+```
+transactions from this wallet   1        ← the deploy, and nothing else
+```
+
+At 2:27 the code block fades to 45% and two lines land over it, accent-coloured, 36 px:
+
+```
+we have not written a receipt.
+this contract has no field to say a probability was a fixture
+```
+
+At 2:33 a terminal strip lands in the bottom third, with a mute tag at its right:
+
+```
+$ npm test          # tests 137   # pass 137        |  no signing key
+$ npx tsc --noEmit  exit 0                          |  on the server
+```
+
+At 2:36 the close card replaces everything:
 
 ```
 Proof of Alpha
@@ -144,11 +167,17 @@ a record nobody can delete
 proof-of-alpha-three.vercel.app
 ```
 
-**Caption:**
-> One contract, one receipt per call. No signing key on the server — a deployment that holds a signer is a public endpoint that spends gas.
+**Caption 1 (2:15–2:26):**
+> The registry is on BNB Chain. One transaction deployed it.
+
+**Caption 2 (2:26–2:36):**
+> And we have not written a single call to it — because the contract has no field to record that the probability inside one was a fixture. A record that protects the reader from us, too.
 
 **End card caption (2:36–2:40):**
 > Free to read. KOLs pay for a verified badge, traders for alerts, launchpads to vet a promoter list.
+
+**Honesty:** every figure here is checkable on BscScan and is stated with its own evidence. The refusal is the
+point of the beat — do not soften it into "coming soon", and do not replace it with a fabricated receipt.
 
 ---
 
@@ -169,7 +198,10 @@ proof-of-alpha-three.vercel.app
 | Priced by Cournot | `0` | `/leaderboard` counter | **real today** — re-captured |
 | Sample row | `sample-kol-alpha · +11.8% · edge +0.38` | `/leaderboard` row | **sample** — label must be in frame |
 | Plain-language answer | the quoted sentence | `POST /api/memory {"action":"ask"}` → `answer` | **real, model-written** — re-run, wording may differ |
-| Tests | `118 passing` | `npm test` output | real |
+| `CallRegistry` address | `0x6860e45d869cb42d3552bd67aecc9d6fe4bf0360` | `docs/addresses.md`, confirmed by `eth_getCode` → 4,950 bytes | **real** |
+| Deploy tx | `0x8a1770…b201` | `eth_getTransactionReceipt` → status SUCCESS, block 145,032,286, gasUsed 1,128,682 | **real** |
+| Transactions from the recorder wallet | `1` | `eth_getTransactionCount` on `0xC73256E295B7C64C38C99CD519f206FA36695717` | **real — no `recordCall` has been sent** |
+| Tests | `137 passing` | `npm test` output | real |
 | Typecheck | `exit 0` | `npx tsc -p tsconfig.json --noEmit` | real |
 
 ### Never to appear

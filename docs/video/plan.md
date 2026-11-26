@@ -34,18 +34,20 @@ This is the part that decides whether the video is a liability. As of now, the l
 
 | Number | Value today | Status |
 |---|---|---|
-| On-chain receipts | **0** | true; no gas at the deployer, contract not deployed |
+| `CallRegistry` on BSC testnet | `0x6860e45d869cb42d3552bd67aecc9d6fe4bf0360` · deploy tx `0x8a1770…b201` · block 145,032,286 · 4,950 bytes of bytecode · gasUsed 1,128,682 | **real** — verified on-chain, linkable on BscScan |
+| `recordCall` receipts written | **0** | true, and **deliberately** so — see §2b |
 | Calls priced by Cournot | **0** | true; "the rest use a labelled proxy" |
 | Leaderboard rows | 3, all **sample data**, backtested, not live-resolved | true, and labelled on-page |
 | CMC BNB price | `554.5424980386598`, `source: keyed` | **real**, live |
 | Atlas BNB/USD price | `554591755781809163950` @18dp = **$554.59**, `singlefeed`, `description: "bnb/usd"` | **real**, live, block-pinned |
 | Cournot on the receipt | `provenance: "fixture"`, probability 0.35 | **invented — must never appear as ours** |
-| Tests | 118 passing, tsc 0 | real |
+| Tests | **137** passing, tsc 0 | real |
 
 **Therefore the video may not show:**
-1. A transaction hash, a block explorer, or the words "recorded on-chain" **unless gas lands and a real tx
-   exists before render**. If it does not land, the video shows the contract source and the deployment's
-   own `NOT ON CHAIN · DRAFT` state, and says so out loud.
+1. A **receipt** transaction, a `CallRecorded` event, or the words "recorded on-chain" **unless a real
+   probability exists**. The **deploy** transaction is real and should be shown — it is the contract
+   existing on BNB Chain, verifiable by anyone. The distinction is: the registry is on chain; no call is
+   recorded in it yet, and §2b says why.
 2. Any probability attributed to Cournot. We hold one **free** `resolve` call (real: `state: complete`,
    `code: 0`, five markets, best match `#113195` at confidence 0.855) but **not** a probability — the
    probability call needs credit. On screen it is "market match, confidence 0.855", never "Cournot says X%".
@@ -54,14 +56,35 @@ This is the part that decides whether the video is a liability. As of now, the l
 4. "Edge +0.38" as a measured result. It is a **proxy** edge; the row already says `proxy · not Cournot`
    and the video repeats it.
 
-**Framing that turns this into a strength:** the two honest zeros are the story. Most submissions will show
-a green leaderboard full of unlabelled numbers. Ours shows a counter that says what we do *not* have. That is
+**Framing that turns this into a strength:** the honest zeros are the story. Most submissions will show a
+green leaderboard full of unlabelled numbers. Ours shows a counter that says what we do *not* have. That is
 the technical-quality-and-safety score (15) and the originality score (10) in one shot — *"the record tells
 you which of its own numbers are real."*
 
-**This is the decision I need from Codex:** is that framing enough, or does the video need to wait for gas so
-it can show one real receipt? My reading: ship the honest version, and if gas lands before 09:00, re-render
-scene 5 with the real tx (the scene is built to accept either).
+### 2b. Why there is a deployed contract and still no receipt — the strongest beat in the video
+
+The registry is on chain (deploy tx above, verifiable). The deployer has sent exactly **one** transaction
+(nonce 1), so **no call has been recorded**, and that is now a deliberate refusal, not a missing step:
+
+> `encodeCall` writes `cournotBps` into the transaction, and the on-chain `Call` struct carries
+> `atlasVerified` for the *price* but **no provenance field for the probability** — verified by reading
+> `server/registry.ts` and `contracts/src/CallRegistry.sol`. So a receipt written today would burn
+> `cournotBps = 3500` from **fixture mode** into a tamper-proof public record with **nothing on chain to
+> distinguish it from a real Cournot number**. Anyone reading the contract would be entitled to believe
+> Cournot said 35%. We would rather ship a zero than a number that cannot be told apart from a lie.
+
+`ENABLE_ONCHAIN_RECORD` has been set back to `false` in `.env.local` for the same reason: leaving it on is
+one API call away from writing that receipt by accident.
+
+**Say this on screen.** It is the single most credible thing in the submission: the team that deployed the
+registry is the team that declined to write to it, because the number it would hold was not real. That is
+what "tamper-proof" is worth — it protects the reader from us too.
+
+**Decision I need from Codex:** is this framing strong enough for the BNB Chain / RWA (20) and technical
+quality (15) scores, or should the video instead show the receipt and accept the fabrication risk? My
+position is that the honest version is worth more, and that the only correct way to get a receipt on screen
+is to spend one real Cournot call first — then re-render scene 5 with a true probability and a real
+`CallRecorded` event.
 
 ## 3. Structure — five beats in 2:40
 
