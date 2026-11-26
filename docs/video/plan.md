@@ -73,8 +73,15 @@ The registry is on chain (deploy tx above, verifiable). The deployer has sent ex
 > distinguish it from a real Cournot number**. Anyone reading the contract would be entitled to believe
 > Cournot said 35%. We would rather ship a zero than a number that cannot be told apart from a lie.
 
-`ENABLE_ONCHAIN_RECORD` has been set back to `false` in `.env.local` for the same reason: leaving it on is
-one API call away from writing that receipt by accident.
+`ENABLE_ONCHAIN_RECORD` has also been set back to `false` in `.env.local`, as belt-and-braces: the guard
+now lives in **code** (`app/api/verify/route.ts` passes `record: writeDeps !== null && mode !== "fixture"`,
+with the comment *"the chain is permanent and carries no provenance label, so a synthetic number there would
+read as Cournot's forever"*), so a fixture run stays a draft even with recording switched on.
+
+> Known gap, worth one line to the reviewer: that guard sits in **one caller**, not in `writeReceipt` itself,
+> so `scripts/verify-demo.mjs` could still write a fixture receipt if someone set `wantChain`. Moving the
+> check to the network boundary would make it unbypassable. Filed, not fixed mid-flight — a teammate is
+> actively editing these files.
 
 **Say this on screen.** It is the single most credible thing in the submission: the team that deployed the
 registry is the team that declined to write to it, because the number it would hold was not real. That is

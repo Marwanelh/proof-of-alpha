@@ -3,11 +3,7 @@
 Companion to `plan.md`. Captions are written as **caption lines** (burned in). They are also the voiceover
 script if a VO is chosen — one reading, same words, no second text.
 
-Reading budget: the captions total **246 words** — measured with a word count, not estimated (the first
-estimate was 402, then 226, and both were wrong before the file said otherwise). At a calm 2.6 words/second
-that is **95 s of speech inside a 160 s video**: deliberately sparse, because the other 65 s are pauses that
-let a judge actually read a block height off the screen. Demo videos fail when narration outruns the viewer.
-The slack also means a voiceover can be added later without re-cutting anything.
+Reading budget: the captions total **245 words** — measured with a word count, never estimated (this figure has been wrong in this file three times before it was computed). At a calm 2.6 words/second that is **94 s of speech inside a 160 s video**: deliberately sparse, because the other 66 s are pauses that let a judge actually read a block height off the screen. Demo videos fail when narration outruns the viewer. The slack also means a voiceover can be added later without re-cutting anything.
 
 ---
 
@@ -149,7 +145,7 @@ At 2:27 the code block fades to 45% and two lines land over it, accent-coloured,
 
 ```
 we have not written a receipt.
-this contract has no field to say a probability was a fixture
+a fixture probability is never written on chain
 ```
 
 At 2:33 a terminal strip lands in the bottom third, with a mute tag at its right:
@@ -171,7 +167,7 @@ proof-of-alpha-three.vercel.app
 > The registry is on BNB Chain. One transaction deployed it.
 
 **Caption 2 (2:26–2:36):**
-> And we have not written a single call to it — because the contract has no field to record that the probability inside one was a fixture. A record that protects the reader from us, too.
+> And we have not written a single call to it — because the chain is permanent and carries no provenance label, so a synthetic number on it would read as Cournot's forever. The writer refuses.
 
 **End card caption (2:36–2:40):**
 > Free to read. KOLs pay for a verified badge, traders for alerts, launchpads to vet a promoter list.
