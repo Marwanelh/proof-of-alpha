@@ -117,9 +117,9 @@ describe("answer — the composed text cannot overstate", () => {
 });
 
 describe("answer — the model is optional and its failure is reported", () => {
-  const saved = { key: process.env["LLM_API_KEY"], model: process.env["LLM_MODEL"], oidc: process.env["VERCEL_OIDC_TOKEN"], base: process.env["LLM_API_BASE"] };
+  const saved = { key: process.env["LLM_API_KEY"], model: process.env["LLM_MODEL"], oidc: process.env["VERCEL_OIDC_TOKEN"], base: process.env["LLM_API_BASE"], vercel: process.env["VERCEL"] };
   afterEach(() => {
-    for (const [k, v] of Object.entries({ LLM_API_KEY: saved.key, LLM_MODEL: saved.model, VERCEL_OIDC_TOKEN: saved.oidc, LLM_API_BASE: saved.base })) {
+    for (const [k, v] of Object.entries({ LLM_API_KEY: saved.key, LLM_MODEL: saved.model, VERCEL_OIDC_TOKEN: saved.oidc, LLM_API_BASE: saved.base, VERCEL: saved.vercel })) {
       if (v === undefined) delete process.env[k];
       else process.env[k] = v;
     }
@@ -130,6 +130,7 @@ describe("answer — the model is optional and its failure is reported", () => {
     delete process.env["LLM_MODEL"];
     delete process.env["VERCEL_OIDC_TOKEN"];
     delete process.env["LLM_API_BASE"];
+    delete process.env["VERCEL"];
   };
 
   test("no model configured is reported as null rather than guessed at", () => {
@@ -159,6 +160,26 @@ describe("answer — the model is optional and its failure is reported", () => {
     const c = llmConfigFromEnv();
     assert.equal(c?.baseUrl, "https://ai-gateway.vercel.sh/v1");
     assert.equal(c?.apiKey, "oidc-token");
+  });
+
+  test("a key on Vercel defaults to the Gateway, not to OpenAI's endpoint", () => {
+    // Regression: with no LLM_API_BASE the key branch fell back to api.openai.com, so a Gateway key came
+    // back 401 and looked like a bad key. The default has to follow where we are running.
+    clear();
+    process.env["LLM_MODEL"] = "some-model";
+    process.env["LLM_API_KEY"] = "gateway-style-key";
+    process.env["VERCEL"] = "1";
+    assert.equal(llmConfigFromEnv()?.baseUrl, "https://ai-gateway.vercel.sh/v1");
+    delete process.env["VERCEL"];
+  });
+
+  test("off Vercel an unqualified key still means OpenAI, and LLM_API_BASE wins", () => {
+    clear();
+    process.env["LLM_MODEL"] = "some-model";
+    process.env["LLM_API_KEY"] = "sk-style-key";
+    assert.equal(llmConfigFromEnv()?.baseUrl, "https://api.openai.com/v1");
+    process.env["LLM_API_BASE"] = "https://example.test/v1";
+    assert.equal(llmConfigFromEnv()?.baseUrl, "https://example.test/v1");
   });
 
   test("a failing model throws so the caller can fall back and say so", async () => {

@@ -147,16 +147,25 @@ export type LlmConfig = { apiKey: string; baseUrl: string; model: string; oidc?:
 /**
  * The provider, if one is configured. Prefers an explicit key; falls back to Vercel's AI Gateway using the
  * OIDC token a Vercel deployment carries, so the deployed demo needs no LLM secret of its own.
+ *
+ * The base URL default matters more than it looks. A Gateway key sent to api.openai.com comes back 401,
+ * which reads exactly like a bad key and sends you off rotating credentials that were fine. So the default
+ * is chosen from where we are running, and LLM_API_BASE overrides it.
  */
+const GATEWAY_BASE = "https://ai-gateway.vercel.sh/v1";
+
 export function llmConfigFromEnv(): LlmConfig | null {
   const key = process.env["LLM_API_KEY"];
   const model = process.env["LLM_MODEL"];
   const oidc = process.env["VERCEL_OIDC_TOKEN"];
-  const baseUrl = process.env["LLM_API_BASE"] ?? (oidc ? "https://ai-gateway.vercel.sh/v1" : "");
+  const explicit = process.env["LLM_API_BASE"];
+  const onVercel = process.env["VERCEL"] !== undefined;
 
   if (!model) return null;
-  if (key && key.trim() !== "") return { apiKey: key, baseUrl: baseUrl || "https://api.openai.com/v1", model };
-  if (oidc && oidc.trim() !== "") return { apiKey: oidc, baseUrl: baseUrl || "https://ai-gateway.vercel.sh/v1", model, oidc };
+  if (key && key.trim() !== "") {
+    return { apiKey: key, baseUrl: explicit ?? (onVercel ? GATEWAY_BASE : "https://api.openai.com/v1"), model };
+  }
+  if (oidc && oidc.trim() !== "") return { apiKey: oidc, baseUrl: explicit ?? GATEWAY_BASE, model, oidc };
   return null;
 }
 
