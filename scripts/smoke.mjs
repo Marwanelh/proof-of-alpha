@@ -17,8 +17,9 @@
 
 import { mkdirSync, writeFileSync, existsSync, readFileSync } from "node:fs";
 
-import { keyedQuotes, keylessPrice, CmcError, CMC_ERRORS } from "../server/cmc.ts";
+import { keyedQuotes, keylessPrice, latestPosts, CmcError, CMC_ERRORS } from "../server/cmc.ts";
 import { readAtlas, AtlasError } from "../server/atlas.ts";
+import { memoryConfigFromEnv, mcpTransport, remember, waitForCompiled } from "../server/memory.ts";
 
 const results = [];
 
@@ -84,16 +85,43 @@ if (existsSync(cournotProof)) {
   record("cournot.live_call", false, "no captured call yet — the Cournot entry requires one real successful call");
 }
 
-/* 5. Living Brain — credentials only. The authenticated write path is confirmed at the booth, not guessed. */
-const lbKey = process.env.LIVING_BRAIN_API_KEY;
-const lbSubject = process.env.LIVING_BRAIN_SUBJECT_ID;
-record(
-  "livingbrain.credentials",
-  Boolean(lbKey && lbSubject),
-  lbKey && lbSubject
-    ? `key + subject present (prefix ${lbKey.slice(0, 4)}…); authenticated capture path to confirm at the booth`
-    : "LIVING_BRAIN_API_KEY / LIVING_BRAIN_SUBJECT_ID missing from .env.local",
-);
+/* 4b. CMC Community posts. Gated by PLAN TIER, not by the key — reported precisely so nobody re-debugs it.
+ * 1005 means no key reached the API; 1006 means the key is valid and the plan excludes the endpoint. */
+try {
+  const posts = await latestPosts({ symbol: "BNB" });
+  record("cmc.content_posts", posts.length > 0, `${posts.length} post(s) returned — this plan includes Content`, { count: posts.length });
+} catch (e) {
+  const code = e instanceof CmcError ? e.errorCode : null;
+  record(
+    "cmc.content_posts",
+    false,
+    code === CMC_ERRORS.PLAN_EXCLUDES_ENDPOINT
+      ? "error 1006 — the key is VALID, the plan excludes Content. Not a code defect: upgrade, or paste posts."
+      : code === CMC_ERRORS.KEY_REQUIRED
+        ? "error 1005 — no key reached the API"
+        : String(e),
+  );
+}
+
+/* 5. Living Brain — a REAL capture with its source id and its true ingest status. This is the ChatAndBuild
+ * sponsor proof, so it is a capture rather than a check that a variable exists. */
+try {
+  const config = memoryConfigFromEnv();
+  const brainId = process.env["LIVING_BRAIN_BRAIN_ID"];
+  if (!brainId) throw new Error("LIVING_BRAIN_BRAIN_ID unset — run `npm run prove:memory` once to find or create the brain");
+  const transport = mcpTransport(config);
+  const target = JSON.parse(readFileSync("data/seed.json", "utf8"))[0];
+  const res = await remember(transport, brainId, target);
+  const settled = await waitForCompiled(transport, brainId, res.sourceId, { timeoutMs: 45_000, intervalMs: 2500 });
+  record(
+    "livingbrain.capture",
+    settled.status === "completed",
+    `source ${res.sourceId} status=${settled.status} after ${(settled.waitedMs / 1000).toFixed(1)}s${settled.timedOut ? " (STILL COMPILING — not claimed as compiled)" : ""}`,
+    { sourceId: res.sourceId, ...settled },
+  );
+} catch (e) {
+  record("livingbrain.capture", false, e instanceof Error ? e.message : String(e));
+}
 
 mkdirSync("evidence", { recursive: true });
 writeFileSync("evidence/evidence.json", JSON.stringify({ at: new Date().toISOString(), results }, null, 2));

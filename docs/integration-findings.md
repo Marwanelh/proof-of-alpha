@@ -370,3 +370,32 @@ recorded fixture data — only the probability number itself is metered.
 - `atlasoracle.io/pricing`, `atlasoracle.io/feeds`, `atlasoracle.io/feeds/1164`
 - `docs.livingbrain.com/llms.txt`, `docs.livingbrain.com/docs/quickstart`
 - `cournot.ai/`, `github.com/Cournot-AI/cournot-skills`
+
+## 6. CMC Content is gated by PLAN TIER, not by the key (verified 2026-11-26)
+
+The record previously said `cmc.content_posts` failed with `403 error_code 1005`, which reads as "no key is
+reaching the API". That was true *before the key was wired*. With the key in `.env.local` the same endpoint
+answers differently, and the difference changes who has to act:
+
+```
+(no key)            -> 403  error_code 1005  "Your API key is missing or invalid."
+(with key, bad args) -> 400  "Unknown query parameter is not allowed"   <-- the key AUTHENTICATED
+(with key, correct)  -> 1006 "Your API key subscription plan doesn't support this endpoint."
+```
+
+The 400 is the tell: the request got past authentication into parameter validation, so the key is valid and
+the syntax was the only thing wrong. With `symbol=BNB`, `slug=bnb` and `id=1839` all tried, the answer is
+1006: **the plan does not include the Content endpoints.** Nothing in our code is wrong, and no amount of
+debugging changes it. The endpoints take exactly one of `id|slug|symbol` and no `limit`.
+
+The keyless base (`pro-api.coinmarketcap.com/public-api`) does not serve community content either, and the
+browser's `data-api/v3` paths return the marketing HTML rather than a route.
+
+**Consequence for Phase 6 (bounded backtest): WITHDRAWN, not faked.** The plan's own hard floor says an
+access gate cannot be compressed and the affected track is withdrawn rather than evidenced with a fixture.
+Post discovery through CMC Content is unavailable on this plan; the **paste path** is real, works today, and
+is what the demo uses. Everything downstream of a claim — extraction, pricing, the Atlas read, the receipt,
+scoring, memory — is unaffected and verified.
+
+**The one action that would reopen it:** a CMC plan that includes Content. Then `npm run smoke` prints
+`PASS cmc.content_posts` with no code change, because the adapter is already written and tested.
