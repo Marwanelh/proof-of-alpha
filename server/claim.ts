@@ -109,7 +109,10 @@ function findTarget(text: string): string | null {
   const directional = text.match(
     new RegExp(`\\b(?:to|at|target(?:ing)?|hits?|reach(?:es)?|break(?:s|ing)?|past|through|flips?|tops?)\\s*\\$\\s?${num}`, "i"),
   );
-  const raw = comparison?.[1] ?? directional?.[1];
+  // "BNB $700 by Dec 20": a dollar figure written straight after the ticker is the target when no
+  // comparison or directional word names one. Checked last, so "BNB $552 now, going to $700" still reads $700.
+  const adjacent = text.match(new RegExp(`\\$?(?:${WATCHLIST.join("|")})\\s+\\$\\s?${num}`, "i"));
+  const raw = comparison?.[1] ?? directional?.[1] ?? adjacent?.[1];
   if (raw === undefined) return null;
   const normalised = raw.replace(/,/g, "");
   const value = Number(normalised);

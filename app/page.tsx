@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import type { ClipboardEvent, FormEvent } from "react";
 
 import { Receipt } from "../components/Receipt.tsx";
+import { cleanPastedPost } from "../shared/clean.ts";
 import type { OnChainReceipt, VerificationRecord } from "../shared/types.ts";
 
 type ApiOk = {
@@ -44,6 +45,7 @@ export default function VerifyPage() {
   const [tick, setTick] = useState(0);
   const [ok, setOk] = useState<ApiOk | null>(null);
   const [fail, setFail] = useState<ApiFailure | null>(null);
+  const [cleanNote, setCleanNote] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -56,7 +58,23 @@ export default function VerifyPage() {
     if (timer.current) clearInterval(timer.current);
   }, []);
 
+  /** Copying a post off a page drags its buttons and price widgets along; keep only the post. */
+  function onPaste(e: ClipboardEvent<HTMLTextAreaElement>) {
+    const raw = e.clipboardData.getData("text");
+    if (!raw.includes("\n") && raw.length < 400) return; // a plain sentence: let the browser paste it
+    e.preventDefault();
+    const c = cleanPastedPost(raw);
+    setText(c.text);
+    if (c.author && !authorTouched) setAuthorId(c.author);
+    setCleanNote(
+      c.dropped > 0
+        ? `Cleaned the paste: removed ${c.dropped} buttons, counts and price widgets${c.sentiment ? `, kept the ${c.sentiment} tag` : ""}${c.author ? `, author ${c.author}` : ""}. Edit anything that is wrong.`
+        : null,
+    );
+  }
+
   function reset() {
+    setCleanNote(null);
     setText("");
     setAuthorId("");
     setAuthorTouched(false);
@@ -121,7 +139,14 @@ export default function VerifyPage() {
       <form className="card post-card" onSubmit={submit}>
         <label className="field" htmlFor="post" style={{ marginBottom: 0 }}>
           <span className="label">Post</span>
-          <textarea id="post" value={text} onChange={(e) => setText(e.target.value)} placeholder="BNB to $1,200 before New Year. — CryptoNova" />
+          <textarea
+            id="post"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onPaste={onPaste}
+            placeholder="Select the whole post on CMC Community and paste it here: buttons, counts and price widgets are removed for you."
+          />
+          {cleanNote ? <span className="hint" style={{ color: "var(--lime)" }}>{cleanNote}</span> : null}
         </label>
         <div className="author-row">
           <label className="label" htmlFor="kol">KOL</label>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { extractClaim } from "../../../server/claim.ts";
+import { cleanPastedPost } from "../../../shared/clean.ts";
 import { readCournot as readCournotResponse, CournotError, type CournotMode } from "../../../server/cournot.ts";
 import { keylessPrice, keyedQuotes, CmcError } from "../../../server/cmc.ts";
 import { readAtlas, AtlasError } from "../../../server/atlas.ts";
@@ -53,8 +54,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ state: "bad_request", message: "expected a JSON body" }, { status: 400 });
   }
 
-  const text = typeof body.text === "string" ? body.text.trim() : "";
-  const authorId = typeof body.authorId === "string" ? body.authorId.trim() : "";
+  // A post copied off a page carries its buttons and price widgets; score the post, not the page chrome.
+  const cleaned = cleanPastedPost(typeof body.text === "string" ? body.text : "");
+  const text = cleaned.text;
+  const authorId = (typeof body.authorId === "string" ? body.authorId.trim() : "") || (cleaned.author ?? "");
   if (text.length < 12) {
     return NextResponse.json(
       { state: "bad_request", message: "Paste the post itself. It needs a target and a deadline to be provable." },
