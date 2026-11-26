@@ -18,7 +18,7 @@ const DEFAULT_HORIZON_DAYS = 7;
 const BULLISH =
   /\b(long(?:ing)?|bullish|pump(?:ing)?|moon(?:ing)?|send it|break(?:s|ing)? out|rally|ath|buy(?:ing)?|bid(?:ding)?|undervalued|accumulat(?:e|ing|ion)|load(?:ing|ed)?(?: up)?|above|higher|rip(?:ping)?)\b/i;
 const BEARISH =
-  /\b(short(?:ing)?|bearish|dump(?:ing)?|crash(?:ing)?|rekt|sell(?:ing)?|overvalued|below|down|lower|top(?:ped)? is in)\b/i;
+  /\b(short(?:ing)?|bearish|dump(?:ing)?|crash(?:ing)?|rekt|sell(?:ing)?|overvalued|below|down|lower|slip(?:s|ping)?|drop(?:s|ping)?|fall(?:s|ing)?|retrace|top(?:ped)? is in)\b/i;
 
 /**
  * A forward-looking marker. Required when the author gave no deadline: without one, a post that merely
@@ -47,7 +47,8 @@ export async function extractClaim(input: ExtractInput): Promise<Claim | null> {
   const original = input.text.trim();
   if (original.length === 0) return null;
   // "$74K" / "$1.2k" are prices in thousands. Expanded for parsing only; the stored text is the author's.
-  const text = original.replace(/\$\s?(\d+(?:\.\d+)?)\s?[kK]\b/g, (_m, n: string) => `$${Math.round(Number(n) * 1000)}`);
+  // A bare "to 55k" is a dollar price too: KOLs drop the sign on round thousands.
+  const text = original.replace(/\$?\s?\b(\d+(?:\.\d+)?)\s?[kK]\b/g, (_m, n: string) => ` $${Math.round(Number(n) * 1000)}`);
 
   const asset = findAsset(text);
   if (asset === null) return null;
@@ -120,7 +121,7 @@ function findAsset(text: string): string | null {
 const STANCE_BULL =
   /\b(long(?:ing)?|bullish|bulls?|pump(?:ing)?|moon(?:ing)?|send it|break(?:s|ing)?\s*out|breakout|rally|buy(?:ing)?|undervalued|accumulat(?:e|ing|ion)|load(?:ing|ed)?(?: up)?|rip(?:ping)?|higher|recovery|uptrend)\b|🚀|📈/i;
 const STANCE_BEAR =
-  /\b(short(?:ing)?|bearish|bears?|dump(?:ing)?|crash(?:ing)?|sell(?:ing)?|overvalued|lower|downtrend|breakdown|top(?:ped)? is in)\b|📉/i;
+  /\b(short(?:ing)?|bearish|bears?|dump(?:ing)?|crash(?:ing)?|sell(?:ing)?|overvalued|lower|downtrend|breakdown|slip(?:s|ping)?|drop(?:s|ping)?|fall(?:s|ing)?|retrace|top(?:ped)? is in)\b|📉/i;
 
 function findSentiment(text: string): Claim["direction"] | null {
   const bull = STANCE_BULL.test(text);

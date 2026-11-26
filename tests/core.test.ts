@@ -177,6 +177,13 @@ Watching for bullish continuation. Manage your risk.`;
     assert.ok(claim?.originalText.includes("$74K"));
   });
 
+  test("'next slip to 55k' is a bearish call with a $55,000 target", async () => {
+    const claim = await extractClaim({ ...base, text: "$BTC next slip to 55k, don't get swept" });
+    assert.equal(claim?.asset, "BTC");
+    assert.equal(claim?.direction, "bearish");
+    assert.equal(claim?.targetUsd, "55000");
+  });
+
   test("still accepts a forward-looking call with a defaulted horizon", async () => {
     const claim = await extractClaim({ ...base, text: "BNB above $600 is coming" });
     assert.ok(claim, "a forward-looking post must still extract");

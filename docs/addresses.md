@@ -37,6 +37,7 @@ Or in one line, through our own reader: `npm run smoke` prints
 
 ## On-chain proof to cite in the submission
 - `recordCallReferenced` tx (call #0, BNB bearish below $500 by 1 Dec, Cournot p = 0.2902): [`0x25270499…dd9a4a80`](https://testnet.bscscan.com/tx/0x252704994cb18087439d79462ce8ffbd1079135c71028f1aae29b901dd9a4a80) — block 145045939, status success
+- **First real KOL call on chain** — call #1, GOLDENBULLCRYPTOS on CMC Community, "$BTC next slip to 55k" (posted 2026-11-27 05:01 Bangkok): BTC bearish to $55,000, Cournot market #1341 "Bitcoin price below $55,000 at any time before 2027-01-01" p = **0.491** (Polymarket 0.485), read 31 min after posting and flagged as such. [`0x891502e0…2bff1739`](https://testnet.bscscan.com/tx/0x891502e0658e667b9917904ff88e5ae7acd9a27931f0c4529cf764b32bff1739) — block 145060027, status success; `getCall(1)` returns cournotBps 4910, deadline 2027-01-01.
 - The `CallRecorded` event it emitted: id 0, `cournotBps` 2902, `atlasVerified` = false (referenced read, Plan A) — readable with `getCall(0)` on the registry
 - Atlas BNB/USD read on BSC mainnet at block **135913072** ($555.62), stored in the receipt as `atlasRefBlock`
 - Cournot: market #111338, probability **0.2902** (free quota, 1 of 3 used). The response carries no request id, so the receipt cites `sha256:c7f95d41…2c561c9b` of the raw response kept verbatim in `evidence/cournot/success-raw.json`
