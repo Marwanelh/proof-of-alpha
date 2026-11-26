@@ -209,7 +209,7 @@ export function MemoryPanel({ kolId, calls }: { kolId: string; calls: number }) 
                 ? "The numbers above are computed from the records and handed to the model; the sentence is its prose about them."
                 : "Written from the records without a model: every number above is arithmetic over this KOL's calls."}
               {state.modelFailed === true
-                ? " A model was configured but failed, so the composed answer is shown instead."
+                ? " A model is configured but the request failed, so this arithmetic answer is shown instead."
                 : ""}
               {state.memories.length > 0 ? ` Brain pages used: ${state.memories.slice(0, 4).map((m) => m.title ?? m.slug ?? "page").join(", ")}.` : ""}
             </p>
