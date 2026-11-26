@@ -69,6 +69,17 @@ export default function LeaderboardPage() {
             {sample ? " · backtested sample, not live-resolved" : ""}
           </p>
         </div>
+        {sample ? (
+          <div>
+            <h2>Why these are samples</h2>
+            <p>
+              Real KOL calls come from CoinMarketCap Community posts, and that endpoint answers{" "}
+              <span className="mono">1006: your subscription plan doesn&rsquo;t support this endpoint</span> on this
+              key. Rather than invent twenty calls and present them as history, this board shows three labelled
+              samples with a proxy baseline and no receipt. The paste path is real, and it is what the demo uses.
+            </p>
+          </div>
+        ) : null}
       </section>
     </main>
   );
