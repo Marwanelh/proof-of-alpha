@@ -4,6 +4,7 @@
  *
  *   npm run backfill                       # read with the deployed model (/api/extract), rules as fallback
  *   npm run backfill -- --rules            # rules only, no network for extraction
+ *   npm run backfill -- --horizon-hours 168   # score undated posts at 7 days instead of 24 hours
  *   EXTRACT_URL=http://localhost:3000/api/extract npm run backfill
  *
  * Input: blocks separated by a line of `---`. Each block starts with header lines, then the post as copied:
@@ -31,6 +32,13 @@ const INPUT = process.env["BACKFILL_INPUT"] ?? "data/backfill/posts.txt";
 const OUTPUT = process.env["BACKFILL_OUTPUT"] ?? "data/backtest.json";
 const EXTRACT_URL = process.env["EXTRACT_URL"] ?? "https://proof-of-alpha-three.vercel.app/api/extract";
 const RULES_ONLY = process.argv.includes("--rules");
+/**
+ * A post that names no deadline is scored at this mark (default 24 hours, override with --horizon-hours N).
+ * Trackers score undated calls at fixed marks (1d / 7d / 30d); 24h is the shortest and lets yesterday's posts
+ * count. Every such row says so in its methodology. A deadline the author wrote is always used as written.
+ */
+const hArg = process.argv.indexOf("--horizon-hours");
+const DEFAULT_MARK_HOURS = hArg >= 0 ? Number(process.argv[hArg + 1]) : 24;
 const KEY = process.env["CMC_API_KEY"];
 const BASE = "https://pro-api.coinmarketcap.com";
 
@@ -99,8 +107,9 @@ async function dailyBefore(symbol, at) {
 
 /* ------------------------------------------------------------------ proxy baseline */
 
-function normCdf(x) {
-  // Abramowitz–Stegun 7.1.26
+function normCdf(z) {
+  // Φ(z) = (1 + erf(z/√2)) / 2, erf by Abramowitz–Stegun 7.1.26
+  const x = z / Math.SQRT2;
   const t = 1 / (1 + 0.3275911 * Math.abs(x));
   const y = 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
   return x >= 0 ? (1 + y) / 2 : (1 - y) / 2;
@@ -160,6 +169,9 @@ for (const [i, { head, text }] of blocks.entries()) {
   claim.source = "cmc";
   if (head.url) claim.sourcePostId = head.url;
 
+  if (claim.horizonDefaulted) {
+    claim.deadline = new Date(postedAt.getTime() + DEFAULT_MARK_HOURS * 3_600_000).toISOString();
+  }
   const deadline = new Date(claim.deadline);
   if (deadline.getTime() > now.getTime() - 10 * 60_000) {
     console.log(`OPEN   ${label} ${authorId} — ${claim.asset} ${claim.direction}, deadline ${claim.deadline} has not passed; skipped`);
@@ -190,7 +202,7 @@ for (const [i, { head, text }] of blocks.entries()) {
       proxyBaseline: {
         probability: p,
         label: "Proxy baseline — not Cournot",
-        methodology: `Trailing 30-day daily volatility (σ ${(sd * 100).toFixed(2)}%/day), lognormal odds of ${claim.asset} being ${claim.direction === "bullish" ? "at or above" : "at or below"} $${claim.targetUsd} after ${days.toFixed(1)} days. CMC historical quotes.`,
+        methodology: `Trailing 30-day daily volatility (σ ${(sd * 100).toFixed(2)}%/day), lognormal odds of ${claim.asset} being ${claim.direction === "bullish" ? "at or above" : "at or below"} $${claim.targetUsd} after ${days.toFixed(1)} days. CMC historical quotes.${claim.horizonDefaulted ? ` The post named no deadline, so it is scored at the ${DEFAULT_MARK_HOURS}-hour mark.` : ""}`,
       },
       resolution: {
         result: { outcome, resolvedAt: atDeadline.observedAt, cmcPriceUsd: atDeadline.priceUsd },
