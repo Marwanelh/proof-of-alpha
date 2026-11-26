@@ -59,6 +59,28 @@ export const CALL_REGISTRY_ABI = [
     outputs: [{ type: "uint256" }],
   },
   {
+    // The second half. Permissionless, but the contract refuses before the deadline (NotYetDue) and refuses
+    // twice (AlreadyResolved), so the backend cannot settle early even by accident.
+    type: "function",
+    name: "resolveCall",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "id", type: "uint256" },
+      { name: "hit", type: "bool" },
+      { name: "cmcPriceAtResolution", type: "uint128" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "event",
+    name: "CallResolved",
+    inputs: [
+      { name: "id", type: "uint256", indexed: true },
+      { name: "hit", type: "bool", indexed: false },
+      { name: "cmcPriceAtResolution", type: "uint128", indexed: false },
+    ],
+  },
+  {
     type: "event",
     name: "CallRecorded",
     inputs: [
@@ -300,6 +322,74 @@ function findCallId(logs: readonly unknown[], postHash: `0x${string}`): bigint {
     }
   }
   throw new RegistryError("the transaction succeeded but emitted no matching CallRecorded event; refusing to invent a call id");
+}
+
+export type ResolutionWrite = {
+  callId: bigint;
+  hit: boolean;
+  cmcPriceUsd: string;
+  /** The same decimals the original call was scaled with, so the two prices are comparable on chain. */
+  decimals: number;
+};
+
+/**
+ * Write a resolution. Called only after the deadline; the contract enforces that too, so a bug here cannot
+ * settle a call early, it can only waste gas.
+ *
+ * Same discipline as the lock: a reverted transaction is a failure, and a success without the matching
+ * `CallResolved` event is also a failure, because reporting a resolution the chain does not show would be
+ * worse than reporting none.
+ */
+export async function writeResolution(
+  input: ResolutionWrite,
+  deps: WriteDeps,
+): Promise<{ txHash: `0x${string}`; callId: string }> {
+  if (!/^0x[0-9a-fA-F]{40}$/.test(deps.registry)) {
+    throw new RegistryError(`registry address is not a deployed address: "${deps.registry}"`);
+  }
+  if (!Number.isInteger(input.decimals) || input.decimals < 0 || input.decimals > 77) {
+    throw new RegistryError(`implausible decimals: ${String(input.decimals)}`);
+  }
+  const scaled = requireUint(scaleDecimal(input.cmcPriceUsd, input.decimals), (1n << 128n) - 1n, "cmcPriceAtResolution");
+
+  const hash = await deps.send({
+    address: deps.registry,
+    abi: CALL_REGISTRY_ABI as unknown as Abi,
+    functionName: "resolveCall",
+    args: [input.callId, input.hit, scaled],
+  });
+
+  const receipt = await deps.wait(hash);
+  if (receipt.status !== "success") {
+    throw new RegistryError(`resolution transaction ${hash} reverted; refusing to report a resolution that did not happen`);
+  }
+  if (!emittedResolution(receipt.logs, input.callId)) {
+    throw new RegistryError(
+      "the transaction succeeded but emitted no matching CallResolved event; refusing to invent a resolution",
+    );
+  }
+  return { txHash: hash, callId: input.callId.toString() };
+}
+
+/** The chain's own confirmation that this call id was resolved. */
+function emittedResolution(logs: readonly unknown[], callId: bigint): boolean {
+  for (const log of logs) {
+    if (typeof log !== "object" || log === null) continue;
+    const l = log as { topics?: readonly `0x${string}`[]; data?: `0x${string}` };
+    try {
+      const decoded = decodeEventLog({
+        abi: CALL_REGISTRY_ABI as unknown as Abi,
+        data: l.data ?? "0x",
+        topics: (l.topics ?? []) as [`0x${string}`, ...`0x${string}`[]],
+      });
+      if (decoded.eventName !== "CallResolved") continue;
+      const args = decoded.args as unknown as { id: bigint };
+      if (args.id === callId) return true;
+    } catch {
+      continue; // not one of our events
+    }
+  }
+  return false;
 }
 
 /** Real transport. Used only when the caller asks for it, never in tests. */
